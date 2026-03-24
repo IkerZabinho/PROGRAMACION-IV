@@ -1,14 +1,14 @@
 #ifndef ESTRUCTURAS_H_
 #define ESTRUCTURAS_H_
 
-//TIPO USUARIO
+// TIPO USUARIO
 typedef enum {
     VOLUNTARIO,
     DONANTE,
     BENEFICIARIO
 } TipoUsuario;
 
-//USUARIO
+// USUARIO
 typedef struct{
     int id_usuario;
     char* nombre;
@@ -16,30 +16,30 @@ typedef struct{
     char* nombre_usuario;
     char* contrasena;
     TipoUsuario tipoUsuario;
-}Usuario;
+} Usuario;
 
-//TIPO DONACION
+// TIPO DONACION
 typedef enum {
-    VOLUNTARIO,
-    DONANTE,
-    BENEFICIARIO
+    DONACION_VOLUNTARIO,
+    DONACION_DONANTE,
+    DONACION_BENEFICIARIO
 } TipoDonacion;
 
-//DONACION
+// DONACION
 typedef struct{
     int id_donacion;
     int id_usuario;
     TipoDonacion tipoDonacion;
-}Donacion;
+} Donacion;
 
-//DINERO
+// DINERO
 typedef struct{
     int id_dinero;
     int id_donacion;
     double cantidad;
-}Dinero;
+} Dinero;
 
-//BENEFICIARIO
+// BENEFICIARIO
 typedef struct{
     int id_beneficiario;
     int id_usuario;
@@ -47,25 +47,24 @@ typedef struct{
     int num_ninos;
     double ingresos;
     double gastos;
-}Beneficiario;
+} Beneficiario;
 
-//FECHA
+// FECHA
 typedef struct{
     int hora;
     int minutos;
     int dia;
     int mes;
     int anyo;
-}Fecha;
+} Fecha;
 
-//TIPO DE EVENTO
+// TIPO DE EVENTO
 typedef enum{
     ROPA,
     COMIDA
-}TipoEvento;
+} TipoEvento;
 
-
-//EVENTO
+// EVENTO
 typedef struct{
     Fecha fecha_inicio;
     Fecha fecha_fin;
@@ -73,7 +72,6 @@ typedef struct{
     TipoEvento tipoEvento;
     char* descripcion;
     int lim_voluntarios;
-}Evento;
-
+} Evento;
 
 #endif
