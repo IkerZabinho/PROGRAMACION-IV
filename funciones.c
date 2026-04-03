@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "estructuras.h"
 #include "sqlite3.h"
-
+//hola
 // Crear tabla de usuarios
 void crearTablaUsuarios(sqlite3 *db) {
     char *sql = "CREATE TABLE IF NOT EXISTS Usuarios ("
