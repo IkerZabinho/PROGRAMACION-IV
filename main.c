@@ -1,19 +1,19 @@
 #include <stdio.h>
-#include "estructuras.h"
-#include "sqlite3.h"
 #include <windows.h>
+#include "sqlite3.h"
 
-// Declaraciones de funciones de funciones.c
-void crearTablaUsuarios(sqlite3 *db);
+// Declaraciones de funciones
+void crearTablas(sqlite3 *db);   // ⚠️ CAMBIO IMPORTANTE
 void menuPrincipal(sqlite3 *db);
 
 int main() {
     sqlite3 *db;
 
-    // Establece la consola en UTF-8 (65001 es el código de UTF-8) para poder visualizar bien las ñ y tildes
+    // UTF-8 para ñ y tildes
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
 
+    // Abrir base de datos
     if (sqlite3_open("asociacion.db", &db) != SQLITE_OK) {
         printf("Error al abrir la base de datos\n");
         return 1;
@@ -21,10 +21,17 @@ int main() {
 
     printf("Base de datos abierta correctamente\n");
 
-    crearTablaUsuarios(db);
+    //Crear Tablas bailña danak
+    crearTablas(db);
+
+    // 
     menuPrincipal(db);
 
+    // Cerrar base de datos
     sqlite3_close(db);
+
+    printf("Programa finalizado\n");
+
     return 0;
 }
 ////////////////////////////////////

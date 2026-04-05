@@ -5,22 +5,35 @@
 #include "estructuras.h"
 #include "sqlite3.h"
 //hola
-// Crear tabla de usuarios
-void crearTablaUsuarios(sqlite3 *db) {
-    char *sql = "CREATE TABLE IF NOT EXISTS Usuarios ("
-                "id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,"
-                "nombre TEXT,"
-                "apellidos TEXT,"
-                "nombre_usuario TEXT UNIQUE,"
-                "contrasena TEXT,"
-                "tipo INTEGER);";
+// Crear tablas
+void crearTablas(sqlite3 *db) {
 
     char *error = 0;
+
+    char *sql =
+    "CREATE TABLE IF NOT EXISTS Usuarios ("
+    "id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,"
+    "nombre TEXT,"
+    "apellidos TEXT,"
+    "nombre_usuario TEXT UNIQUE,"
+    "contrasena TEXT,"
+    "tipo INTEGER);"
+
+    "CREATE TABLE IF NOT EXISTS Donaciones ("
+    "id_donacion INTEGER PRIMARY KEY AUTOINCREMENT,"
+    "id_usuario INTEGER,"
+    "tipo INTEGER);"
+
+    "CREATE TABLE IF NOT EXISTS Eventos ("
+    "id_evento INTEGER PRIMARY KEY AUTOINCREMENT,"
+    "descripcion TEXT,"
+    "tipo INTEGER,"
+    "lim_voluntarios INTEGER);";
+
     if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
-        printf("Error al crear tabla: %s\n", error);
-        sqlite3_free(error);
+        printf("Error al crear tablas: %s\n", error);
     } else {
-        printf("Tabla Usuarios lista.\n");
+        printf("Tablas listas\n");
     }
 }
 
@@ -36,7 +49,7 @@ void insertarUsuario(sqlite3 *db, Usuario u) {
         printf("Error al insertar usuario: %s\n", error);
         sqlite3_free(error);
     } else {
-        printf("Usuario guardado correctamente\n");
+        printf("Usuario registrado y guardado correctamente\n");
     }
 }
 
@@ -48,7 +61,7 @@ int callbackLogin(void *data, int argc, char **argv, char **colName) {
 }
 
 // Comprobar login
-int comprobarLogin(sqlite3 *db, char *user, char *pass) {
+int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo) {
     char sql[300];
     int encontrado = 0;
     sprintf(sql, "SELECT * FROM Usuarios WHERE nombre_usuario='%s' AND contrasena='%s';", user, pass);
@@ -62,6 +75,7 @@ int comprobarLogin(sqlite3 *db, char *user, char *pass) {
 // Mostrar usuarios
 int callbackMostrar(void *data, int argc, char **argv, char **colName) {
     printf("\n--- Usuario ---\n");
+
     for (int i = 0; i < argc; i++) {
         printf("%s: %s\n", colName[i], argv[i] ? argv[i] : "NULL");
     }
@@ -77,7 +91,83 @@ void mostrarUsuarios(sqlite3 *db) {
     }
 }
 
+
+//DONAZIUAK
+void donarDinero(sqlite3 *db) {
+
+    int id;
+    printf("Tu ID de usuario: ");
+    scanf("%d", &id);
+
+    char sql[200];
+
+    sprintf(sql,
+        "INSERT INTO Donaciones (id_usuario, tipo) VALUES (%d, 1);",
+        id);
+
+    sqlite3_exec(db, sql, 0, 0, 0);
+
+    printf("Donación registrada\n");
+}
+
+//EVENTUAK
+
+void crearEvento(sqlite3 *db) {
+
+    char descripcion[100];
+    int tipo, limite;
+
+    printf("Descripcion: ");
+    scanf("%s", descripcion);
+
+    printf("Tipo (0 ropa, 1 comida): ");//Hau nahi dan ordenian baiña horrela jarri dot adibide modura
+    scanf("%d", &tipo);
+
+    printf("Limite voluntarios: ");
+    scanf("%d", &limite);
+
+    char sql[300];
+
+    sprintf(sql,
+        "INSERT INTO Eventos (descripcion, tipo, lim_voluntarios) VALUES ('%s', %d, %d);",
+        descripcion, tipo, limite);
+
+    sqlite3_exec(db, sql, 0, 0, 0);
+
+    printf("Evento creado\n");
+}
+
+//ROLAN ARABERA MENUA
+void menuUsuario(sqlite3 *db, int tipo) {
+
+    int opcion;
+
+    do {
+        printf("\n--- MENU USUARIO ---\n");
+
+        if(tipo == VOLUNTARIO) {
+            printf("1. Ver eventos\n");
+        }
+        else if(tipo == DONANTE) {
+            printf("1. Donar dinero\n");
+        }
+        else if(tipo == BENEFICIARIO) {
+            printf("1. Ver ayudas\n");
+        }
+
+        printf("0. Salir\n");
+        scanf("%d", &opcion);
+
+        if(opcion == 1 && tipo == DONANTE) {
+            donarDinero(db);
+        }
+
+    } while(opcion != 0);
+}
+
 // Funciones de menú
+//HAU ZABANA GEHIXKI BADAO NERIA ZABANA JARRI BERRIZ!!
+/*
 void iniciarSesion(sqlite3 *db) {
     char user[50], pass[50];
     printf("\n--- INICIAR SESIÓN ---\n");
@@ -92,6 +182,28 @@ void iniciarSesion(sqlite3 *db) {
         printf("\nError: Usuario o contraseña incorrectos.\n");
     }
 }
+    */
+
+    //INICIAR SESION 2.0
+void iniciarSesion(sqlite3 *db) {
+
+    char user[50], pass[50];
+    int tipo;
+
+    printf("\nUsuario: ");
+    scanf("%s", user);
+
+    printf("Contraseña: ");
+    scanf("%s", pass);
+
+    if (comprobarLogin(db, user, pass, &tipo)) {
+        printf("Bienvenido!\n");
+        menuUsuario(db, tipo);
+    } else {
+        printf("Error login\n");
+    }
+}
+
 
 void registrarUsuario(sqlite3 *db) {
     Usuario nuevoUsuario;
@@ -111,19 +223,22 @@ void registrarUsuario(sqlite3 *db) {
     insertarUsuario(db, nuevoUsuario);
 }
 
-void menuPrincipal(sqlite3 *db) {
+void menuPrincipal(sqlite3 *db) {//Zaba aldau indot pixkat eventua sortu ahal izateko
+
     int opcion;
+
     do {
-        printf("\n=== MENÚ PRINCIPAL ===\n");
-        printf("1. Iniciar sesión\n2. Registrarse\n3. Ver usuarios (solo prueba)\n4. Salir\nElige: ");
+        printf("\n=== MENU ===\n");
+        printf("1. Login\n2. Registro\n3. Ver usuarios\n4. Crear evento\n5. Salir\n");
+
         scanf("%d", &opcion);
 
         switch(opcion) {
             case 1: iniciarSesion(db); break;
             case 2: registrarUsuario(db); break;
             case 3: mostrarUsuarios(db); break;
-            case 4: printf("Saliendo...\n"); break;
-            default: printf("Opción inválida.\n");
+            case 4: crearEvento(db); break;
         }
-    } while(opcion != 4);
+
+    } while(opcion != 5);
 }
