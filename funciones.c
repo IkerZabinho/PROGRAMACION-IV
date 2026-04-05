@@ -75,8 +75,9 @@ int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo) {
 // Mostrar usuarios
 int callbackMostrar(void *data, int argc, char **argv, char **colName) {
     printf("\n--- Usuario ---\n");
-
     for (int i = 0; i < argc; i++) {
+        // Contraseña ez azaltzeko
+        if (strcmp(colName[i], "contrasena") == 0) continue;
         printf("%s: %s\n", colName[i], argv[i] ? argv[i] : "NULL");
     }
     return 0;
@@ -113,28 +114,31 @@ void donarDinero(sqlite3 *db) {
 //EVENTUAK
 
 void crearEvento(sqlite3 *db) {
-
     char descripcion[100];
     int tipo, limite;
 
-    printf("Descripcion: ");
-    scanf("%s", descripcion);
+    printf("\n--- Crear Evento ---\n");
+    printf("Descripción: ");
+    scanf(" %[^\n]", descripcion); // Para leer con espacios
 
-    printf("Tipo (0 ropa, 1 comida): ");//Hau nahi dan ordenian baiña horrela jarri dot adibide modura
+    printf("Tipo de evento (0 = Ropa, 1 = Comida): ");
     scanf("%d", &tipo);
 
-    printf("Limite voluntarios: ");
+    printf("Límite de voluntarios: ");
     scanf("%d", &limite);
 
     char sql[300];
-
     sprintf(sql,
         "INSERT INTO Eventos (descripcion, tipo, lim_voluntarios) VALUES ('%s', %d, %d);",
         descripcion, tipo, limite);
 
-    sqlite3_exec(db, sql, 0, 0, 0);
-
-    printf("Evento creado\n");
+    char *error = 0;
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("Error al crear evento: %s\n", error);
+        sqlite3_free(error);
+    } else {
+        printf("Evento registrado correctamente\n");
+    }
 }
 
 //ROLAN ARABERA MENUA
@@ -158,8 +162,16 @@ void menuUsuario(sqlite3 *db, int tipo) {
         printf("0. Salir\n");
         scanf("%d", &opcion);
 
-        if(opcion == 1 && tipo == DONANTE) {
-            donarDinero(db);
+        switch(opcion) {
+            case 1:
+                if(tipo == VOLUNTARIO) {
+                    printf("Hemen funcion para ver eventos(iteko dao oaindik)\n");
+                } else if(tipo == DONANTE) {
+                    donarDinero(db);
+                } else if(tipo == BENEFICIARIO) {
+                    printf("Hemen funcion para ver ayudas(iteko dao oaindik)\n");
+                }
+                break;
         }
 
     } while(opcion != 0);
@@ -221,6 +233,8 @@ void registrarUsuario(sqlite3 *db) {
     printf("Contraseña: "); scanf("%s", buffer); nuevoUsuario.contrasena = strdup(buffer);
 
     insertarUsuario(db, nuevoUsuario);
+    printf("Registro completado. Accediendo al menú...\n");
+    menuUsuario(db, nuevoUsuario.tipoUsuario);
 }
 
 void menuPrincipal(sqlite3 *db) {//Zaba aldau indot pixkat eventua sortu ahal izateko
