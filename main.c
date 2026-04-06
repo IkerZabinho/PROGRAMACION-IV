@@ -3,7 +3,7 @@
 #include "sqlite3.h"
 
 // Declaraciones de funciones
-void crearTablas(sqlite3 *db);   // ⚠️ CAMBIO IMPORTANTE
+//void crearTablas(sqlite3 *db);   // ⚠️ CAMBIO IMPORTANTE
 void menuPrincipal(sqlite3 *db);
 
 int main() {
@@ -22,7 +22,7 @@ int main() {
     printf("Base de datos abierta correctamente\n");
 
     //Crear Tablas bailña danak
-    crearTablas(db);
+    //crearTablas(db);
 
     // 
     menuPrincipal(db);
