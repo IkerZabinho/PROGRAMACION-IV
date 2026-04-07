@@ -5,41 +5,7 @@
 #include "estructuras.h"
 #include "sqlite3.h"
 // hola
-//  Crear tablas
-void crearTablas(sqlite3 *db)
-{
 
-    char *error = 0;
-
-    char *sql =
-        "CREATE TABLE IF NOT EXISTS Usuarios ("
-        "id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "nombre TEXT,"
-        "apellidos TEXT,"
-        "nombre_usuario TEXT UNIQUE,"
-        "contrasena TEXT,"
-        "tipo INTEGER);"
-
-        "CREATE TABLE IF NOT EXISTS Donaciones ("
-        "id_donacion INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "id_usuario INTEGER,"
-        "tipo INTEGER);"
-
-        "CREATE TABLE IF NOT EXISTS Eventos ("
-        "id_evento INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "descripcion TEXT,"
-        "tipo INTEGER,"
-        "lim_voluntarios INTEGER);";
-
-    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK)
-    {
-        printf("Error al crear tablas: %s\n", error);
-    }
-    else
-    {
-        printf("Tablas listas\n");
-    }
-}
 // Insertar beneficiarios
 
 int insertarDatosBeneficiario(sqlite3 *db, long long id, float ing, float gas, int adu, int nin)
@@ -153,7 +119,7 @@ int callbackLogin(void *data, int argc, char **argv, char **colName)
 }
 
 // Comprobar login
-int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo)
+int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo)  //TIPO ERABILI GABE DAO???
 {
     char sql[300];
     int encontrado = 0;
@@ -191,22 +157,45 @@ void mostrarUsuarios(sqlite3 *db)
 }
 
 // DONAZIUAK
-void donarDinero(sqlite3 *db)
+void donarDinero(sqlite3 *db, int id_usuario)  //he puesto id aquí, para que otra persona no haga donacion en tu nombre
 {
-
-    int id;
-    printf("Tu ID de usuario: ");
-    scanf("%d", &id);
-
+    double cantidad;
     char sql[200];
+    char *error = 0;
+
+    printf("\n--- REALIZAR DONACIÓN DE DINERO ---\n");
+
+    printf("\nIntroduce la cantidad a donar: ");  //he añadido cantidad
+    scanf("%f", &cantidad); 
+
+    if (cantidad <= 0) {
+        printf("La cantidad debe ser mayor que 0.\n");
+        return;
+    }
 
     sprintf(sql,
             "INSERT INTO Donaciones (id_usuario, tipo) VALUES (%d, 1);",
-            id);
+            id_usuario);
 
-    sqlite3_exec(db, sql, 0, 0, 0);
+    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) 
+    {
+        // PASO 2: Recuperar el ID que la base de datos acaba de generar para esta donación
+        //para ponder id_donacion en la estrucutra dinero que crearemos
+        long long id_generado = sqlite3_last_insert_rowid(db);
 
-    printf("Donación registrada\n");
+        // PASO 3: Insertar en la tabla 'Dinero' usando ese ID como referencia
+        char sqlDinero[300];
+        sprintf(sqlDinero, "INSERT INTO Dinero (id_donacion, cantidad) VALUES (%lld, %.2f);", 
+                id_generado, cantidad);  //no se si poner lld, es porque caben más números que en un int
+
+        if (sqlite3_exec(db, sqlDinero, 0, 0, &error) == SQLITE_OK) {
+            printf("\nSe han registrado %.2f€ en la donación nº %lld.\n", cantidad, id_generado);
+        } else {
+            printf("Error al guardar la cantidad: %s\n", error);
+            sqlite3_free(error);
+        }
+    }
+
 }
 
 // EVENTUAK
@@ -234,7 +223,7 @@ void crearEvento(sqlite3 *db)
     char *error = 0;
     if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK)
     {
-        printf("Error al crear evento: %s\n", error);
+        printf("Error al crear evento: %s\n", error);   //berrize menure bueltatzie nahi deu??
         sqlite3_free(error);
     }
     else
@@ -245,40 +234,7 @@ void crearEvento(sqlite3 *db)
 
 // ROLAN ARABERA MENUA
 
-void menuUsuario(sqlite3 *db, int tipo) {
 
-    int opcion;
-
-    do {
-        printf("\n--- MENU USUARIO ---\n");
-
-        if(tipo = 0) {
-            printf("1. Ver eventos\n");
-        }
-        else if(tipo = 1) {
-            printf("1. Donar dinero\n");
-        }
-        else if(tipo = 2) {
-            printf("1. Ver ayudas\n");
-        }
-
-        printf("0. Salir\n");
-        scanf("%d", &opcion);
-
-        switch(opcion) {
-            case 1:
-                if(tipo == VOLUNTARIO) {
-                    printf("Hemen funcion para ver eventos(iteko dao oaindik)\n");
-                } else if(tipo == DONANTE) {
-                    donarDinero(db);
-                } else if(tipo == BENEFICIARIO) {
-                    printf("Hemen funcion para ver ayudas(iteko dao oaindik)\n");
-                }
-                break;
-        }
-
-    } while(opcion != 0);
-}
 
 // Funciones de menú
 // HAU ZABANA GEHIXKI BADAO NERIA ZABANA JARRI BERRIZ!!
@@ -304,6 +260,8 @@ void iniciarSesion(sqlite3 *db)
 {
 
     char user[50], pass[50];
+    printf("\n--- INICIAR SESIÓN ---\n");
+
     int tipo;
 
     printf("\nUsuario: ");
@@ -382,33 +340,150 @@ void registrarUsuario(sqlite3 *db)
     }
 }
 
-void menuPrincipal(sqlite3 *db)
-{ // Zaba aldau indot pixkat eventua sortu ahal izateko
+
+void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
+{
 
     int opcion;
 
-    do
-    {
-        printf("\n=== MENU ===\n");
-        printf("1. Login\n2. Registro\n3. Ver usuarios\n4. Crear evento\n5. Salir\n");
+    do {
+        printf("\n======= MENU PRINCIPAL =======");
 
+        // Mostrar opciones ESPECÍFICAS según el tipo
+        if (tipo == VOLUNTARIO) { // tipo 0
+            printf("\n1.Apuntarse a un evento");
+            printf("\n2. Consultar calendario de mis eventos");  //despauntarse calendario barrun zaudela ingo deu
+            printf("\n3. Consultar historial de mi voluntariado");
+
+        } 
+        else if (tipo == DONANTE) { // tipo 1
+            printf("\n1. Realizar donación de dinero");
+            printf("\n2. Realizar donación de comida");
+            printf("\n3. Realizar donación de ropa");
+            printf("\n4. Consultar historial de mis donaciones");
+        } 
+        else if (tipo == BENEFICIARIO) { // tipo 2
+            printf("\n1. Registrar o cambiar condiciones"); //iuel registrar condiciones registratzeakun derrigorra bezela jarri??
+            printf("\n2. Consultar horarios");
+        }
+        
+        printf("\n0. Cerrar sesión");
+        printf("\nSeleccione una opción: ");
         scanf("%d", &opcion);
 
-        switch (opcion)
-        {
-        case 1:
-            iniciarSesion(db);
-            break;
-        case 2:
-            registrarUsuario(db);
-            break;
-        case 3:
-            mostrarUsuarios(db);
-            break;
-        case 4:
-            crearEvento(db);
-            break;
-        }
+        switch(opcion) {
+            case 1:
+                if(tipo == VOLUNTARIO) {
+                    apuntarseEvento(db, id_usuario);
+                } else if(tipo == DONANTE) {
+                    donarDinero(db, id_usuario);
+                } else if(tipo == BENEFICIARIO) {
+                    //falta registrar/cambiar usuario, funtzixo bat in ber da
+                }
+                break;
 
-    } while (opcion != 5);
+            case 2:
+                if(tipo == VOLUNTARIO) {
+                    //función para consultar calendario de mis eventos
+                } else if(tipo == DONANTE) {
+                    //función azaltzeko los siguientes eventos de recogida de comida
+                } else if(tipo == BENEFICIARIO) {
+                    //función consultar horarios, jakitteko noiz jun ber dun eta zer jasotzea
+                }
+                break;
+
+            case 3:
+                if(tipo == VOLUNTARIO) {
+                    //función historiala azaltzeko de los eventos acudidos hasta ahora
+                } else if(tipo == DONANTE) {
+                    //función azaltzeko los siguientes eventos de recogidad de ropa
+                } 
+                break;
+            
+            case 4:
+                if(tipo == DONANTE) {
+                    //función historiala azaltzeko de las donaciones realizadas hasta ahora
+                }
+
+        }
+    } while (opcion != 0);
 }
+
+
+
+//FUNCIONES PARA VOLUNTARIO
+
+//Función callbackMostrarEventos
+int callbackMostrarEventos(void *data, int argc, char **argv, char **colName)
+{
+    printf("\nID: %s | %s | Fecha: %s", 
+           argv[0] ? argv[0] : "?", // id_evento
+           argv[1] ? argv[1] : "?", // descripcion
+           argv[2] ? argv[2] : "?"); // fecha_inicio
+    return 0;
+} //los signos de interrogacion son como escribir esto
+/*if (argv[0] != NULL) {
+    printf("%s", argv[0]);
+} else {
+    printf("?");
+}
+*/
+
+//Función para que verifique fecha, el voluntario no podrá apuntarse a 2 eventos del mismo día
+int callbackCheckFecha(void *data, int argc, char **argv, char **colName) {
+    int *existe = (int *)data;
+    if (atoi(argv[0]) > 0) {
+        *existe = 1;
+    }; // Si el COUNT es > 0, hay colisión
+    return 0;
+}
+
+//Función apuntarse a un evento
+void apuntarseEvento(sqlite3 *db, int id_usuario) {
+    int id_evento_elegido;
+    char sql[500];
+    char *error = 0;
+    printf("\n--- APUNTARSE A UN EVENTO ---\n");
+
+    //1. Mostrar eventos de los próximos 3 meses
+    printf("\nEventos disponibles (próximos 3 meses):\n");
+
+    char *sql_ver = "SELECT id_evento, descripcion, fecha_inicio FROM Eventos "
+    "WHERE fecha_inicio BETWEEN date('now') AND date('now', '+3 months');";
+    
+    sqlite3_exec(db, sql_ver, callbackMostrarEventos, 0, &error);
+    
+    printf("----------------------------------------------------------\n");
+    printf("Introduce el ID del evento (0 para cancelar): "); //qué quiere decir?
+    scanf("%d", &id_evento_elegido);
+    if (id_evento_elegido <= 0) return;
+
+    //2. Comprobar que el usuario ya tiene un evento ese día
+    int ya_ocupado = 0;
+    sprintf(sql, 
+        "SELECT COUNT(*) FROM Participaciones P "
+        "JOIN Eventos E1 ON P.id_evento = E1.id_evento "
+        "WHERE P.id_usuario = %d AND E1.fecha_inicio = "
+        "(SELECT fecha_inicio FROM Eventos WHERE id_evento = %d);", 
+        id_usuario, id_evento_elegido);
+
+    sqlite3_exec(db, sql, callbackCheckFecha, &ya_ocupado, &error);
+    //habrá que mirar después de cambiar la  base de datos
+    if (ya_ocupado) {
+        printf("\n¡ERROR! Ya tienes otro compromiso registrado para ese mismo día.\n");
+        return;
+    }
+
+    //3. Si no tiene evento en el mismo día, hacemos inscripción
+    sprintf(sql, "INSERT INTO Participaciones (id_usuario, id_evento) VALUES (%d, %d);", 
+            id_usuario, id_evento_elegido);
+    
+    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
+        printf("\n¡Inscripción realizada con éxito! Nos vemos allí.\n");
+    } else {
+        printf("\nError al apuntarse: %s\n", error);
+        sqlite3_free(error);
+    }
+
+}
+

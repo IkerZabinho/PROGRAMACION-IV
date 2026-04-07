@@ -74,4 +74,23 @@ typedef struct{
     int lim_voluntarios;
 } Evento;
 
+// PARTICIPACIÓN (para guardar qué usuarios van a qué eventos)
+//FALTA AÑADIR ESTA TABLA EN SQL!!!!!!!!
+typedef struct {
+    int id_usuario;
+    int id_evento;
+} Participacion;
+
+
+/*CREATE TABLE Participaciones (
+    id_usuario INTEGER,
+    id_evento INTEGER,
+    PRIMARY KEY (id_usuario, id_evento),
+    FOREIGN KEY(id_usuario) REFERENCES Usuarios(id_usuario),
+    FOREIGN KEY(id_evento) REFERENCES Eventos(id_evento)
+);*/
+
+//ME DICE QUE GUARDEMOS FEHCA COMO TEXTO ???????
+//si no para buscar eventos proximos 3 meses es una pesadilla de IFs
+
 #endif

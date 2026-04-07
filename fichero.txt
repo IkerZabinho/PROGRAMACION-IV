@@ -1,0 +1,107 @@
+//  Crear tablas
+void crearTablas(sqlite3 *db)
+{
+
+    char *error = 0;
+
+    char *sql =
+        "CREATE TABLE IF NOT EXISTS Usuarios ("
+        "id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "nombre TEXT,"
+        "apellidos TEXT,"
+        "nombre_usuario TEXT UNIQUE,"
+        "contrasena TEXT,"
+        "tipo INTEGER);"
+
+        "CREATE TABLE IF NOT EXISTS Donaciones ("
+        "id_donacion INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "id_usuario INTEGER,"
+        "tipo INTEGER);"
+
+        "CREATE TABLE IF NOT EXISTS Eventos ("
+        "id_evento INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "descripcion TEXT,"
+        "tipo INTEGER,"
+        "lim_voluntarios INTEGER);";
+
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK)
+    {
+        printf("Error al crear tablas: %s\n", error);
+    }
+    else
+    {
+        printf("Tablas listas\n");
+    }
+}
+
+
+
+
+
+void menuPrincipal(sqlite3 *db)
+{ // Zaba aldau indot pixkat eventua sortu ahal izateko
+
+    int opcion;
+
+    do
+    {
+        printf("\n=== MENU ===\n");
+        printf("1. Login\n2. Registro\n3. Ver usuarios\n4. Crear evento\n5. Salir\n");
+
+        scanf("%d", &opcion);
+
+        switch (opcion)
+        {
+        case 1:
+            iniciarSesion(db);
+            break;
+        case 2:
+            registrarUsuario(db);
+            break;
+        case 3:
+            mostrarUsuarios(db);
+            break;
+        case 4:
+            crearEvento(db);
+            break;
+        }
+
+    } while (opcion != 5);
+}
+
+
+void menuUsuario(sqlite3 *db, int tipo) {
+
+    int opcion;
+
+    do {
+        printf("\n--- MENU USUARIO ---\n");
+
+        printf("0. Salir\n");
+
+        if(tipo == 0) {
+            printf("1. Ver eventos\n");
+        }
+        else if(tipo == 1) {
+            printf("1. Donar dinero\n");
+        }
+        else if(tipo == 2) {
+            printf("1. Ver ayudas\n");
+        }
+
+        scanf("%d", &opcion);
+
+        switch(opcion) {
+            case 1:
+                if(tipo == VOLUNTARIO) {
+                    printf("Hemen funcion para ver eventos(iteko dao oaindik)\n");
+                } else if(tipo == DONANTE) {
+                    donarDinero(db);
+                } else if(tipo == BENEFICIARIO) {
+                    printf("Hemen funcion para ver ayudas(iteko dao oaindik)\n");
+                }
+                break;
+        }
+
+    } while(opcion != 0);
+}

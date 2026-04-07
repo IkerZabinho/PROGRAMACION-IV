@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <windows.h>
 #include "sqlite3.h"
+#include "funciones.h"
+#include "estructuras.h"
 
 // Declaraciones de funciones
-//void crearTablas(sqlite3 *db);   // ⚠️ CAMBIO IMPORTANTE
-void menuPrincipal(sqlite3 *db);
+//void crearTablas(sqlite3 *db);   //  CAMBIO IMPORTANTE
+void menuPrincipal(sqlite3 *db, int tipo);
 
 int main() {
     sqlite3 *db;
@@ -25,7 +27,7 @@ int main() {
     //crearTablas(db);
 
     // 
-    menuPrincipal(db);
+    menuPrincipal(db, int tipo);
 
     // Cerrar base de datos
     sqlite3_close(db);
