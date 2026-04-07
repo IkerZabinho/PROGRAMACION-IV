@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "funciones.h"
 #include "estructuras.h"
 #include "sqlite3.h"
-// hola
 
 // Insertar beneficiarios
 
@@ -119,15 +119,37 @@ int callbackLogin(void *data, int argc, char **argv, char **colName)
 }
 
 // Comprobar login
-int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo)  //TIPO ERABILI GABE DAO???
-{
-    char sql[300];
+// int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo)  //TIPO ERABILI GABE DAO???
+// {
+//     char sql[300];
+//     int encontrado = 0;
+//     sprintf(sql, "SELECT * FROM Usuarios WHERE nombre_usuario='%s' AND contrasena='%s';", user, pass);
+
+//     char *error = 0;
+//     sqlite3_exec(db, sql, callbackLogin, &encontrado, &error);
+
+//     return encontrado;
+// }
+
+//PRUEBA
+int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo_res, int *id_res) {
+    sqlite3_stmt *stmt;
+    char *sql = "SELECT tipo, id_usuario FROM Usuarios WHERE nombre_usuario = ? AND contrasena = ?;";
     int encontrado = 0;
-    sprintf(sql, "SELECT * FROM Usuarios WHERE nombre_usuario='%s' AND contrasena='%s';", user, pass);
 
-    char *error = 0;
-    sqlite3_exec(db, sql, callbackLogin, &encontrado, &error);
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+        // Enlazamos los parámetros para evitar Inyección SQL
+        sqlite3_bind_text(stmt, 1, user, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, pass, -1, SQLITE_STATIC);
 
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            // "Extraemos" los valores de la fila encontrada
+            *tipo_res = sqlite3_column_int(stmt, 0); 
+            *id_res = sqlite3_column_int(stmt, 1);
+            encontrado = 1;
+        }
+    }
+    sqlite3_finalize(stmt);
     return encontrado;
 }
 
@@ -157,45 +179,64 @@ void mostrarUsuarios(sqlite3 *db)
 }
 
 // DONAZIUAK
-void donarDinero(sqlite3 *db, int id_usuario)  //he puesto id aquí, para que otra persona no haga donacion en tu nombre
+void donarDinero(sqlite3 *db, int id_usuario) 
 {
-    double cantidad;
-    char sql[200];
+    float cantidad;
+    char sql[300];
     char *error = 0;
+    int respuesta;
 
     printf("\n--- REALIZAR DONACIÓN DE DINERO ---\n");
 
-    printf("\nIntroduce la cantidad a donar: ");  //he añadido cantidad
-    scanf("%f", &cantidad); 
+    printf("Introduce la cantidad a donar: ");
+    if (scanf("%f", &cantidad) != 1) {
+        printf("Error: Entrada no válida.\n");
+        while (getchar() != '\n'); // Limpiar buffer
+        return;
+    }
 
     if (cantidad <= 0) {
         printf("La cantidad debe ser mayor que 0.\n");
         return;
     }
 
-    sprintf(sql,
-            "INSERT INTO Donaciones (id_usuario, tipo) VALUES (%d, 1);",
-            id_usuario);
+    printf("¿Estás seguro de que quieres donar %.2f€?\n0. No\n1. Sí\nSelección: ", cantidad);
+    scanf("%d", &respuesta);
 
-    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) 
-    {
-        // PASO 2: Recuperar el ID que la base de datos acaba de generar para esta donación
-        //para ponder id_donacion en la estrucutra dinero que crearemos
-        long long id_generado = sqlite3_last_insert_rowid(db);
+    if (respuesta == 1) {
+        // PASO A: Insertar en la tabla 'Donaciones' (La tabla padre)
+        // El id_usuario vincula quién dona, y el '1' indica que es tipo dinero.
+        sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo) VALUES (%d, 1);", id_usuario);
 
-        // PASO 3: Insertar en la tabla 'Dinero' usando ese ID como referencia
-        char sqlDinero[300];
-        sprintf(sqlDinero, "INSERT INTO Dinero (id_donacion, cantidad) VALUES (%lld, %.2f);", 
-                id_generado, cantidad);  //no se si poner lld, es porque caben más números que en un int
+        if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) 
+        {
+            // PASO B: Obtener el ID que SQLite acaba de crear para esta donación
+            long long id_padre = sqlite3_last_insert_rowid(db);
 
-        if (sqlite3_exec(db, sqlDinero, 0, 0, &error) == SQLITE_OK) {
-            printf("\nSe han registrado %.2f€ en la donación nº %lld.\n", cantidad, id_generado);
-        } else {
-            printf("Error al guardar la cantidad: %s\n", error);
+            // PASO C: Insertar en tu tabla 'Dinero'
+            // No insertamos 'id_dinero' porque es PRIMARY KEY AUTOINCREMENT
+            char sqlDinero[400];
+            sprintf(sqlDinero, "INSERT INTO Dinero (cantidad, id_donacion) VALUES (%.2f, %lld);", 
+                    cantidad, id_padre);
+
+            if (sqlite3_exec(db, sqlDinero, 0, 0, &error) == SQLITE_OK) {
+                printf("\n[ÉXITO] Se han registrado %.2f€ correctamente.\n", cantidad);
+                printf("ID de Donación: %lld\n", id_padre);
+            } else {
+                printf("Error en tabla Dinero: %s\n", error);
+                sqlite3_free(error);
+            }
+        } 
+        else 
+        {
+            printf("Error en tabla Donaciones: %s\n", error);
             sqlite3_free(error);
         }
+    } 
+    else 
+    {
+        printf("Operación cancelada por el usuario.\n");
     }
-
 }
 
 // EVENTUAK
@@ -260,6 +301,8 @@ void iniciarSesion(sqlite3 *db)
 {
 
     char user[50], pass[50];
+    int tipo_detectado = -1;
+    int id_detectado = -1;
     printf("\n--- INICIAR SESIÓN ---\n");
 
     int tipo;
@@ -270,10 +313,10 @@ void iniciarSesion(sqlite3 *db)
     printf("Contraseña: ");
     scanf("%s", pass);
 
-    if (comprobarLogin(db, user, pass, &tipo))
-    {
+   if (comprobarLogin(db, user, pass, &tipo_detectado, &id_detectado)) 
+   {
         printf("Bienvenido!\n");
-        menuUsuario(db, tipo);
+        menuPrincipal(db, tipo_detectado, id_detectado);
     }
     else
     {
@@ -300,12 +343,17 @@ void registrarUsuario(sqlite3 *db)
     printf("Nombre: ");
     scanf("%s", buffer);
     nuevoUsuario.nombre = strdup(buffer);
-    printf("Apellidos: ");
-    scanf("%s", buffer);
+
+    printf("Apellidos: "); //Estas lineas para que funcione al escribir 2 apellidos
+    while (getchar() != '\n'); 
+    fgets(buffer, sizeof(buffer), stdin);
+    buffer[strcspn(buffer, "\n")] = 0;
     nuevoUsuario.apellidos = strdup(buffer);
+
     printf("Nombre de usuario: ");
     scanf("%s", buffer);
     nuevoUsuario.nombre_usuario = strdup(buffer);
+
     printf("Contraseña: ");
     scanf("%s", buffer);
     nuevoUsuario.contrasena = strdup(buffer);
@@ -313,6 +361,7 @@ void registrarUsuario(sqlite3 *db)
     // INTENTO DE INSERCIÓN
     if (insertarUsuario(db, nuevoUsuario))
     {
+        int id_recien_creado = (int)sqlite3_last_insert_rowid(db);
         // SI SALE BIEN:
         printf("\nRegistro completado con éxito. Accediendo a tu menú...\n");
 
@@ -322,7 +371,7 @@ void registrarUsuario(sqlite3 *db)
         free(nuevoUsuario.nombre_usuario);
         free(nuevoUsuario.contrasena);
 
-        menuUsuario(db, nuevoUsuario.tipoUsuario);
+        menuPrincipal(db, (int)nuevoUsuario.tipoUsuario, id_recien_creado);
     }
     else
     {
@@ -340,6 +389,54 @@ void registrarUsuario(sqlite3 *db)
     }
 }
 
+//Función apuntarse a un evento
+void apuntarseEvento(sqlite3 *db, int id_usuario) {
+    int id_evento_elegido;
+    char sql[500];
+    char *error = 0;
+    printf("\n--- APUNTARSE A UN EVENTO ---\n");
+
+    //1. Mostrar eventos de los próximos 3 meses
+    printf("\nEventos disponibles (próximos 3 meses):\n");
+
+    char *sql_ver = "SELECT id_evento, descripcion, fecha_inicio FROM Eventos "
+    "WHERE fecha_inicio BETWEEN date('now') AND date('now', '+3 months');";
+    
+    sqlite3_exec(db, sql_ver, callbackMostrarEventos, 0, &error);
+    
+    printf("----------------------------------------------------------\n");
+    printf("Introduce el ID del evento (0 para cancelar): "); //qué quiere decir?
+    scanf("%d", &id_evento_elegido);
+    if (id_evento_elegido <= 0) return;
+
+    //2. Comprobar que el usuario ya tiene un evento ese día
+    int ya_ocupado = 0;
+    sprintf(sql, 
+        "SELECT COUNT(*) FROM Participaciones P "
+        "JOIN Eventos E1 ON P.id_evento = E1.id_evento "
+        "WHERE P.id_usuario = %d AND E1.fecha_inicio = "
+        "(SELECT fecha_inicio FROM Eventos WHERE id_evento = %d);", 
+        id_usuario, id_evento_elegido);
+
+    sqlite3_exec(db, sql, callbackCheckFecha, &ya_ocupado, &error);
+    //habrá que mirar después de cambiar la  base de datos
+    if (ya_ocupado) {
+        printf("\n¡ERROR! Ya tienes otro compromiso registrado para ese mismo día.\n");
+        return;
+    }
+
+    //3. Si no tiene evento en el mismo día, hacemos inscripción
+    sprintf(sql, "INSERT INTO Participaciones (id_usuario, id_evento) VALUES (%d, %d);", 
+            id_usuario, id_evento_elegido);
+    
+    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
+        printf("\n¡Inscripción realizada con éxito! Nos vemos allí.\n");
+    } else {
+        printf("\nError al apuntarse: %s\n", error);
+        sqlite3_free(error);
+    }
+
+}
 
 void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
 {
@@ -438,52 +535,5 @@ int callbackCheckFecha(void *data, int argc, char **argv, char **colName) {
     return 0;
 }
 
-//Función apuntarse a un evento
-void apuntarseEvento(sqlite3 *db, int id_usuario) {
-    int id_evento_elegido;
-    char sql[500];
-    char *error = 0;
-    printf("\n--- APUNTARSE A UN EVENTO ---\n");
 
-    //1. Mostrar eventos de los próximos 3 meses
-    printf("\nEventos disponibles (próximos 3 meses):\n");
-
-    char *sql_ver = "SELECT id_evento, descripcion, fecha_inicio FROM Eventos "
-    "WHERE fecha_inicio BETWEEN date('now') AND date('now', '+3 months');";
-    
-    sqlite3_exec(db, sql_ver, callbackMostrarEventos, 0, &error);
-    
-    printf("----------------------------------------------------------\n");
-    printf("Introduce el ID del evento (0 para cancelar): "); //qué quiere decir?
-    scanf("%d", &id_evento_elegido);
-    if (id_evento_elegido <= 0) return;
-
-    //2. Comprobar que el usuario ya tiene un evento ese día
-    int ya_ocupado = 0;
-    sprintf(sql, 
-        "SELECT COUNT(*) FROM Participaciones P "
-        "JOIN Eventos E1 ON P.id_evento = E1.id_evento "
-        "WHERE P.id_usuario = %d AND E1.fecha_inicio = "
-        "(SELECT fecha_inicio FROM Eventos WHERE id_evento = %d);", 
-        id_usuario, id_evento_elegido);
-
-    sqlite3_exec(db, sql, callbackCheckFecha, &ya_ocupado, &error);
-    //habrá que mirar después de cambiar la  base de datos
-    if (ya_ocupado) {
-        printf("\n¡ERROR! Ya tienes otro compromiso registrado para ese mismo día.\n");
-        return;
-    }
-
-    //3. Si no tiene evento en el mismo día, hacemos inscripción
-    sprintf(sql, "INSERT INTO Participaciones (id_usuario, id_evento) VALUES (%d, %d);", 
-            id_usuario, id_evento_elegido);
-    
-    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
-        printf("\n¡Inscripción realizada con éxito! Nos vemos allí.\n");
-    } else {
-        printf("\nError al apuntarse: %s\n", error);
-        sqlite3_free(error);
-    }
-
-}
 

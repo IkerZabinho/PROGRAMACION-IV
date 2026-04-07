@@ -6,10 +6,11 @@
 
 // Declaraciones de funciones
 //void crearTablas(sqlite3 *db);   //  CAMBIO IMPORTANTE
-void menuPrincipal(sqlite3 *db, int tipo);
+//void menuPrincipal(sqlite3 *db, int tipo);
 
 int main() {
     sqlite3 *db;
+    int tipo = 0;
 
     // UTF-8 para ñ y tildes
     SetConsoleOutputCP(65001);
@@ -27,8 +28,21 @@ int main() {
     //crearTablas(db);
 
     // 
-    menuPrincipal(db, int tipo);
+    //menuPrincipal(db, tipo);
+    //MENU
+    int opcion;
+    do {
+        printf("\n=== BIENVENIDO ===\n");
+        printf("1. Iniciar Sesión\n");
+        printf("2. Registrarse\n");
+        printf("0. Salir\n");
+        printf("Seleccione: ");
+        scanf("%d", &opcion);
 
+        if (opcion == 1) iniciarSesion(db);
+        else if (opcion == 2) registrarUsuario(db);
+
+    } while (opcion != 0);
     // Cerrar base de datos
     sqlite3_close(db);
 
