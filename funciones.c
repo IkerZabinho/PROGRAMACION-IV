@@ -179,6 +179,8 @@ void mostrarUsuarios(sqlite3 *db)
 }
 
 // DONAZIUAK
+
+//DINERO
 void donarDinero(sqlite3 *db, int id_usuario) 
 {
     float cantidad;
@@ -221,7 +223,7 @@ void donarDinero(sqlite3 *db, int id_usuario)
 
             if (sqlite3_exec(db, sqlDinero, 0, 0, &error) == SQLITE_OK) {
                 printf("\n[ÉXITO] Se han registrado %.2f€ correctamente.\n", cantidad);
-                printf("ID de Donación: %lld\n", id_padre);
+                printf("ID de Donante: %lld\n", id_padre);
             } else {
                 printf("Error en tabla Dinero: %s\n", error);
                 sqlite3_free(error);
@@ -238,6 +240,130 @@ void donarDinero(sqlite3 *db, int id_usuario)
         printf("Operación cancelada por el usuario.\n");
     }
 }
+
+// En funciones.c - añadir estas dos funciones
+
+//COMIDA
+void donarComida(sqlite3 *db, int id_usuario) 
+{
+    float kilos;
+    char tipo_comida[100];
+    char sql[300];
+    char *error = 0;
+    int respuesta;
+
+    printf("\n--- REALIZAR DONACIÓN DE COMIDA ---\n");
+
+    printf("Tipo de comida (ej: arroz, legumbres, conservas...): ");
+    while (getchar() != '\n'); 
+    fgets(tipo_comida, sizeof(tipo_comida), stdin);
+    tipo_comida[strcspn(tipo_comida, "\n")] = 0; 
+
+    printf("Cantidad en kilogramos: ");
+    if (scanf("%f", &kilos) != 1 || kilos <= 0) {
+        printf("Cantidad no válida.\n");
+        while (getchar() != '\n');
+        return;
+    }
+
+    printf("¿Confirmas donar %.2f kg de %s?\n0. No\n1. Sí\nSelección: ", kilos, tipo_comida);
+    scanf("%d", &respuesta);
+
+    if (respuesta == 1) {
+        // PASO A: Insertar en tabla padre 'Donaciones' (tipo 2 = comida)
+        sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo) VALUES (%d, 2);", id_usuario);
+
+        if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) 
+        {
+            long long id_padre = sqlite3_last_insert_rowid(db);
+
+            // PASO B: Insertar en tabla 'Comida'
+            char sqlComida[400];
+            sprintf(sqlComida, 
+                    "INSERT INTO Comida (tipo_comida, kilos, id_donacion) VALUES ('%s', %.2f, %lld);",
+                    tipo_comida, kilos, id_padre);
+
+            if (sqlite3_exec(db, sqlComida, 0, 0, &error) == SQLITE_OK) {
+                printf("\n[ÉXITO] Donación de %.2f kg de %s registrada correctamente.\n", kilos, tipo_comida);
+            } else {
+                printf("Error en tabla Comida: %s\n", error);
+                sqlite3_free(error);
+            }
+        } 
+        else 
+        {
+            printf("Error en tabla Donaciones: %s\n", error);
+            sqlite3_free(error);
+        }
+    } 
+    else 
+    {
+        printf("Operación cancelada.\n");
+    }
+}
+
+
+//ROPA
+void donarRopa(sqlite3 *db, int id_usuario) 
+{
+    float kilos;
+    char tipo_ropa[100];
+    char sql[300];
+    char *error = 0;
+    int respuesta;
+
+    printf("\n--- REALIZAR DONACIÓN DE ROPA ---\n");
+
+    printf("Tipo de ropa (ej: camisetas, abrigos, pantalones...): ");
+    while (getchar() != '\n');
+    fgets(tipo_ropa, sizeof(tipo_ropa), stdin);
+    tipo_ropa[strcspn(tipo_ropa, "\n")] = 0;
+
+    printf("Cantidad en kilogramos: ");
+    if (scanf("%f", &kilos) != 1 || kilos <= 0) {
+        printf("Cantidad no válida.\n");
+        while (getchar() != '\n');
+        return;
+    }
+
+    printf("¿Confirmas donar %.2f kg de %s?\n0. No\n1. Sí\nSelección: ", kilos, tipo_ropa);
+    scanf("%d", &respuesta);
+
+    if (respuesta == 1) {
+      //Sartu donaziuetan 3.tipua
+        sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo) VALUES (%d, 3);", id_usuario);
+
+        if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) 
+        {
+            long long id_padre = sqlite3_last_insert_rowid(db);
+
+            //Meter ropa 
+            char sqlRopa[400];
+            sprintf(sqlRopa, 
+                    "INSERT INTO Ropa (tipo_ropa, kilos, id_donacion) VALUES ('%s', %.2f, %lld);",
+                    tipo_ropa, kilos, id_padre);
+
+            if (sqlite3_exec(db, sqlRopa, 0, 0, &error) == SQLITE_OK) {
+                printf("\n[ÉXITO] Donación de %.2f kg de %s registrada correctamente.\n", kilos, tipo_ropa);
+            } else {
+                printf("Error en tabla Ropa: %s\n", error);
+                sqlite3_free(error);
+            }
+        } 
+        else 
+        {
+            printf("Error en tabla Donaciones: %s\n", error);
+            sqlite3_free(error);
+        }
+    } 
+    else 
+    {
+        printf("Operación cancelada.\n");
+    }
+}
+
+
+
 
 // EVENTUAK
 
@@ -483,7 +609,7 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
                 if(tipo == VOLUNTARIO) {
                     //función para consultar calendario de mis eventos
                 } else if(tipo == DONANTE) {
-                    //función azaltzeko los siguientes eventos de recogida de comida
+                    donarComida(db, id_usuario); 
                 } else if(tipo == BENEFICIARIO) {
                     //función consultar horarios, jakitteko noiz jun ber dun eta zer jasotzea
                 }
@@ -493,7 +619,7 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
                 if(tipo == VOLUNTARIO) {
                     //función historiala azaltzeko de los eventos acudidos hasta ahora
                 } else if(tipo == DONANTE) {
-                    //función azaltzeko los siguientes eventos de recogidad de ropa
+                    donarRopa(db, id_usuario); 
                 } 
                 break;
             

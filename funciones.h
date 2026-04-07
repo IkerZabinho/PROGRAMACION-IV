@@ -14,6 +14,9 @@ int callbackMostrar(void *data, int argc, char **argv, char **colName);
 void mostrarUsuarios(sqlite3 *db);
 
 void donarDinero(sqlite3 *db, int id_usuario);
+void donarComida(sqlite3 *db, int id_usuario);
+void donarRopa(sqlite3 *db, int id_usuario);
+
 void crearEvento(sqlite3 *db);
 
 void iniciarSesion(sqlite3 *db);
