@@ -28,6 +28,11 @@ int callbackMostrarEventos(void *data, int argc, char **argv, char **colName);
 int callbackCheckFecha(void *data, int argc, char **argv, char **colName);
 void apuntarseEvento(sqlite3 *db, int id_usuario);
 
+void evaluarBeneficiario(Beneficiario b);
+void mostrarAyudaComida(Beneficiario b);
+void mostrarAyudaRopa(Beneficiario b);
+float calcularAyudaDinero(Beneficiario b);
+
 
 
 #endif

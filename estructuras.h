@@ -45,8 +45,8 @@ typedef struct{
     int id_usuario;
     int num_adultos;
     int num_ninos;
-    double ingresos;
-    double gastos;
+    float ingresos;
+    float gastos;
 } Beneficiario;
 
 // FECHA
@@ -85,7 +85,7 @@ typedef enum{
     LEGUMBRES,
     CONSERVAS,
     LACTEOS,
-    ALIMENTOS_INFANTILES
+    ALIMENTOS_INFANTILES  //jarriko nuke arroz/pasta(carbohidratos), legumbres, leche, conservas (sin lo de infantiles es mas facil para luego calcular las ayudas)
 } TipoComida;
 typedef struct{
     int id_comida;

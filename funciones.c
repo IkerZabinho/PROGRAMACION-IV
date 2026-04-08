@@ -2,16 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 #include "funciones.h"
 #include "estructuras.h"
 #include "sqlite3.h"
+
 
 // Insertar beneficiarios
 
 int insertarDatosBeneficiario(sqlite3 *db, long long id, float ing, float gas, int adu, int nin)
 {
     char sql[400];
-    sprintf(sql, "INSERT INTO Beneficiarios (id_usuario, ingresos, gastos, num_adultos, num_nino) "
+    sprintf(sql, "INSERT INTO Beneficiario (id_usuario, ingresos, gastos, num_adultos, num_nino) "
                  "VALUES (%lld, %.2f, %.2f, %d, %d);",
             id, ing, gas, adu, nin);
     return (sqlite3_exec(db, sql, 0, 0, 0) == SQLITE_OK);
@@ -24,29 +26,139 @@ int insertarDatosVoluntario(sqlite3 *db, long long id, const char *rol)
     return (sqlite3_exec(db, sql, 0, 0, 0) == SQLITE_OK);
 }
 
+
+
+//funcion para condiciones de beneficiario (para registrar y cambiar)
+Beneficiario guardarCondicionesBeneficiario (){
+
+    Beneficiario b;
+    int correcto;
+
+    float sueldos;
+    float ayudas;
+    float alquiler;
+    float suministros;
+    float material_escolar;
+    float estudios;
+    float otros;
+
+    printf("\n--- DETALLES ECONÓMICOS DEL BENEFICIARIO ---\n");
+    
+    printf("\n*responde la pregunta y pulsa enter para pasar a la siguiente pregunta\n");
+
+
+    do {
+        printf("\n> INTEGRANTES DE LA FAMILIA\n");
+        printf("Número de adultos en casa: ");
+        scanf("%d", &b.num_adultos);
+        printf("Número de niños/as en casa: ");
+        scanf("%d", &b.num_ninos);
+        printf("  > ¿Deseas cambiar algún dato de los integrantes de la familia? (1: Sí / 0: No): ");
+        scanf("%d", &correcto);
+
+        //limpia buffer
+        while (getchar() != '\n');
+
+        if (correcto == 1) {
+        printf("[!] Volviendo a pedir los datos de integrantes...\n");
+    }
+
+    } while (correcto != 0);
+
+    do {
+    printf("\n> INGRESOS\n");
+    printf("Sueldo mensual total: ");
+    scanf("%f", &sueldos);
+    printf("Otras ayudas/pensiones: ");
+    scanf("%f", &ayudas);
+
+    printf("  > ¿Deseas cambiar algún dato de los ingresos? (1: Sí / 0: No): ");
+    scanf("%d", &correcto);
+
+    //limpia buffer
+    while (getchar() != '\n');
+
+    if (correcto == 1) {
+    printf("[!] Volviendo a pedir los datos de ingresos...\n");
+
+    }
+    } while (correcto != 0);
+
+
+    do {
+    printf("\n> GASTOS\n");
+    printf("Alquiler o hipoteca: ");
+    scanf("%f", &alquiler);
+    printf("Luz, agua y gas (normalmente): ");
+    scanf("%f", &suministros);
+    printf("Material escolar (0 si no hay): ");
+    scanf("%f", &material_escolar);
+    printf("Gastos en estudios (0 si no hay): ");
+    scanf("%f", &estudios);
+    printf("Otros gastos (0 si no hay): ");
+    scanf("%f", &otros);
+
+    printf("  > ¿Deseas cambiar algún dato de los gastos? (1: Sí / 0: No): ");
+    scanf("%d", &correcto);
+
+    //limpia buffer
+    while (getchar() != '\n');
+
+    if (correcto == 1) {
+    printf("[!] Volviendo a pedir los datos de gastos...\n");
+
+    } 
+    } while (correcto != 0);
+
+    float gastosTotal = alquiler + suministros + material_escolar + estudios + otros;
+    float ingresosTotal = sueldos + ayudas;
+
+    //guardamos datos en structura para luego calcular ayuda
+    b.ingresos = ingresosTotal;
+    b.gastos = gastosTotal;
+
+
+    //funcion para calcular la ayuda que necesitarán
+    
+    evaluarBeneficiario(b);
+
+    return b;
+};
+
+//función para actualizar los datos de beneficiario
+int actualizarDatosBeneficiario(sqlite3 *db, int id_usuario, Beneficiario b) {
+    char sql[400];
+    char *error = 0;
+
+    // Usamos UPDATE para modificar la fila que ya existe
+    sprintf(sql, 
+        "UPDATE Beneficiario SET ingresos = %.2f, gastos = %.2f, "
+        "num_adultos = %d, num_nino = %d WHERE id_usuario = %d;",
+        b.ingresos, b.gastos, b.num_adultos, b.num_ninos, id_usuario);
+
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("Error al actualizar base de datos: %s\n", error);
+        sqlite3_free(error);
+        return 0;
+    }
+    return 1;
+}
+
 // insertar usuarios
 int insertarUsuario(sqlite3 *db, Usuario u)
 {
-    char sql[500];
-    char *error = 0;
+char sql[500];
+char *error = 0;
 
-    // 1. RECOLECTAR DATOS ESPECÍFICOS PRIMERO (en memoria)
-    float ing = 0, gas = 0;
-    int adu = 0, nin = 0;            // Para beneficiario
-    char *rolVoluntario = "General"; // Para voluntario
+// 1. RECOLECTAR DATOS ESPECÍFICOS PRIMERO (en memoria)
 
-    if (u.tipoUsuario == BENEFICIARIO)
-    {
-        printf("Ingresos: ");
-        scanf("%f", &ing);
-        printf("Gastos: ");
-        scanf("%f", &gas);
-        printf("Adultos: ");
-        scanf("%d", &adu);
-        printf("Niños: ");
-        scanf("%d", &nin);
-    }
-    else if (u.tipoUsuario == VOLUNTARIO)
+char *rolVoluntario = "General"; // Para voluntario
+Beneficiario b = {0}; //por si acaso
+if (u.tipoUsuario == BENEFICIARIO)
+{
+     b = guardarCondicionesBeneficiario();
+
+    } else if (u.tipoUsuario == VOLUNTARIO)
     {
         int op;
         printf("1.Profesor 2.Entrenador 3.Cocinero 4.Repartidor: ");
@@ -82,7 +194,7 @@ int insertarUsuario(sqlite3 *db, Usuario u)
 
     if (u.tipoUsuario == BENEFICIARIO)
     {
-        exitoEspecifico = insertarDatosBeneficiario(db, id, ing, gas, adu, nin);
+        exitoEspecifico = insertarDatosBeneficiario(db, id, b.ingresos, b.gastos, b.num_adultos, b.num_ninos);
     }
     else if (u.tipoUsuario == VOLUNTARIO)
     {
@@ -109,6 +221,12 @@ int insertarUsuario(sqlite3 *db, Usuario u)
         return 0;
     }
 }
+
+
+//calcular ayuda de Beneficiario
+
+
+
 
 // Callback login
 int callbackLogin(void *data, int argc, char **argv, char **colName)
@@ -397,7 +515,7 @@ void crearEvento(sqlite3 *db)
 
     char sql[300];
     sprintf(sql,
-            "INSERT INTO Eventos (descripcion, tipo, lim_voluntarios) VALUES ('%s', %d, %d);",
+            "INSERT INTO Evento (descripcion, tipo, lim_voluntarios) VALUES ('%s', %d, %d);",
             descripcion, tipo, limite);
 
     char *error = 0;
@@ -538,7 +656,7 @@ void apuntarseEvento(sqlite3 *db, int id_usuario) {
     //1. Mostrar eventos de los próximos 3 meses
     printf("\nEventos disponibles (próximos 3 meses):\n");
 
-    char *sql_ver = "SELECT id_evento, descripcion, fecha_inicio FROM Eventos "
+    char *sql_ver = "SELECT id_evento, descripcion, fecha_inicio FROM Evento "
     "WHERE fecha_inicio BETWEEN date('now') AND date('now', '+3 months');";
     
     sqlite3_exec(db, sql_ver, callbackMostrarEventos, 0, &error);
@@ -552,9 +670,9 @@ void apuntarseEvento(sqlite3 *db, int id_usuario) {
     int ya_ocupado = 0;
     sprintf(sql, 
         "SELECT COUNT(*) FROM Participaciones P "
-        "JOIN Eventos E1 ON P.id_evento = E1.id_evento "
+        "JOIN Evento E1 ON P.id_evento = E1.id_evento "
         "WHERE P.id_usuario = %d AND E1.fecha_inicio = "
-        "(SELECT fecha_inicio FROM Eventos WHERE id_evento = %d);", 
+        "(SELECT fecha_inicio FROM Evento WHERE id_evento = %d);", 
         id_usuario, id_evento_elegido);
 
     sqlite3_exec(db, sql, callbackCheckFecha, &ya_ocupado, &error);
@@ -637,6 +755,7 @@ void listarDonaciones(sqlite3 *db, int id_usuario) {
 
     sqlite3_finalize(stmt);
 }
+
 void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
 {
 
@@ -659,7 +778,8 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
             printf("\n4. Consultar historial de mis donaciones");
         } 
         else if (tipo == BENEFICIARIO) { // tipo 2
-            printf("\n1. Registrar o cambiar condiciones"); //iuel registrar condiciones registratzeakun derrigorra bezela jarri??
+            printf("\n1. Cambiar condiciones"); //iuel registrar condiciones registratzeakun derrigorra bezela jarri??
+
             printf("\n2. Consultar horarios");
         }
         
@@ -669,13 +789,19 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
 
         switch(opcion) {
             case 1:
-                if(tipo == VOLUNTARIO) {
-                    apuntarseEvento(db, id_usuario);
-                } else if(tipo == DONANTE) {
-                    donarDinero(db, id_usuario);
-                } else if(tipo == BENEFICIARIO) {
-                    //falta registrar/cambiar usuario, funtzixo bat in ber da
+            if(tipo == VOLUNTARIO) {
+                apuntarseEvento(db, id_usuario);
+            } else if(tipo == DONANTE) {
+                donarDinero(db, id_usuario);
+            } else if(tipo == BENEFICIARIO) {
+                Beneficiario b_actualizada = guardarCondicionesBeneficiario();                                    // 2. Los mandamos a la base de datos para que el cambio sea real
+                if (actualizarDatosBeneficiario(db, id_usuario, b_actualizada)) {
+                    printf("\n---------------------------------------------------------");
+                    printf("\n[SISTEMA] Tus condiciones se han actualizado correctamente en tu perfil.\n");
                 }
+            } else if(tipo == VOLUNTARIO) {
+            apuntarseEvento(db, id_usuario);
+            }
                 break;
 
             case 2:
@@ -736,3 +862,99 @@ int callbackCheckFecha(void *data, int argc, char **argv, char **colName) {
 
 
 
+//FUNCIONES PARA BENEFICIARIO
+
+//Ayuda de dinero
+float calcularAyudaDinero(Beneficiario b) {
+    float renta = b.ingresos - b.gastos;
+    // Cubrimos el déficit mensual + un pequeño bono de emergencia
+    return fabsf(renta) + 50.0f; //fabsf(valor absoluto)
+}
+
+//Ayuda alimentación semanal
+void mostrarAyudaComida(Beneficiario b) {
+    float totalArrozPasta = (b.num_adultos * 1.0f) + (b.num_ninos * 0.75f);
+    float totalLegumbres   = (b.num_adultos + b.num_ninos) * 0.5f;
+    float totalLeche       = (b.num_adultos * 2.0f) + (b.num_ninos * 4.0f);
+    int totalConservas     = (b.num_adultos * 3) + (b.num_ninos * 2);
+
+    printf("\n[ALIMENTACIÓN SEMANAL - RECOGIDA MARTES 18:00]");   //la recogida cómo lo gestionamos??
+    printf("\n > Arroz/Pasta:        %.2f kg", totalArrozPasta);
+    printf("\n > Legumbres:          %.2f kg", totalLegumbres);
+    printf("\n > Leche:              %.0f litros", totalLeche);
+    printf("\n > Conservas:          %d latas", totalConservas);
+}
+
+//Ayuda ropa semestral
+void mostrarAyudaRopa(Beneficiario b) {
+    int camNinos = b.num_ninos * 3;
+    int panNinos = b.num_ninos * 2;
+    int sudNinos = b.num_ninos * 1;
+
+    int camAdultos = b.num_adultos * 2;
+    int panAdultos = b.num_adultos * 1;
+
+    printf("\n[VESTIMENTA SEMESTRAL - PRÓXIMA CAMPAÑA]");  //la fecha cómo la ponemos???
+    if (b.num_ninos > 0) {
+        printf("\n > NIÑOS/AS: %d camisetas, %d pantalones, %d sudaderas", 
+                camNinos, panNinos, sudNinos);
+    }
+    if (b.num_adultos > 0) {
+        printf("\n > ADULTOS: %d camisetas, %d pantalones", 
+                camAdultos, panAdultos);
+    }
+}
+
+//Evaluar la ayuda que necesita
+void evaluarBeneficiario(Beneficiario b) {
+    float renta = b.ingresos - b.gastos;
+    
+    // Cálculos de umbrales mensuales
+    float gastoComidaMensual = (b.num_adultos * 150.0f) + (b.num_ninos * 140.0f);
+    float gastoRopaMensual   = (b.num_adultos * 5.50f) + (b.num_ninos * 9.0f);
+    float umbralTotal        = gastoComidaMensual + gastoRopaMensual;
+
+    printf("\n===========================================");
+    printf("\n      RESULTADO DEL ANÁLISIS SOCIAL");
+    printf("\n===========================================");
+
+    // Lógica de Escenarios
+    if (renta > umbralTotal) {
+        // --- AUTOSUFICIENTE ---
+        printf("\nESTADO: Evaluación Finalizada -> Autosuficiente");
+        printf("\nTras analizar tu renta disponible, el sistema indica que puedes cubrir");
+        printf("\nlas necesidades básicas de alimentación y vestimenta por tu cuenta.");
+        printf("\nPriorizamos nuestros recursos para casos en situación de mayor urgencia.");
+        printf("\n-------------------------------------------");
+        printf("\nSi tu situación económica cambia, puedes solicitar una nueva evaluación.");
+    } 
+    else if (renta >= gastoComidaMensual && renta <= umbralTotal) {
+        // --- ESCENARIO A ---
+        printf("\nESTADO: Evaluación Finalizada -> Escenario A");
+        printf("\nTras analizar tu renta disponible, consideramos que cubres la alimentación");
+        printf("\nbásica, por lo tanto, recibirás apoyo específico en vestimenta.");
+        printf("\n-------------------------------------------");
+        mostrarAyudaRopa(b);
+    } 
+    else if (renta > 0 && renta < gastoComidaMensual) {
+        // --- ESCENARIO B ---
+        printf("\nESTADO: Evaluación Finalizada -> Escenario B");
+        printf("\nTras analizar tu renta disponible, el sistema indica que necesitas apoyo");
+        printf("\ntanto en alimentación semanal como en vestimenta semestral.");
+        printf("\n-------------------------------------------");
+        mostrarAyudaComida(b);
+        mostrarAyudaRopa(b);
+    } 
+    else {
+        // --- ESCENARIO C ---
+        printf("\nESTADO: Evaluación Finalizada -> Escenario C");
+        printf("\nTras analizar tu renta disponible, el sistema detecta una situación de");
+        printf("\nemergencia. Recibirás ayuda económica, alimentación y vestimenta.");
+        printf("\n-------------------------------------------");
+        float dinero = calcularAyudaDinero(b);
+        printf("\n > AYUDA ECONÓMICA: %.2f euros/mes", dinero);
+        mostrarAyudaComida(b);
+        mostrarAyudaRopa(b);
+    }
+    printf("\n===========================================\n");
+}
