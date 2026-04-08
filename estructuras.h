@@ -80,8 +80,26 @@ typedef struct {
     int id_usuario;
     int id_evento;
 } Participacion;
+typedef enum{
+    CARBOHIDRATOS=1,
+    LEGUMBRES,
+    CONSERVAS,
+    LACTEOS,
+    ALIMENTOS_INFANTILES
+} TipoComida;
+typedef struct{
+    int id_comida;
+    TipoComida tipo_comida;
+    float kilos;
+    int id_donacion;
+}Comida;
 
-
+typedef struct{
+    int id_ropa;
+    float kilos;
+    int id_donacion;
+    
+}Ropa;
 /*CREATE TABLE Participaciones (
     id_usuario INTEGER,
     id_evento INTEGER,

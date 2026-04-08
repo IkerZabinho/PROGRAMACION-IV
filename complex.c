@@ -1,3 +1,0 @@
-crearTablas
-
-//prueba tituaaa
