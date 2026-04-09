@@ -5,7 +5,8 @@
 typedef enum {
     VOLUNTARIO,
     DONANTE,
-    BENEFICIARIO
+    BENEFICIARIO,
+    ADMINISTRADOR
 } TipoUsuario;
 
 // USUARIO
@@ -17,6 +18,8 @@ typedef struct{
     char* contrasena;
     TipoUsuario tipoUsuario;
 } Usuario;
+
+
 
 // TIPO DONACION
 typedef enum {

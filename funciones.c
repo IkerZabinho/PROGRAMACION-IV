@@ -570,15 +570,19 @@ void iniciarSesion(sqlite3 *db)
     printf("Contraseña: ");
     scanf("%s", pass);
 
-   if (comprobarLogin(db, user, pass, &tipo_detectado, &id_detectado)) 
-   {
-        printf("Bienvenido!\n");
-        menuPrincipal(db, tipo_detectado, id_detectado);
+   if (comprobarLogin(db, user, pass, &tipo_detectado, &id_detectado)) {
+    printf("DEBUG tipo=%d, ADMINISTRADOR=%d\n", tipo_detectado, (int)ADMINISTRADOR);
+    printf("\n");
+    printf("Bienvenido!\n");
+
+    if (tipo_detectado == (int)ADMINISTRADOR) {
+    menuAdministrador(db);
+    }else {
+    menuPrincipal(db, tipo_detectado, id_detectado);
     }
-    else
-    {
-        printf("Error login\n");
-    }
+} else {
+    printf("Error login\n");
+}
 }
 
 void registrarUsuario(sqlite3 *db)
@@ -957,4 +961,126 @@ void evaluarBeneficiario(Beneficiario b) {
         mostrarAyudaRopa(b);
     }
     printf("\n===========================================\n");
+}
+
+
+void listarUsuarios(sqlite3 *db) {
+    
+}
+
+//Usuariuei baja eman
+void darBajaUsuario(sqlite3 *db) {
+    int id_eliminar;
+    char sql[200];
+    char *error = 0;
+
+    printf("\n--- DAR DE BAJA USUARIO ---\n");
+    listarUsuarios(db);
+
+    printf("Introduce ID del usuario para eliminar (0 para cancelar): ");
+    scanf("%d", &id_eliminar);
+    if (id_eliminar <= 0) {
+        printf("Operación cancelada.\n");
+        return;
+    }
+
+    int confirmar;
+    printf("¿Estás seguro de eliminar usuario %d?\n0. No\n1. Sí\nSelección: ", id_eliminar);
+    scanf("%d", &confirmar);
+    if (confirmar != 1) {
+        printf("Operación cancelada.\n");
+        return;
+    }
+
+    
+    sprintf(sql, "DELETE FROM Usuarios WHERE id_usuario = %d;", id_eliminar);
+
+
+    
+    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
+        printf("\n[ÉXITO] Usuario %d eliminado correctamente.\n", id_eliminar);
+    } else {
+        printf("Error al eliminar usuario: %s\n", error);
+        sqlite3_free(error);
+    }
+}
+
+// Borrar un evento
+void borrarEvento(sqlite3 *db) {
+    int id_evento;
+    char sql[200];
+    char *error = 0;
+
+    printf("\n--- BORRAR EVENTO ---\n");
+
+    
+    printf("\nEventos existentes:\n");
+    char *sql_ver = "SELECT id_evento, descripcion, fecha_inicio, tipo FROM Evento;";
+    sqlite3_exec(db, sql_ver, callbackMostrarEventos, 0, &error);
+    printf("\n");
+
+    printf("Introduce el ID del evento a borrar (0 para cancelar): ");
+    scanf("%d", &id_evento);
+    if (id_evento <= 0) {
+        printf("Operación cancelada.\n");
+        return;
+    }
+
+    int confirmar;
+    printf("¿Estás seguro de borrar el evento %d?\n0. No\n1. Sí\nSelección: ", id_evento);
+    scanf("%d", &confirmar);
+    if (confirmar != 1) {
+        printf("Operación cancelada.\n");
+        return;
+    }
+
+    
+    sprintf(sql, "DELETE FROM Participaciones WHERE id_evento = %d;", id_evento);
+    sqlite3_exec(db, sql, 0, 0, &error);
+
+   
+    sprintf(sql, "DELETE FROM Evento WHERE id_evento = %d;", id_evento);
+    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
+        printf("\n[ÉXITO] Evento %d borrado correctamente.\n", id_evento);
+    } else {
+        printf("Error al borrar evento: %s\n", error);
+        sqlite3_free(error);
+    }
+}
+
+// Admiñan menua
+void menuAdministrador(sqlite3 *db) {
+    int opcion;
+
+    do {
+        printf("\n======= MENU ADMINISTRADOR =======");
+        printf("\n1. Crear evento");
+        printf("\n2. Borrar evento");
+        printf("\n3. Ver usuarios");
+        printf("\n4. Dar de baja a un usuario");
+        printf("\n0. Cerrar sesión");
+        printf("\nSeleccione una opción: ");
+        scanf("%d", &opcion);
+
+        switch(opcion) {
+            case 1:
+                crearEvento(db);
+                break;
+            case 2:
+                borrarEvento(db);
+                break;
+            case 3:
+                listarUsuarios(db);
+                break;
+            case 4:
+                darBajaUsuario(db);
+                break;
+            case 0:
+                printf("\nCerrando sesión...\n");
+                break;
+            default:
+                printf("\nOpción no válida.\n");
+                break;
+        }
+    } while (opcion != 0);
 }

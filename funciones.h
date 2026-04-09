@@ -33,6 +33,13 @@ void mostrarAyudaComida(Beneficiario b);
 void mostrarAyudaRopa(Beneficiario b);
 float calcularAyudaDinero(Beneficiario b);
 
+//Admiñan funtziuak
+
+void menuAdministrador(sqlite3 *db);
+void borrarEvento(sqlite3 *db);
+void darBajaUsuario(sqlite3 *db);
+void listarUsuarios(sqlite3 *db);
+
 
 
 #endif
