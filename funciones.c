@@ -965,8 +965,24 @@ void evaluarBeneficiario(Beneficiario b) {
 
 
 void listarUsuarios(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    char *sql = "SELECT id_usuario, nombre FROM Usuarios;";
     
+    printf("\n--- LISTA ACTUAL DE USUARIOS ---\n");
+    printf("%-10s %-20s\n", "ID", "NOMBRE");
+    printf("-------------------------------\n");
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            int id = sqlite3_column_int(stmt, 0);
+            const unsigned char *nombre = sqlite3_column_text(stmt, 1);
+            printf("%-10d %-20s\n", id, nombre);
+        }
+    }
+    sqlite3_finalize(stmt);
+    printf("-------------------------------\n");
 }
+
 
 //Usuariuei baja eman
 void darBajaUsuario(sqlite3 *db) {
