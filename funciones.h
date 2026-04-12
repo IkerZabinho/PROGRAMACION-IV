@@ -36,6 +36,9 @@ float calcularAyudaDinero(Beneficiario b);
 //Admiñan funtziuak
 
 void menuAdministrador(sqlite3 *db);
+int es_bisiesto(int a);
+int comparar_fechas(Fecha f1, Fecha f2);
+int leer_y_validar_fecha(const char *mensaje, Fecha *f);
 void borrarEvento(sqlite3 *db);
 void darBajaUsuario(sqlite3 *db);
 void listarUsuarios(sqlite3 *db);
