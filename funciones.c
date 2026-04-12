@@ -632,7 +632,10 @@ void registrarUsuario(sqlite3 *db)
     }
 }
 
-//Función apuntarse a un evento
+
+
+//FUNCIONES PARA VOLUNTARIO
+
 void apuntarseEvento(sqlite3 *db, int id_usuario) {
     int id_evento_elegido;
     char sql[500];
@@ -642,8 +645,8 @@ void apuntarseEvento(sqlite3 *db, int id_usuario) {
     //1. Mostrar eventos de los próximos 3 meses
     printf("\nEventos disponibles (próximos 3 meses):\n");
 
-    char *sql_ver = "SELECT id_evento, descripcion, fecha_inicio FROM Evento "
-    "WHERE fecha_inicio BETWEEN date('now') AND date('now', '+3 months');";
+    char *sql_ver = "SELECT id_evento, descripcion, fecha_ini FROM Evento "
+    "WHERE date(fecha_ini) BETWEEN date('now') AND date('now', '+3 months');";
     
     sqlite3_exec(db, sql_ver, callbackMostrarEventos, 0, &error);
     
@@ -657,8 +660,8 @@ void apuntarseEvento(sqlite3 *db, int id_usuario) {
     sprintf(sql, 
         "SELECT COUNT(*) FROM Participaciones P "
         "JOIN Evento E1 ON P.id_evento = E1.id_evento "
-        "WHERE P.id_usuario = %d AND E1.fecha_inicio = "
-        "(SELECT fecha_inicio FROM Evento WHERE id_evento = %d);", 
+        "WHERE P.id_usuario = %d AND date(E1.fecha_ini) = "
+        "(SELECT date(fecha_ini) FROM Evento WHERE id_evento = %d);", 
         id_usuario, id_evento_elegido);
 
     sqlite3_exec(db, sql, callbackCheckFecha, &ya_ocupado, &error);
@@ -681,6 +684,60 @@ void apuntarseEvento(sqlite3 *db, int id_usuario) {
 
 }
 
+//Función callbackMostrarEventos
+int callbackMostrarEventos(void *data, int argc, char **argv, char **colName)
+{
+   printf("ID: %-4s | Tipo: %-10s | Fecha: %-16s | Desc: %s\n", 
+           argv[0] ? argv[0] : "NULL", //ID
+           argv[3] ? argv[3] : "NULL", //TIPO
+           argv[2] ? argv[2] : "NULL", //Fecha inicio
+           argv[1] ? argv[1] : "NULL"); //Descripcion
+    return 0;
+} //los signos de interrogacion son como escribir esto
+/*if (argv[0] != NULL) {
+    printf("%s", argv[0]);
+} else {
+    printf("?");
+}
+*/
+
+//Función para que verifique fecha, el voluntario no podrá apuntarse a 2 eventos del mismo día
+int callbackCheckFecha(void *data, int argc, char **argv, char **colName) {
+    int *existe = (int *)data;
+    if (atoi(argv[0]) > 0) {
+        *existe = 1;
+    }; // Si el COUNT es > 0, hay colisión
+    return 0;
+}
+
+//función para consultar eventos a los que está apuntado
+void consultarMisEventos(sqlite3 *db, int id_usuario) {
+    char sql[600];
+    char *error = 0;
+
+    printf("\n--- CALENDARIO DE MIS EVENTOS ---\n");
+    printf("%-5s | %-25s | %-20s\n", "ID", "DESCRIPCIÓN", "FECHA INICIO");
+    printf("------------------------------------------------------------\n");
+
+    // Usamos un JOIN para cruzar la tabla Participaciones con Evento
+    sprintf(sql, 
+        "SELECT E.id_evento, E.descripcion, E.fecha_ini "
+        "FROM Evento E "
+        "JOIN Participaciones P ON E.id_evento = P.id_evento "
+        "WHERE P.id_usuario = %d "
+        "ORDER BY E.fecha_ini ASC;", id_usuario);
+
+    // Reutilizamos el callback que ya tenemos para mostrar eventos
+    if (sqlite3_exec(db, sql, callbackMostrarEventos, 0, &error) != SQLITE_OK) {
+        printf("Error al consultar tus eventos: %s\n", error);
+        sqlite3_free(error);
+    }
+    
+    printf("------------------------------------------------------------\n");
+}
+
+
+//Función apuntarse a un evento
 void listarDonaciones(sqlite3 *db, int id_usuario) {
     sqlite3_stmt *stmt;
     // 0:tipo, 1:r.kilos, 2:c.tipo_comida, 3:c.kilos, 4:din.cantidad
@@ -785,14 +842,12 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
                     printf("\n---------------------------------------------------------");
                     printf("\n[SISTEMA] Tus condiciones se han actualizado correctamente en tu perfil.\n");
                 }
-            } else if(tipo == VOLUNTARIO) {
-            apuntarseEvento(db, id_usuario);
-            }
+            } 
                 break;
 
             case 2:
                 if(tipo == VOLUNTARIO) {
-                    //función para consultar calendario de mis eventos
+                    consultarMisEventos(db, id_usuario);
                 } else if(tipo == DONANTE) {
                     donarComida(db, id_usuario); 
                 } else if(tipo == BENEFICIARIO) {
@@ -818,34 +873,6 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
 }
 
 
-
-//FUNCIONES PARA VOLUNTARIO
-
-//Función callbackMostrarEventos
-int callbackMostrarEventos(void *data, int argc, char **argv, char **colName)
-{
-   printf("ID: %-4s | Tipo: %-10s | Fecha: %-16s | Desc: %s\n", 
-           argv[0] ? argv[0] : "NULL", //ID
-           argv[3] ? argv[3] : "NULL", //TIPO
-           argv[2] ? argv[2] : "NULL", //Fecha inicio
-           argv[1] ? argv[1] : "NULL"); //Descripcion
-    return 0;
-} //los signos de interrogacion son como escribir esto
-/*if (argv[0] != NULL) {
-    printf("%s", argv[0]);
-} else {
-    printf("?");
-}
-*/
-
-//Función para que verifique fecha, el voluntario no podrá apuntarse a 2 eventos del mismo día
-int callbackCheckFecha(void *data, int argc, char **argv, char **colName) {
-    int *existe = (int *)data;
-    if (atoi(argv[0]) > 0) {
-        *existe = 1;
-    }; // Si el COUNT es > 0, hay colisión
-    return 0;
-}
 
 
 
