@@ -37,10 +37,27 @@ int main() {
         printf("2. Registrarse\n");
         printf("0. Salir\n");
         printf("Seleccione: ");
-        scanf("%d", &opcion);
+        if (scanf("%d", &opcion) != 1) {
+            printf("[!] Error: Introduce un número válido.\n");
+            while (getchar() != '\n'); // Limpiar el búfer para evitar bucle infinito
+            opcion = -1; // Forzamos que continúe el bucle
+            continue;
+        }
 
-        if (opcion == 1) iniciarSesion(db);
-        else if (opcion == 2) registrarUsuario(db);
+      switch (opcion) {
+            case 1:
+                iniciarSesion(db);
+                break;
+            case 2:
+                registrarUsuario(db);
+                break;
+            case 0:
+                printf("Saliendo del programa...\n");
+                break;
+            default:
+                printf("[!] Error: '%d' no es una opción válida.\n", opcion);
+                break;
+        }
 
     } while (opcion != 0);
     // Cerrar base de datos

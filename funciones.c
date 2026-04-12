@@ -6,7 +6,7 @@
 #include "funciones.h"
 #include "estructuras.h"
 #include "sqlite3.h"
-
+#include <time.h>
 
 // Insertar beneficiarios
 
@@ -34,13 +34,13 @@ Beneficiario guardarCondicionesBeneficiario (){
     Beneficiario b;
     int correcto;
 
-    float sueldos;
-    float ayudas;
-    float alquiler;
-    float suministros;
-    float material_escolar;
-    float estudios;
-    float otros;
+    float sueldos=0;
+    float ayudas=0;
+    float alquiler=0;
+    float suministros=0;
+    float material_escolar=0;
+    float estudios=0;
+    float otros=0;
 
     printf("\n--- DETALLES ECONÓMICOS DEL BENEFICIARIO ---\n");
     
@@ -51,10 +51,13 @@ Beneficiario guardarCondicionesBeneficiario (){
         printf("\n> INTEGRANTES DE LA FAMILIA\n");
         printf("Número de adultos en casa: ");
         scanf("%d", &b.num_adultos);
+        while (getchar() != '\n');
         printf("Número de niños/as en casa: ");
         scanf("%d", &b.num_ninos);
+        while (getchar() != '\n');
         printf("  > ¿Deseas cambiar algún dato de los integrantes de la familia? (1: Sí / 0: No): ");
         scanf("%d", &correcto);
+        
 
         //limpia buffer
         while (getchar() != '\n');
@@ -69,11 +72,14 @@ Beneficiario guardarCondicionesBeneficiario (){
     printf("\n> INGRESOS\n");
     printf("Sueldo mensual total: ");
     scanf("%f", &sueldos);
+    while (getchar() != '\n');
     printf("Otras ayudas/pensiones: ");
     scanf("%f", &ayudas);
+    while (getchar() != '\n');
 
     printf("  > ¿Deseas cambiar algún dato de los ingresos? (1: Sí / 0: No): ");
     scanf("%d", &correcto);
+    
 
     //limpia buffer
     while (getchar() != '\n');
@@ -89,17 +95,23 @@ Beneficiario guardarCondicionesBeneficiario (){
     printf("\n> GASTOS\n");
     printf("Alquiler o hipoteca: ");
     scanf("%f", &alquiler);
+    while (getchar() != '\n');
     printf("Luz, agua y gas (normalmente): ");
     scanf("%f", &suministros);
+    while (getchar() != '\n');
     printf("Material escolar (0 si no hay): ");
     scanf("%f", &material_escolar);
+    while (getchar() != '\n');
     printf("Gastos en estudios (0 si no hay): ");
     scanf("%f", &estudios);
+    while (getchar() != '\n');
     printf("Otros gastos (0 si no hay): ");
     scanf("%f", &otros);
+    while (getchar() != '\n');
 
     printf("  > ¿Deseas cambiar algún dato de los gastos? (1: Sí / 0: No): ");
     scanf("%d", &correcto);
+    
 
     //limpia buffer
     while (getchar() != '\n');
@@ -161,7 +173,7 @@ if (u.tipoUsuario == BENEFICIARIO)
     } else if (u.tipoUsuario == VOLUNTARIO)
     {
         int op;
-        printf("1.Profesor 2.Entrenador 3.Cocinero 4.Repartidor: ");
+        printf("1.Profesor\n 2.Entrenador\n 3.Cocinero\n 4.Repartidor\n Seleccione:\n ");
         scanf("%d", &op);
         if (op == 1)
             rolVoluntario = "profesor";
@@ -498,37 +510,7 @@ void donarRopa(sqlite3 *db, int id_usuario)
 
 // EVENTUAK
 
-void crearEvento(sqlite3 *db)
-{
-    char descripcion[100];
-    int tipo, limite;
 
-    printf("\n--- Crear Evento ---\n");
-    printf("Descripción: ");
-    scanf(" %[^\n]", descripcion); // Para leer con espacios
-
-    printf("Tipo de evento (0 = Ropa, 1 = Comida): ");
-    scanf("%d", &tipo);
-
-    printf("Límite de voluntarios: ");
-    scanf("%d", &limite);
-
-    char sql[300];
-    sprintf(sql,
-            "INSERT INTO Evento (descripcion, tipo, lim_voluntarios) VALUES ('%s', %d, %d);",
-            descripcion, tipo, limite);
-
-    char *error = 0;
-    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK)
-    {
-        printf("Error al crear evento: %s\n", error);   //berrize menure bueltatzie nahi deu??
-        sqlite3_free(error);
-    }
-    else
-    {
-        printf("Evento registrado correctamente\n");
-    }
-}
 
 // ROLAN ARABERA MENUA
 
@@ -650,7 +632,10 @@ void registrarUsuario(sqlite3 *db)
     }
 }
 
-//Función apuntarse a un evento
+
+
+//FUNCIONES PARA VOLUNTARIO
+
 void apuntarseEvento(sqlite3 *db, int id_usuario) {
     int id_evento_elegido;
     char sql[500];
@@ -660,8 +645,8 @@ void apuntarseEvento(sqlite3 *db, int id_usuario) {
     //1. Mostrar eventos de los próximos 3 meses
     printf("\nEventos disponibles (próximos 3 meses):\n");
 
-    char *sql_ver = "SELECT id_evento, descripcion, fecha_inicio FROM Evento "
-    "WHERE fecha_inicio BETWEEN date('now') AND date('now', '+3 months');";
+    char *sql_ver = "SELECT id_evento, descripcion, fecha_ini, tipo FROM Evento "
+    "WHERE date(fecha_ini) BETWEEN date('now') AND date('now', '+3 months');";
     
     sqlite3_exec(db, sql_ver, callbackMostrarEventos, 0, &error);
     
@@ -675,8 +660,8 @@ void apuntarseEvento(sqlite3 *db, int id_usuario) {
     sprintf(sql, 
         "SELECT COUNT(*) FROM Participaciones P "
         "JOIN Evento E1 ON P.id_evento = E1.id_evento "
-        "WHERE P.id_usuario = %d AND E1.fecha_inicio = "
-        "(SELECT fecha_inicio FROM Evento WHERE id_evento = %d);", 
+        "WHERE P.id_usuario = %d AND date(E1.fecha_ini) = "
+        "(SELECT date(fecha_ini) FROM Evento WHERE id_evento = %d);", 
         id_usuario, id_evento_elegido);
 
     sqlite3_exec(db, sql, callbackCheckFecha, &ya_ocupado, &error);
@@ -699,6 +684,67 @@ void apuntarseEvento(sqlite3 *db, int id_usuario) {
 
 }
 
+//Función callbackMostrarEventos
+int callbackMostrarEventos(void *data, int argc, char **argv, char **colName)
+{
+    char *tipoTexto = "Desconocido";
+    if (argv[3]) {
+        if (strcmp(argv[3], "0") == 0) {
+            tipoTexto = "Ropa";
+        } else if (strcmp(argv[3], "1") == 0) {
+            tipoTexto = "Comida";
+        }
+   printf("ID: %-4s | Tipo: %-10s | Fecha: %-16s | Desc: %s\n", 
+           argv[0] ? argv[0] : "NULL", //ID
+           tipoTexto, //TIPO
+           argv[2] ? argv[2] : "NULL", //Fecha inicio
+           argv[1] ? argv[1] : "NULL"); //Descripcion
+    return 0;
+} }//los signos de interrogacion son como escribir esto
+/*if (argv[0] != NULL) {
+    printf("%s", argv[0]);
+} else {
+    printf("?");
+}
+*/
+
+//Función para que verifique fecha, el voluntario no podrá apuntarse a 2 eventos del mismo día
+int callbackCheckFecha(void *data, int argc, char **argv, char **colName) {
+    int *existe = (int *)data;
+    if (atoi(argv[0]) > 0) {
+        *existe = 1;
+    }; // Si el COUNT es > 0, hay colisión
+    return 0;
+}
+
+//función para consultar eventos a los que está apuntado
+void consultarMisEventos(sqlite3 *db, int id_usuario) {
+    char sql[600];
+    char *error = 0;
+
+    printf("\n--- CALENDARIO DE MIS EVENTOS ---\n");
+    printf("%-5s | %-25s | %-20s\n", "ID", "DESCRIPCIÓN", "FECHA INICIO");
+    printf("------------------------------------------------------------\n");
+
+    // Usamos un JOIN para cruzar la tabla Participaciones con Evento
+    sprintf(sql, 
+        "SELECT E.id_evento, E.descripcion, E.fecha_ini "
+        "FROM Evento E "
+        "JOIN Participaciones P ON E.id_evento = P.id_evento "
+        "WHERE P.id_usuario = %d "
+        "ORDER BY E.fecha_ini ASC;", id_usuario);
+
+    // Reutilizamos el callback que ya tenemos para mostrar eventos
+    if (sqlite3_exec(db, sql, callbackMostrarEventos, 0, &error) != SQLITE_OK) {
+        printf("Error al consultar tus eventos: %s\n", error);
+        sqlite3_free(error);
+    }
+    
+    printf("------------------------------------------------------------\n");
+}
+
+
+//Función apuntarse a un evento
 void listarDonaciones(sqlite3 *db, int id_usuario) {
     sqlite3_stmt *stmt;
     // 0:tipo, 1:r.kilos, 2:c.tipo_comida, 3:c.kilos, 4:din.cantidad
@@ -803,14 +849,12 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
                     printf("\n---------------------------------------------------------");
                     printf("\n[SISTEMA] Tus condiciones se han actualizado correctamente en tu perfil.\n");
                 }
-            } else if(tipo == VOLUNTARIO) {
-            apuntarseEvento(db, id_usuario);
-            }
+            } 
                 break;
 
             case 2:
                 if(tipo == VOLUNTARIO) {
-                    //función para consultar calendario de mis eventos
+                    consultarMisEventos(db, id_usuario);
                 } else if(tipo == DONANTE) {
                     donarComida(db, id_usuario); 
                 } else if(tipo == BENEFICIARIO) {
@@ -836,33 +880,6 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
 }
 
 
-
-//FUNCIONES PARA VOLUNTARIO
-
-//Función callbackMostrarEventos
-int callbackMostrarEventos(void *data, int argc, char **argv, char **colName)
-{
-    printf("\nID: %s | %s | Fecha: %s", 
-           argv[0] ? argv[0] : "?", // id_evento
-           argv[1] ? argv[1] : "?", // descripcion
-           argv[2] ? argv[2] : "?"); // fecha_inicio
-    return 0;
-} //los signos de interrogacion son como escribir esto
-/*if (argv[0] != NULL) {
-    printf("%s", argv[0]);
-} else {
-    printf("?");
-}
-*/
-
-//Función para que verifique fecha, el voluntario no podrá apuntarse a 2 eventos del mismo día
-int callbackCheckFecha(void *data, int argc, char **argv, char **colName) {
-    int *existe = (int *)data;
-    if (atoi(argv[0]) > 0) {
-        *existe = 1;
-    }; // Si el COUNT es > 0, hay colisión
-    return 0;
-}
 
 
 
@@ -963,9 +980,146 @@ void evaluarBeneficiario(Beneficiario b) {
     printf("\n===========================================\n");
 }
 
-
+//ADMINISTRADOR
 void listarUsuarios(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    char *sql = "SELECT id_usuario, nombre FROM Usuarios;";
     
+    printf("\n--- LISTA ACTUAL DE USUARIOS ---\n");
+    printf("%-10s %-20s\n", "ID", "NOMBRE");
+    printf("-------------------------------\n");
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            int id = sqlite3_column_int(stmt, 0);
+            const unsigned char *nombre = sqlite3_column_text(stmt, 1);
+            printf("%-10d %-20s\n", id, nombre);
+        }
+    }
+    sqlite3_finalize(stmt);
+    printf("-------------------------------\n");
+}
+int es_bisiesto(int a) {
+    if (a % 400 == 0) return 1;
+    if (a % 100 == 0) return 0;
+    if (a % 4 == 0) return 1;
+    return 0;
+}
+
+int leer_y_validar_fecha(const char *mensaje, Fecha *f) {
+    printf("%s", mensaje);
+    if (scanf("%d/%d/%d %d:%d", &f->dia, &f->mes, &f->anyo, &f->hora, &f->minutos) != 5) {
+        while (getchar() != '\n'); 
+        return 0; 
+    }
+    while (getchar() != '\n'); 
+    int dias_max;
+    if (f->mes < 1 || f->mes > 12 || f->hora < 0 || f->hora > 23 || f->minutos < 0 || f->minutos > 59) return 0;
+    
+    if (f->mes == 2) {
+    if (es_bisiesto(f->anyo)) {
+        dias_max = 29;
+    } else {
+        dias_max = 28;
+    }}
+
+    else if (f->mes == 4 || f->mes == 6 || f->mes == 9 || f->mes == 11) dias_max = 30;
+    else dias_max = 31;
+
+    if (f->dia < 1 || f->dia > dias_max) return 0;
+    struct tm temp = {0};
+    temp.tm_mday = f->dia;
+    temp.tm_mon = f->mes - 1;      // Los meses en C van de 0 a 11
+    temp.tm_year = f->anyo - 1900; // El año cuenta desde 1900
+    temp.tm_hour = f->hora;
+    temp.tm_min = f->minutos;
+    temp.tm_sec = 0;
+    temp.tm_isdst = -1;            // Para que el sistema ajuste horario de verano solo
+
+    time_t tiempo_usuario = mktime(&temp); // Convertimos la fecha del usuario a segundos
+    time_t tiempo_ahora;      // Creamos la "caja" para guardar el tiempo
+    tiempo_ahora = time(NULL);
+    if (tiempo_usuario <= tiempo_ahora) {
+        printf("Error: La fecha debe ser posterior a la actual.\n");
+        return 0; // Fecha ya pasada
+    }
+
+    return 1; // Fecha valida
+}
+
+int comparar_fechas(Fecha f1, Fecha f2) {
+    if (f1.anyo < f2.anyo) return 1;
+    if (f1.anyo > f2.anyo) return 0;
+
+    if (f1.mes < f2.mes) return 1;
+    if (f1.mes > f2.mes) return 0;
+
+    if (f1.dia < f2.dia) return 1;
+    if (f1.dia > f2.dia) return 0;
+
+    if (f1.hora < f2.hora) return 1;
+    if (f1.hora > f2.hora) return 0;
+
+    if (f1.minutos < f2.minutos) return 1;
+    
+    return 0;
+}
+
+void crearEvento(sqlite3 *db)
+{
+    char descripcion[100];
+    int tipo, limite;
+    Fecha inicio, final;
+
+    printf("\n--- Crear Evento ---\n");
+    printf("Descripción: ");
+    scanf(" %[^\n]", descripcion); // Para leer con espacios
+
+    printf("Tipo de evento (0 = Ropa, 1 = Comida): ");
+    scanf("%d", &tipo);
+
+    printf("Límite de voluntarios: ");
+    scanf("%d", &limite);
+   do {
+        printf("Fecha inicio (DD/MM/AAAA HH:MM): ");
+        if (leer_y_validar_fecha("", &inicio)) {
+            break; 
+        }
+        printf(" Error: La fecha de inicio debe ser valida y futura.\n");
+    } while (1);
+
+    do {
+        printf("Fecha final (DD/MM/AAAA HH:MM): ");
+        if (leer_y_validar_fecha("", &final)) {
+            //Validar que 'final' sea después de 'inicio'
+            if (comparar_fechas(inicio, final) == 1) {
+                break; 
+            }
+            printf(" Error: La fecha final debe ser posterior a la de inicio.\n");
+        } else {
+            printf(" Error: Formato incorrecto o fecha pasada.\n");
+        }
+    } while (1);
+    
+    char sql[300];
+    sprintf(sql,
+    "INSERT INTO Evento (tipo, descripcion, fecha_ini, fecha_fin, lim_voluntarios) "
+    "VALUES (%d, '%s', '%04d-%02d-%02d %02d:%02d', '%04d-%02d-%02d %02d:%02d', %d);",
+    tipo, 
+    descripcion, 
+    inicio.anyo, inicio.mes, inicio.dia, inicio.hora, inicio.minutos, // Fecha Inicio
+    final.anyo, final.mes, final.dia, final.hora, final.minutos,    // Fecha Fin
+    limite);
+    char *error = 0;
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK)
+    {
+        printf("Error al crear evento: %s\n", error);   //berrize menure bueltatzie nahi deu??
+        sqlite3_free(error);
+    }
+    else
+    {
+        printf("Evento registrado correctamente\n");
+    }
 }
 
 //Usuariuei baja eman
@@ -1015,7 +1169,7 @@ void borrarEvento(sqlite3 *db) {
 
     
     printf("\nEventos existentes:\n");
-    char *sql_ver = "SELECT id_evento, descripcion, fecha_inicio, tipo FROM Evento;";
+    char *sql_ver = "SELECT id_evento, descripcion, fecha_ini, tipo FROM Evento;";
     sqlite3_exec(db, sql_ver, callbackMostrarEventos, 0, &error);
     printf("\n");
 
