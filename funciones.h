@@ -4,44 +4,56 @@
 #include "sqlite3.h"
 
 
+
+
 int insertarDatosBeneficiario(sqlite3 *db, long long id, float ing, float gas, int adu, int nin);
 int insertarDatosVoluntario(sqlite3 *db, long long id, const char *rol);
 int insertarUsuario(sqlite3 *db, Usuario u);
+
 
 int callbackLogin(void *data, int argc, char **argv, char **colName);
 int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo, int *id_res);
 int callbackMostrar(void *data, int argc, char **argv, char **colName);
 void mostrarUsuarios(sqlite3 *db);
 
+
 void donarDinero(sqlite3 *db, int id_usuario);
 void donarComida(sqlite3 *db, int id_usuario);
 void donarRopa(sqlite3 *db, int id_usuario);
 
+
 void crearEvento(sqlite3 *db);
+
 
 void iniciarSesion(sqlite3 *db);
 void registrarUsuario(sqlite3 *db);
 
+
 void menuPrincipal(sqlite3 *db, int tipo, int id_usuario);
 
+
+int callbackCheckCupo(void *data, int argc, char **argv, char **colName);
 int callbackMostrarEventos(void *data, int argc, char **argv, char **colName);
 int callbackCheckFecha(void *data, int argc, char **argv, char **colName);
 void apuntarseEvento(sqlite3 *db, int id_usuario);
+
 
 void evaluarBeneficiario(Beneficiario b);
 void mostrarAyudaComida(Beneficiario b);
 void mostrarAyudaRopa(Beneficiario b);
 float calcularAyudaDinero(Beneficiario b);
 
+
 //Admiñan funtziuak
 
+
 void menuAdministrador(sqlite3 *db);
-int es_bisiesto(int a);
-int comparar_fechas(Fecha f1, Fecha f2);
-int leer_y_validar_fecha(const char *mensaje, Fecha *f);
 void borrarEvento(sqlite3 *db);
 void darBajaUsuario(sqlite3 *db);
 void listarUsuarios(sqlite3 *db);
+
+
+
 
 
 
