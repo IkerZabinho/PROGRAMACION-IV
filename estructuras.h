@@ -33,6 +33,7 @@ typedef struct{
     int id_donacion;
     int id_usuario;
     TipoDonacion tipoDonacion;
+    char* fecha;
 } Donacion;
 
 // DINERO
