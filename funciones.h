@@ -35,6 +35,7 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario);
 int callbackCheckCupo(void *data, int argc, char **argv, char **colName);
 int callbackMostrarEventos(void *data, int argc, char **argv, char **colName);
 int callbackCheckFecha(void *data, int argc, char **argv, char **colName);
+int callbackGetID(void *data, int argc, char **argv, char **colName);
 void apuntarseEvento(sqlite3 *db, int id_usuario);
 
 
@@ -45,7 +46,9 @@ float calcularAyudaDinero(Beneficiario b);
 
 
 //Admiñan funtziuak
-
+int es_bisiesto(int a);
+int comparar_fechas(Fecha f1, Fecha f2);
+int leer_y_validar_fecha(const char *mensaje, Fecha *f);
 
 void menuAdministrador(sqlite3 *db);
 void borrarEvento(sqlite3 *db);

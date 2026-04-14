@@ -6,6 +6,7 @@
 #include "funciones.h"
 #include "estructuras.h"
 #include "sqlite3.h"
+#include <time.h>
 
 
 
@@ -134,27 +135,6 @@ Beneficiario guardarCondicionesBeneficiario (){
         while (getchar() != '\n')
             ;
 
-
-
-    do {
-    printf("\n> GASTOS\n");
-    printf("Alquiler o hipoteca: ");
-    scanf("%f", &alquiler);
-    while (getchar() != '\n');
-    printf("Luz, agua y gas (normalmente): ");
-    scanf("%f", &suministros);
-    while (getchar() != '\n');
-    printf("Material escolar (0 si no hay): ");
-    scanf("%f", &material_escolar);
-    while (getchar() != '\n');
-    printf("Gastos en estudios (0 si no hay): ");
-    scanf("%f", &estudios);
-    while (getchar() != '\n');
-    printf("Otros gastos (0 si no hay): ");
-    scanf("%f", &otros);
-    while (getchar() != '\n');
-
-
     printf("  > ¿Deseas cambiar algún dato de los gastos? (1: Sí / 0: No): ");
     scanf("%d", &correcto);
    
@@ -190,7 +170,7 @@ Beneficiario guardarCondicionesBeneficiario (){
 
 
     return b;
-};
+}
 
 
 //función para actualizar los datos de beneficiario
@@ -596,10 +576,7 @@ void donarComida(sqlite3 *db, int id_usuario)
             sqlite3_free(error);
         }
     }
-    else
-    {
-        printf("Operación cancelada.\n");
-    }
+   
     else
     {
         printf("[!] Error: opción no válida.\n");
@@ -691,10 +668,7 @@ void donarRopa(sqlite3 *db, int id_usuario)
             sqlite3_free(error);
         }
     }
-    else
-    {
-        printf("Operación cancelada.\n");
-    }
+   
     else
     {
         printf("[!] Error: opción no válida.\n");
@@ -766,7 +740,7 @@ void iniciarSesion(sqlite3 *db)
 
     if (comprobarLogin(db, user, pass, &tipo_detectado, &id_detectado))
     {
-        printf("DEBUG tipo=%d, ADMINISTRADOR=%d\n", tipo_detectado, (int)ADMINISTRADOR);
+        //printf("DEBUG tipo=%d, ADMINISTRADOR=%d\n", tipo_detectado, (int)ADMINISTRADOR);
         printf("\n");
         printf("Bienvenido!\n");
 
@@ -863,10 +837,17 @@ void registrarUsuario(sqlite3 *db)
 }
 
 // FUNCIONES PARA VOLUNTARIO
-
+int callbackGetID(void *data, int argc, char **argv, char **colName) {
+    int *id_dest = (int *)data;
+    if (argc > 0 && argv[0] != NULL) {
+        *id_dest = atoi(argv[0]);
+    }
+    return 0;
+}
 void apuntarseEvento(sqlite3 *db, int id_usuario)
 {
-    int id_evento_elegido;
+    int id_evento_elegido=-1;
+    int id_voluntario = -1;
     char sql[500];
     char *error = 0;
     printf("\n--- APUNTARSE A UN EVENTO ---\n");
@@ -874,7 +855,7 @@ void apuntarseEvento(sqlite3 *db, int id_usuario)
     // 1. Mostrar eventos de los próximos 3 meses
     printf("\nEventos disponibles (próximos 3 meses):\n");
 
-    char *sql_ver = "SELECT id_evento, descripcion, fecha_ini, tipo FROM Evento "
+    char *sql_ver = "SELECT id_evento, descripcion, fecha_ini, material, tipo FROM Evento "
                     "WHERE date(fecha_ini) BETWEEN date('now') AND date('now', '+3 months');";
 
     sqlite3_exec(db, sql_ver, callbackMostrarEventos, 0, &error);
@@ -920,9 +901,16 @@ void apuntarseEvento(sqlite3 *db, int id_usuario)
         "opción para apuntarte a otro...\n");
         return;
     }
+    sprintf(sql, "SELECT id_voluntario FROM Voluntarios WHERE id_usuario = %d;", id_usuario);
+    sqlite3_exec(db, sql, callbackGetID, &id_voluntario, &error);
+
+    if (id_voluntario == -1) {
+        printf("\n[!] Error: No se encontró un perfil de voluntario para este usuario.\n");
+        return;
+    }
     //3. Si no tiene evento en el mismo día, hacemos inscripción
-    sprintf(sql, "INSERT INTO Participaciones (id_usuario, id_evento) VALUES (%d, %d);",
-            id_usuario, id_evento_elegido);
+    sprintf(sql, "INSERT INTO Participaciones (id_voluntario, id_evento) VALUES (%d, %d);",
+            id_voluntario, id_evento_elegido);
    
     if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
         printf("\n¡Inscripción realizada con éxito! Nos vemos allí.\n");
@@ -936,23 +924,40 @@ void apuntarseEvento(sqlite3 *db, int id_usuario)
 
 }
 
-
 //Función callbackMostrarEventos
 int callbackMostrarEventos(void *data, int argc, char **argv, char **colName)
 {
-   printf("ID: %-4s | Tipo: %-10s | Fecha: %-16s | Desc: %s\n",
+    char *material = "Desconocido";
+    if (argv[4]) {
+        if (strcmp(argv[4], "0") == 0) {
+            material = "Ropa";
+        } else if (strcmp(argv[4], "1") == 0) {
+            material = "Comida";
+        }
+    }
+    char *tipo = "Desconocido";
+    if (argv[3]) {
+        if (strcmp(argv[3], "0") == 0) {
+            tipo = "Recogida";
+        } else if (strcmp(argv[3], "1") == 0) {
+            tipo = "Reparto";
+        }
+    }
+   printf("ID: %-4s | Tipo: %-10s | Material: %-10s | Fecha: %-16s | Descripcion: %s\n", 
            argv[0] ? argv[0] : "NULL", //ID
-           argv[3] ? argv[3] : "NULL", //TIPO
+           tipo, //TIPO
+           material, //MATERIAL
            argv[2] ? argv[2] : "NULL", //Fecha inicio
            argv[1] ? argv[1] : "NULL"); //Descripcion
     return 0;
-} //los signos de interrogacion son como escribir esto
+}//los signos de interrogacion son como escribir esto
 /*if (argv[0] != NULL) {
     printf("%s", argv[0]);
 } else {
     printf("?");
 }
 */
+
 
 
 // Callback para verificar si hay hueco en el evento
@@ -971,7 +976,7 @@ int callbackCheckCupo(void *data, int argc, char **argv, char **colName) {
         *esta_lleno = 0; // Hay sitio
     }
 
-    printf("DEBUG: Inscritos: %d, Máximo permitido: %d\n", actuales, maximo);
+    //printf("DEBUG: Inscritos: %d, Máximo permitido: %d\n", actuales, maximo);
     return 0;
 }
 
@@ -1192,6 +1197,7 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
 
 
             printf("\n2. Consultar horarios");
+            printf("\n3.Ver proximos talleres");
         }
        
         printf("\n0. Cerrar sesión");
@@ -1485,7 +1491,7 @@ int comparar_fechas(Fecha f1, Fecha f2)
 void crearEvento(sqlite3 *db)
 {
     char descripcion[100];
-    int tipo, limite;
+    int tipo, material, limite;
     Fecha inicio, final;
 
 
@@ -1494,9 +1500,11 @@ void crearEvento(sqlite3 *db)
     scanf(" %[^\n]", descripcion); // Para leer con espacios
 
 
-    printf("Tipo de evento (0 = Ropa, 1 = Comida): ");
+    printf("Tipo de evento (0 = Recogida, 1 = Reparto): ");
     scanf("%d", &tipo);
 
+    printf("Material para recogoda/reparto (0 = Ropa, 1 = Comida): ");
+    scanf("%d", &material);
 
     printf("Límite de voluntarios: ");
     scanf("%d", &limite);
@@ -1530,12 +1538,13 @@ void crearEvento(sqlite3 *db)
 
     char sql[300];
     sprintf(sql,
-            "INSERT INTO Evento (tipo, descripcion, fecha_ini, fecha_fin, lim_voluntarios) "
-            "VALUES (%d, '%s', '%04d-%02d-%02d %02d:%02d', '%04d-%02d-%02d %02d:%02d', %d);",
-            tipo,
+            "INSERT INTO Evento (material, descripcion, fecha_ini, fecha_fin, tipo, lim_voluntarios) "
+            "VALUES (%d, '%s', '%04d-%02d-%02d %02d:%02d', '%04d-%02d-%02d %02d:%02d', %d, %d);",
+            material,
             descripcion,
             inicio.anyo, inicio.mes, inicio.dia, inicio.hora, inicio.minutos, // Fecha Inicio
             final.anyo, final.mes, final.dia, final.hora, final.minutos,      // Fecha Fin
+            tipo,
             limite);
     char *error = 0;
     if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK)
