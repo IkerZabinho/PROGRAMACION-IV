@@ -1106,7 +1106,7 @@ void listarDonaciones(sqlite3 *db, int id_usuario) {
     sqlite3_stmt *stmt;
     // 0:tipo, 1:r.kilos, 2:c.tipo_comida, 3:c.kilos, 4:din.cantidad
     const char *sql =
-        "SELECT d.tipo, r.kilos, c.tipo_comida, c.kilos, din.cantidad "
+        "SELECT d.tipo, r.kilos, c.tipo_comida, c.kilos, din.cantidad, d.fecha "
         "FROM Donaciones d "
         "LEFT JOIN Ropa r ON d.id_donacion = r.id_donacion "
         "LEFT JOIN Comida c ON d.id_donacion = c.id_donacion "
@@ -1123,7 +1123,7 @@ void listarDonaciones(sqlite3 *db, int id_usuario) {
     sqlite3_bind_int(stmt, 1, id_usuario);
 
 
-    printf("\n%-12s | %-45s\n", "TIPO", "DETALLES");
+    printf("\n%-12s | %-45s | %-20s\n", "TIPO", "DETALLES", "FECHA");
     printf("------------------------------------------------------------\n");
 
 
@@ -1139,20 +1139,20 @@ void listarDonaciones(sqlite3 *db, int id_usuario) {
         switch (tipo) {
             case 2: // COMIDA
                 // El nombre está en el 2 y los kilos en el 3
-                printf("%-12s | %s - %.2f kg\n",
+                printf("%-12s | %s - %.2f kg | %s\n",
                        "COMIDA",
                        sqlite3_column_text(stmt, 2) ? (const char*)sqlite3_column_text(stmt, 2) : "Desconocido",
                        sqlite3_column_double(stmt, 3));
                 break;
             case 1: // DINERO
                 // El dinero está en el 4
-                printf("%-12s | Importe: %.2f€\n",
+                printf("%-12s | Importe: %.2f€ | %s\n",
                        "DINERO",
                        sqlite3_column_double(stmt, 4));
                 break;
             case 3: // ROPA
                 // Solo mostramos los kilos que están en el índice 1
-                printf("%-12s | %-15s - %.2f kg\n",
+                printf("%-12s | %-15s - %.2f kg | %s\n",
                        "ROPA",
                        "Ropa variada",
                        sqlite3_column_double(stmt, 1));
@@ -2049,4 +2049,29 @@ void menuAdministrador(sqlite3 *db)
                 break;
         }
     } while (opcion != 0);
+}
+
+void mostrarFechaEntrega(int tipo)
+{
+    time_t ahora = time(NULL);
+    struct tm *tm_info = localtime(&ahora);
+
+    int dias = 2; 
+
+    
+    if (tipo == 2) {        // COMIDA
+        dias = 1;
+    } else if (tipo == 3) { // ROPA
+        dias = 3;
+    } else if (tipo == 1) { // DINERO
+        dias = 2;
+    }
+
+    tm_info->tm_mday += dias;
+    mktime(tm_info); 
+
+    char fecha_entrega[30];
+    strftime(fecha_entrega, sizeof(fecha_entrega), "%d/%m/%Y %H:%M", tm_info);
+
+    printf(" Debes llevar tu donación antes de: %s\n", fecha_entrega);
 }

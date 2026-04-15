@@ -64,4 +64,6 @@ void listarUsuarios(sqlite3 *db);
 void crearEventoMartesAutomatico(sqlite3 *db);
 void asegurarEventoRopa(sqlite3 *db);
 
+void mostrarFechaEntrega(int tipo);
+
 #endif
