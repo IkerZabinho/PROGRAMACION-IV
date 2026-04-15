@@ -1194,8 +1194,6 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
         }
         else if (tipo == BENEFICIARIO) { // tipo 2
             printf("\n1. Cambiar condiciones"); //iuel registrar condiciones registratzeakun derrigorra bezela jarri??
-
-
             printf("\n2. Consultar horarios");
             printf("\n3.Ver proximos talleres");
         }
@@ -1242,6 +1240,8 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
                     consultarHistorialEventos(db, id_usuario);
                 } else if(tipo == DONANTE) {
                     donarRopa(db, id_usuario);
+                } else if(tipo==BENEFICIARIO){
+                    verTalleresProximos(db);
                 }
                 break;
            
@@ -1265,9 +1265,40 @@ void menuPrincipal(sqlite3 *db, int tipo, int id_usuario)
 
 
 
-//FUNCIONES PARA BENEFICIARIO
+//FUNCIONES PARA BENEFICIARIO (ver talleres)
 
+void verTalleresProximos(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    // Usamos el nombre de tabla 'Taller' que mencionaste antes
+    char *sql = "SELECT tipo, descripcion, fecha_ini, fecha_fin FROM Taller;";
 
+    printf("\n--- LISTA DE PRÓXIMOS TALLERES ---\n");
+    printf("%-15s %-25s %-20s %-20s\n", "TIPO", "DESCRIPCIÓN", "INICIO", "FIN");
+    printf("--------------------------------------------------------------------------------\n");
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            // Siguiendo tu formato: obtenemos los datos de las columnas
+            const unsigned char *tipo = sqlite3_column_text(stmt, 0);
+            const unsigned char *descripcion = sqlite3_column_text(stmt, 1);
+            const unsigned char *fecha_ini = sqlite3_column_text(stmt, 2);
+            const unsigned char *fecha_fin = sqlite3_column_text(stmt, 3);
+
+            // Imprimimos con el formato de columnas alineadas
+            printf("%-15s %-25s %-20s %-20s\n", 
+                   tipo, 
+                   descripcion, 
+                   fecha_ini, 
+                   fecha_fin);
+        }
+    } else {
+        // Añadimos un aviso por si la consulta falla (tabla mal escrita, etc.)
+        printf("Error al preparar la consulta: %s\n", sqlite3_errmsg(db));
+    }
+
+    sqlite3_finalize(stmt);
+    printf("--------------------------------------------------------------------------------\n");
+}
 //Ayuda de dinero
 float calcularAyudaDinero(Beneficiario b) {
     float renta = b.ingresos - b.gastos;

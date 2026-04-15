@@ -43,6 +43,7 @@ void evaluarBeneficiario(Beneficiario b);
 void mostrarAyudaComida(Beneficiario b);
 void mostrarAyudaRopa(Beneficiario b);
 float calcularAyudaDinero(Beneficiario b);
+void verTalleresProximos(sqlite3 *db);
 
 
 //Admiñan funtziuak
