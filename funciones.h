@@ -42,6 +42,8 @@ void apuntarseEvento(sqlite3 *db, int id_usuario);
 void evaluarBeneficiario(Beneficiario b);
 void mostrarAyudaComida(Beneficiario b);
 void mostrarAyudaRopa(Beneficiario b);
+void verProximoRepartoComida(sqlite3 *db);
+void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario);
 float calcularAyudaDinero(Beneficiario b);
 void verTalleresProximos(sqlite3 *db);
 
