@@ -24,6 +24,9 @@ int main() {
 
     printf("Base de datos abierta correctamente\n");
 
+    crearEventoMartesAutomatico(db);
+    asegurarEventoRopa(db);
+
     //Crear Tablas bailña danak
     //crearTablas(db);
 
