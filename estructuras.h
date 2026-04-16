@@ -79,6 +79,23 @@ typedef struct{
     int id_donante;
     int id_usuario;
 } Donante;
+//TIPOTALLER
+typedef enum 
+{
+    COCINA,
+    APRENDIZAJE,
+    DEPORTES
+}TipoTaller;
+
+//TALLER
+typedef struct{
+    int id_taller;
+    TipoTaller tipo;
+    Fecha fecha_ini;
+    Fecha fecha_fin;
+    char descripcion[200];
+    int id_voluntario;
+}Taller;
 
 // EVENTO
 typedef struct{

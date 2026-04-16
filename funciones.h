@@ -27,9 +27,10 @@ void verProximoRepartoComida(sqlite3 *db);
 void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario);
 void verTalleresProximos(sqlite3 *db);
 void apuntarseTaller(sqlite3 *db, int id_beneficiario);
-void asignarVoluntarioTaller(sqlite3 *db);
+//void asignarVoluntarioTaller(sqlite3 *db);
 void asegurarEventoRopa(sqlite3 *db);
 void crearEventoMartesAutomatico(sqlite3 *db);
+void crearTaller(sqlite3 *db);
 
 // --- DONACIONES ---
 void donarDinero(sqlite3 *db, int id_donante);

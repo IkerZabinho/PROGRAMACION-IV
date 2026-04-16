@@ -1098,8 +1098,116 @@ void apuntarseTaller(sqlite3 *db, int id_beneficiario) {
     }
 }
 
+void crearTaller(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    Taller t; 
+    int id_voluntario, opcion_tipo;
+    char f_ini_str[20], f_fin_str[20];
 
+    printf("\n--- CREAR NUEVO TALLER ---\n");
 
+    // 1. LISTAR VOLUNTARIOS (RELLENADO)
+    printf("\n--- VOLUNTARIOS DISPONIBLES ---\n");
+    const char *sql_v = "SELECT v.id_voluntario, u.nombre FROM Voluntarios v "
+                        "JOIN Usuarios u ON v.id_usuario = u.id_usuario;";
+    
+    int hay_voluntarios = 0;
+    if (sqlite3_prepare_v2(db, sql_v, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            hay_voluntarios = 1;
+            printf("ID: [%d] | Nombre: %s\n", 
+                   sqlite3_column_int(stmt, 0), 
+                   sqlite3_column_text(stmt, 1));
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    if (!hay_voluntarios) {
+        printf("[!] No hay voluntarios registrados. Registra uno antes de crear un taller.\n");
+        return;
+    }
+
+    printf("\nIntroduce el ID del voluntario responsable: ");
+    if (scanf("%d", &id_voluntario) != 1) {
+        printf("[!] Error: ID no válido.\n");
+        while (getchar() != '\n');
+        return;
+    }
+
+    // 2. CAPTURA DE TIPO (ENUM)
+    printf("\nSeleccione el tipo de taller:\n");
+    printf("0. Cocina\n1. Aprendizaje\n2. Deportes\n: ");
+    scanf("%d", &opcion_tipo);
+    t.tipo = (TipoTaller)opcion_tipo; // Asignación al enum
+
+    printf("Descripción: ");
+    scanf(" %[^\n]", t.descripcion);
+
+    // 3. VALIDACIÓN DE FECHAS (Estilo Evento)
+    do {
+        printf("Fecha inicio (DD/MM/AAAA HH:MM): ");
+        if (leer_y_validar_fecha("", &t.fecha_ini)) break;
+        printf(" [!] Error: Fecha inválida.\n");
+    } while (1);
+
+    do {
+        printf("Fecha fin (DD/MM/AAAA HH:MM): ");
+        if (leer_y_validar_fecha("", &t.fecha_fin)) break;
+        printf(" [!] Error: Fecha inválida.\n");
+    } while (1);
+
+    // 4. FORMATEO DE FECHAS
+    sprintf(f_ini_str, "%04d-%02d-%02d %02d:%02d", 
+            t.fecha_ini.anyo, t.fecha_ini.mes, t.fecha_ini.dia, 
+            t.fecha_ini.hora, t.fecha_ini.minutos);
+            
+    sprintf(f_fin_str, "%04d-%02d-%02d %02d:%02d", 
+            t.fecha_fin.anyo, t.fecha_fin.mes, t.fecha_fin.dia, 
+            t.fecha_fin.hora, t.fecha_fin.minutos);
+
+    // 5. INSERTAR EN TABLA TALLER
+    const char *sql_ins = "INSERT INTO Taller (tipo, fecha_ini, fecha_fin, descripcion, id_voluntario) VALUES (?, ?, ?, ?, ?);";
+
+    if (sqlite3_prepare_v2(db, sql_ins, -1, &stmt, 0) == SQLITE_OK) {
+        // OPCIÓN A: Si tu base de datos guarda el número del enum
+        sqlite3_bind_int(stmt, 1, (int)t.tipo); 
+        
+        // OPCIÓN B: Si tu base de datos guarda el TEXTO del taller
+        // char *nombres[] = {"Carpinteria", "Cocina", "Costura", "Informatica"};
+        // sqlite3_bind_text(stmt, 1, nombres[t.tipo], -1, SQLITE_STATIC);
+
+        sqlite3_bind_text(stmt, 2, f_ini_str, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 3, f_fin_str, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 4, t.descripcion, -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 5, id_voluntario);
+
+        if (sqlite3_step(stmt) == SQLITE_DONE) {
+            printf("\n[OK] Taller creado con éxito.\n");
+        } else {
+            printf("\n[!] Error SQL: %s\n", sqlite3_errmsg(db));
+        }
+        sqlite3_finalize(stmt);
+        // 1. Obtenemos el ID del taller que acabamos de crear
+        int id_taller_recien_creado = (int)sqlite3_last_insert_rowid(db);
+
+        // 2. Preparamos el insert para la tabla 'Impartir'
+        sqlite3_stmt *stmt_rel;
+        const char *sql_rel = "INSERT INTO Impartir (id_voluntario, id_taller) VALUES (?, ?);";
+
+        if (sqlite3_prepare_v2(db, sql_rel, -1, &stmt_rel, 0) == SQLITE_OK) {
+            sqlite3_bind_int(stmt_rel, 1, id_voluntario);
+            sqlite3_bind_int(stmt_rel, 2, id_taller_recien_creado);
+
+            if (sqlite3_step(stmt_rel) == SQLITE_DONE) {
+                //printf("[INFO] Relación guardada en tabla 'Impartir'.\n");
+            } else {
+                printf("[!] Error al relacionar en 'Impartir': %s\n", sqlite3_errmsg(db));
+            }
+            sqlite3_finalize(stmt_rel);
+        }
+            }
+}
+/*
 // Asignar profesor
 // Función que usa el Administrador para asignar un voluntario
 void asignarVoluntarioTaller(sqlite3 *db) {
@@ -1193,7 +1301,7 @@ void asignarVoluntarioTaller(sqlite3 *db) {
         }
         sqlite3_finalize(stmt);
     }
-}
+}*/
 // Borrar un evento
 void borrarEvento(sqlite3 *db) {
     int id_borrar;
@@ -2250,7 +2358,7 @@ void menuAdministrador(sqlite3 *db) {
             case 3: listarUsuarios(db); break;
             case 4: darBajaUsuario(db); break;
             case 5: registrarRecogidaRopaAdmin(db); break;
-            case 6: asignarVoluntarioTaller(db); break;
+            case 6: crearTaller(db); break;
             case 0: printf("\nFinalizando sesión administrativa. ¡Buen día!\n"); break;
             default: printf("\n[!] Esa opción no está en el menú. Inténtalo de nuevo.\n"); break;
         }
