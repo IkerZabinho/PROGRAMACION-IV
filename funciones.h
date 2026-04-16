@@ -5,7 +5,8 @@
 
 
 int cargar_configuracion(const char *filename, Config *conf) ;
-
+void generarReporteResumen(sqlite3 *db, const char *nombreArchivo);
+int callback_escribir_fichero(void *data, int argc, char **argv, char **azColName);
 
 // --- GESTIÓN DE USUARIOS ---
 int insertarUsuario(sqlite3 *db, Usuario u, void *datosEspecificos);

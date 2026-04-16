@@ -33,6 +33,44 @@ int cargar_configuracion(const char *filename, Config *conf) {
     fclose(file);
     return 1;
 }
+void generarReporteResumen(sqlite3 *db, const char *nombreArchivo) {
+    FILE *f = fopen(nombreArchivo, "w");
+    if (f == NULL) return;
+
+    fprintf(f, "=== RESUMEN DE LA ONG ===\n");
+    
+    // 1. Usuarios
+    fprintf(f, "\n[USUARIOS]\n");
+    sqlite3_exec(db, "SELECT nombre_usuario, tipo FROM Usuarios;", 
+                 callback_escribir_fichero, f, 0);
+
+    // 2. Donaciones de Dinero
+    fprintf(f, "\n[DONACIONES DINERO]\n");
+    sqlite3_exec(db, "SELECT id_dinero, cantidad FROM Dinero;", 
+                 callback_escribir_fichero, f, 0);
+
+    // 3. Ropa
+    fprintf(f, "\n[DONACIONES  ROPA]\n");
+    sqlite3_exec(db, "SELECT id_ropa, kilos FROM Ropa;", 
+                 callback_escribir_fichero, f, 0);
+    // 4.Comida
+    fprintf(f, "\n[DONACIONES  COMIDA]\n");
+    sqlite3_exec(db, "SELECT id_comida, tipo_comida,kilos FROM Comida;", 
+                 callback_escribir_fichero, f, 0);
+
+
+    fclose(f);
+}
+
+// Esta es una función auxiliar para que SQLite escriba en el archivo
+int callback_escribir_fichero(void *data, int argc, char **argv, char **azColName) {
+    FILE *f = (FILE *)data;
+    for (int i = 0; i < argc; i++) {
+        fprintf(f, "%s: %s | ", azColName[i], argv[i] ? argv[i] : "N/A");
+    }
+    fprintf(f, "\n");
+    return 0;
+}
 
 // [GRUPO 1: BASE DE DATOS]
 
@@ -1580,7 +1618,7 @@ void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario) {
 
     if (sqlite3_prepare_v2(db, sql_next, -1, &stmt, 0) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
-            printf("\n[DISPONIBLE] Puedes acudir al proximo reparto el dia: %s\n", sqlite3_column_text(stmt, 0));
+            printf("\nProximo reparto de ropa el dia: %s\n", sqlite3_column_text(stmt, 0));
         } else {
             printf("\nNo hay repartos de ropa programados actualmente.\n");
         }
@@ -1963,7 +2001,7 @@ void asegurarEventoRopa(sqlite3 *db) {
     sqlite3_stmt *stmt;
     char *error = 0;
 
-    printf("[SISTEMA] Verificando calendario de recogida de ropa (6 meses)...\n");
+    //printf("[SISTEMA] Verificando calendario de recogida de ropa (6 meses)...\n");
 
     for (int i = 0; i < 6; i++) {
         char sql_check[256];

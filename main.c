@@ -8,8 +8,26 @@
 // Evita bucles infinitos si el usuario mete letras en un scanf de números
 
 int main() {
-    sqlite3 *db;
+    sqlite3 *db=NULL;
+    Config miConfig;
+    // Intentar cargar el fichero
+    if (!cargar_configuracion("config.conf", &miConfig)) {
+        printf("Error: No se encontró el archivo de configuración.\n");
+        return 1;
+    }
+
+    // Ahora usas los datos parametrizados
+    printf("Iniciando servidor con usuario: %s\n", miConfig.admin_user);
+
     
+    // Usamos la ruta del archivo de configuración
+    if (sqlite3_open(miConfig.db_path, &db) != SQLITE_OK) {
+        printf("Error al abrir la BD definida en config: %s\n", miConfig.db_path);
+        return 1;
+    }
+
+    // Al crear el resumen, usamos el nombre del archivo del config
+    FILE *archivo = fopen(miConfig.report_name, "w");
     // Configuración para que se vean bien las tildes y la Ñ en Windows
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
@@ -54,6 +72,8 @@ int main() {
                 registrarUsuario(db);
                 break;
             case 0:
+                printf("\nGenerando reporte en %s...", miConfig.report_name);
+                generarReporteResumen(db, miConfig.report_name);
                 printf("\nGracias por usar el sistema. ¡Hasta pronto!\n");
                 break;
             default:
@@ -63,6 +83,10 @@ int main() {
 
     } while (opcion != 0);
 
+   
+    printf("Reporte guardado como: %s\n", miConfig.report_name);
+    
+    fclose(archivo);
     sqlite3_close(db);
     return 0;
 }
