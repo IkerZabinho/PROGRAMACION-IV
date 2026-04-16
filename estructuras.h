@@ -75,6 +75,11 @@ typedef struct {
     char rol[50];
 } Voluntario;
 
+typedef struct{
+    int id_donante;
+    int id_usuario;
+} Donante;
+
 // EVENTO
 typedef struct{
     int id_evento;
@@ -134,5 +139,11 @@ typedef struct {
     int id_taller;
 } Asistencia;
 
+typedef struct {
+    char admin_user[50];
+    char admin_pass[50];
+    char db_path[100];
+    char report_name[100];
+} Config;
 
 #endif

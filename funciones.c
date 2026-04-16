@@ -9,7 +9,30 @@
 #include <time.h>
 
 
+int cargar_configuracion(const char *filename, Config *conf) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) return 0;
 
+    char linea[256];
+    while (fgets(linea, sizeof(linea), file)) {
+        // Ignorar comentarios o líneas vacías
+        if (linea[0] == '#' || linea[0] == '\n') continue;
+
+        // Dividir la línea en CLAVE=VALOR
+        char *clave = strtok(linea, "=");
+        char *valor = strtok(NULL, "\n");
+
+        if (clave && valor) {
+            if (strcmp(clave, "ADMIN_USER") == 0) strcpy(conf->admin_user, valor);
+            else if (strcmp(clave, "ADMIN_PASS") == 0) strcpy(conf->admin_pass, valor);
+            else if (strcmp(clave, "DB_PATH") == 0) strcpy(conf->db_path, valor);
+            else if (strcmp(clave, "REPORT_NAME") == 0) strcpy(conf->report_name, valor);
+        }
+    }
+
+    fclose(file);
+    return 1;
+}
 
 // [GRUPO 1: BASE DE DATOS]
 
@@ -49,13 +72,16 @@ int insertarUsuario(sqlite3 *db, Usuario u, void *datosEspecificos) {
         id_perfil_especifico = insertarDatosVoluntario(db, *v);
     } 
     else if (u.tipoUsuario == 1) { // DONANTE (Ajusta el número si tu enum es distinto)
-        // Insertamos en la tabla Donantes para que el perfil exista
+        Donante *d = (Donante *)datosEspecificos;
+        d->id_usuario = id_usuario_gen;
+        id_perfil_especifico = insertarDatosDonante(db, *d);
+        /*// Insertamos en la tabla Donantes para que el perfil exista
         sprintf(sql, "INSERT INTO Donantes (id_usuario) VALUES (%d);", id_usuario_gen);
         if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
             printf("[ERROR SQL Donantes] %s\n", error);
             sqlite3_free(error);
             id_perfil_especifico = -1; // Esto disparará el ROLLBACK abajo
-        }
+        }*/
 
     if (id_perfil_especifico == -1) {
         sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
@@ -146,7 +172,26 @@ int insertarDatosVoluntario(sqlite3 *db, Voluntario v)
         return -1;
     }
 }
+// Insertar donantes
+// Inserta los datos específicos de un donante. 
+int insertarDatosDonante(sqlite3 *db, Donante d)
+{
+    char sql[400];
+    char *error = 0;
 
+    // Usamos los campos de la estructura b
+    sprintf(sql, "INSERT INTO Donantes (id_usuario) "
+                 "VALUES (%d);",
+            d.id_usuario);
+
+    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
+        return (int)sqlite3_last_insert_rowid(db); 
+    } else {
+        printf("[ERROR SQL] No se pudo insertar datos de beneficiario: %s\n", error);
+        sqlite3_free(error);
+        return -1;
+    }
+}
 // Insertar Evento
 int insertarEvento(sqlite3 *db, Evento e) {
     char sql[1000];
@@ -545,6 +590,7 @@ void registrarUsuario(sqlite3 *db) {
     void *datosE = NULL;
     Beneficiario b = {0};
     Voluntario v = {0};
+    Donante d={0};
 
     printf("\n--- REGISTRO DE NUEVO USUARIO ---\n");
     printf("Elige tu rol:\n1. Voluntario\n2. Donante\n3. Beneficiario\nRol (1-3): ");
@@ -583,7 +629,9 @@ void registrarUsuario(sqlite3 *db) {
         //scanf("%s", v.rol);
         datosE = &v;
     }
-
+    else if(u.tipoUsuario==1){
+        datosE= &d;
+    }
     // Llamamos a la función que gestiona la DB
 // ... después de capturar los datos ...
     int id_perfil_especifico = insertarUsuario(db, u, datosE);
@@ -2170,3 +2218,4 @@ void menuAdministrador(sqlite3 *db) {
         }
     } while (opcion != 0);
 }
+
