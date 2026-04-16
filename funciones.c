@@ -42,7 +42,34 @@ int insertarDatosVoluntario(sqlite3 *db, long long id_usuario, const char *rol)
 
 
 
+void mostrarProximaRecogida(sqlite3 *db, int material) {
+    sqlite3_stmt *stmt;
+    // Buscamos eventos de tipo 0 (Recogida) que ocurran a partir de hoy
+    const char *sql =
+        "SELECT descripcion, fecha_ini, fecha_fin FROM Evento "
+        "WHERE material = ? AND tipo = 0 "
+        "AND date(fecha_ini) >= date('now') "
+        "ORDER BY fecha_ini ASC LIMIT 1;";
 
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, material);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("\n--- PROXIMO EVENTO DE RECOGIDA ---\n");
+            printf("Evento:  %s\n", sqlite3_column_text(stmt, 0));
+            printf("Inicio:  %s\n", sqlite3_column_text(stmt, 1));
+            printf("Fin:     %s\n", sqlite3_column_text(stmt, 2));
+            printf("--------------------------------------------\n");
+        } else {
+            // Si llega aquí es porque la consulta no devolvió filas
+            printf("\n[INFO] No hay eventos de recogida programados en el sistema.\n");
+            printf("Por favor, acude a nuestra sede central de lunes a viernes.\n");
+        }
+    } else {
+        printf("Error SQL: %s\n", sqlite3_errmsg(db));
+    }
+    sqlite3_finalize(stmt);
+}
 
 
 //funcion para condiciones de beneficiario (para registrar y cambiar)
@@ -182,31 +209,27 @@ Beneficiario guardarCondicionesBeneficiario (){
     return b;
 }
 
-void mostrarProximaRecogida(sqlite3 *db, int material) {
-    sqlite3_stmt *stmt;
-    const char *sql =
-        "SELECT descripcion, fecha_ini, fecha_fin FROM Evento "
-        "WHERE tipo = 0 AND material = ? "
-        "AND date(fecha_ini) >= date('now') "
-        "ORDER BY fecha_ini ASC LIMIT 1;";
 
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, material);
 
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            printf("El evento mas cercano es:\n");
-            printf("  Nombre: %s\n",  sqlite3_column_text(stmt, 0));
-            printf("  Inicio: %s\n",  sqlite3_column_text(stmt, 1));
-            printf("  Fin:    %s\n",  sqlite3_column_text(stmt, 2));
-            printf("Puedes entregar tu donacion en ese evento.\n");
-        } else {
-            printf("No hay eventos de recogida programados proximamente.\n");
-            printf("Contacta con nosotros para coordinar la entrega.\n");
-        }
-    } else {
-        printf("Error al buscar evento: %s\n", sqlite3_errmsg(db));
+//función para actualizar los datos de beneficiario
+int actualizarDatosBeneficiario(sqlite3 *db, int id_usuario, Beneficiario b) {
+    char sql[400];
+    char *error = 0;
+
+
+    // Usamos UPDATE para modificar la fila que ya existe
+    sprintf(sql,
+        "UPDATE Beneficiario SET ingresos = %.2f, gastos = %.2f, "
+        "num_adultos = %d, num_nino = %d WHERE id_usuario = %d;",
+        b.ingresos, b.gastos, b.num_adultos, b.num_ninos, id_usuario);
+
+
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("Error al actualizar base de datos: %s\n", error);
+        sqlite3_free(error);
+        return 0;
     }
-    sqlite3_finalize(stmt);
+    return 1;
 }
 
 
@@ -405,7 +428,6 @@ void mostrarUsuarios(sqlite3 *db)
 
 //DINERO
 void donarDinero(sqlite3 *db, int id_donante) {
-    // Verificar que el id_donante existe en la tabla Donantes
     sqlite3_stmt *check;
     const char *sql_check = "SELECT COUNT(*) FROM Donantes WHERE id_donante = ?;";
     int existe = 0;
@@ -433,7 +455,15 @@ void donarDinero(sqlite3 *db, int id_donante) {
         while (getchar() != '\n');
         return;
     }
-    while (getchar() != '\n');
+    // VALIDAR que no queden caracteres extra en el buffer
+    {
+        int c = getchar();
+        if (c != '\n' && c != EOF) {
+            printf("[!] Error: debes introducir solo un numero valido.\n");
+            while (getchar() != '\n');
+            return;
+        }
+    }
 
     if (cantidad <= 0) {
         printf("La cantidad debe ser mayor que 0.\n");
@@ -484,17 +514,6 @@ void donarDinero(sqlite3 *db, int id_donante) {
 
 // COMIDA
 void donarComida(sqlite3 *db, int id_donante) {
-    sqlite3_stmt *check;
-    const char *sql_check = "SELECT COUNT(*) FROM Donantes WHERE id_donante = ?;";
-    int existe = 0;
-    if (sqlite3_prepare_v2(db, sql_check, -1, &check, 0) == SQLITE_OK) {
-        sqlite3_bind_int(check, 1, id_donante);
-        if (sqlite3_step(check) == SQLITE_ROW)
-            existe = sqlite3_column_int(check, 0);
-    }
-    sqlite3_finalize(check);
-    if (!existe) { printf("[!] Error: ID de donante no valido.\n"); return; }
-
     float kilos;
     char sql[300];
     char *error = 0;
@@ -503,36 +522,51 @@ void donarComida(sqlite3 *db, int id_donante) {
 
     printf("\n--- REALIZAR DONACION DE COMIDA ---\n");
 
-    // Bucle para evitar tener que seleccionar dos veces
+    // 1. Selección de categoría con limpieza de buffer única
     do {
         printf("Seleccione el tipo de alimento:\n");
         printf("1. %s\n2. %s\n3. %s\n4. %s\n5. %s\n",
                nombresCategorias[1], nombresCategorias[2], nombresCategorias[3],
                nombresCategorias[4], nombresCategorias[5]);
         printf("Seleccion: ");
+        
         if (scanf("%d", &seleccion) != 1) {
-            printf("Opcion no valida.\n");
-            while (getchar() != '\n');   // limpia basura no numérica
-            seleccion = -1;              // fuerza repetir
+            printf("[!] Error: Introduce un numero.\n");
+            while (getchar() != '\n'); // Limpia letras
+            seleccion = -1;
             continue;
         }
-        while (getchar() != '\n');       // limpia el \n que deja scanf
+        while (getchar() != '\n'); // Limpia el ENTER tras el número
+
         if (seleccion < 1 || seleccion > 5)
-            printf("Opcion no valida, elige entre 1 y 5.\n");
+            printf("[!] Opcion no valida, elige entre 1 y 5.\n");
     } while (seleccion < 1 || seleccion > 5);
 
+    // 2. Validación robusta para la cantidad (Solución al 3f3)
     printf("Cantidad en kilogramos: ");
     if (scanf("%f", &kilos) != 1) {
         printf("[!] Error: debes introducir un numero valido.\n");
-        while (getchar() != '\n');
+        while (getchar() != '\n'); 
         return;
     }
-    while (getchar() != '\n');
+    
+    // Comprobar si quedó "basura" en el buffer (como la 'f' de '3f3')
+    int c = getchar();
+    if (c != '\n' && c != EOF) {
+        printf("[!] Error: Formato incorrecto. No incluyas letras en la cantidad.\n");
+        while (getchar() != '\n'); // Limpia el resto de la línea
+        return;
+    }
 
-    if (kilos <= 0) { printf("[!] Los kilogramos deben ser mayor que 0.\n"); return; }
+    if (kilos <= 0) { 
+        printf("[!] Los kilogramos deben ser mayor que 0.\n"); 
+        return; 
+    }
 
+    // 3. Confirmación
     printf("¿Confirmas donar %.2f kg de %s?\n0. No\n1. Si\nSeleccion: ",
            kilos, nombresCategorias[seleccion]);
+    
     if (scanf("%d", &respuesta) != 1) {
         printf("[!] Error: opcion no valida.\n");
         while (getchar() != '\n');
@@ -553,30 +587,16 @@ void donarComida(sqlite3 *db, int id_donante) {
                     nombresCategorias[seleccion], kilos, id_padre);
 
             if (sqlite3_exec(db, sqlComida, 0, 0, &error) == SQLITE_OK) {
-                time_t t = time(NULL);
-                struct tm *tm_info = localtime(&t);
-                char fecha[20];
-                strftime(fecha, sizeof(fecha), "%d/%m/%Y %H:%M", tm_info);
-
-                printf("\n[EXITO] Donacion de %.2f kg de %s registrada.\n",
-                       kilos, nombresCategorias[seleccion]);
-                printf("Fecha: %s\n", fecha);
-
-                // Mensaje evento más cercano
-                printf("\n--- EVENTO MAS CERCANO PARA ENTREGAR TU DONACION ---\n");
-                mostrarProximaRecogida(db, 1); // 1 = Comida
+                printf("\n[EXITO] Donacion registrada correctamente.\n");
+                // Llamamos a la función del evento
+                mostrarProximaRecogida(db, 1); 
             } else {
-                printf("[!] Error en tabla Comida: %s\n", error);
+                printf("[!] Error: %s\n", error);
                 sqlite3_free(error);
             }
-        } else {
-            printf("[!] Error en tabla Donaciones: %s\n", error);
-            sqlite3_free(error);
         }
-    } else if (respuesta == 0) {
-        printf("Operacion cancelada.\n");
     } else {
-        printf("[!] Opcion no valida.\n");
+        printf("Operacion cancelada.\n");
     }
 }
 
@@ -595,7 +615,11 @@ void donarRopa(sqlite3 *db, int id_donante) {
             existe = sqlite3_column_int(check, 0);
     }
     sqlite3_finalize(check);
-    if (!existe) { printf("[!] Error: ID de donante no valido.\n"); return; }
+
+    if (!existe) {
+        printf("[!] Error: ID de donante no valido.\n");
+        return;
+    }
 
     float kilos;
     char sql[300];
@@ -603,20 +627,26 @@ void donarRopa(sqlite3 *db, int id_donante) {
     int respuesta;
 
     printf("\n--- REALIZAR DONACION DE ROPA ---\n");
-
-    // Bucle para evitar tener que introducir kilos dos veces
-    do {
-        printf("Cantidad en kilogramos: ");
-        if (scanf("%f", &kilos) != 1) {
-            printf("[!] Error: debes introducir un numero valido.\n");
-            while (getchar() != '\n');
-            kilos = -1;   // fuerza repetir
-            continue;
-        }
+    printf("Cantidad en kilogramos: ");
+    if (scanf("%f", &kilos) != 1) {
+        printf("[!] Error: debes introducir un numero valido.\n");
         while (getchar() != '\n');
-        if (kilos <= 0)
-            printf("[!] Los kilogramos deben ser mayor que 0.\n");
-    } while (kilos <= 0);
+        return;
+    }
+    // VALIDAR que no queden caracteres extra en el buffer
+    {
+        int c = getchar();
+        if (c != '\n' && c != EOF) {
+            printf("[!] Error: debes introducir solo un numero valido.\n");
+            while (getchar() != '\n');
+            return;
+        }
+    }
+
+    if (kilos <= 0) {
+        printf("[!] Error: los kilogramos deben ser mayor que 0.\n");
+        return;
+    }
 
     printf("¿Confirmas donar %.2f kg de ropa?\n0. No\n1. Si\nSeleccion: ", kilos);
     if (scanf("%d", &respuesta) != 1) {
@@ -627,11 +657,11 @@ void donarRopa(sqlite3 *db, int id_donante) {
     while (getchar() != '\n');
 
     if (respuesta == 1) {
-        sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo, fecha) "
-                     "VALUES (%d, 3, datetime('now'));", id_donante);
+        sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo, fecha) VALUES (%d, 3, datetime('now'));", id_donante);
 
         if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
             long long id_padre = sqlite3_last_insert_rowid(db);
+
             char sqlRopa[400];
             sprintf(sqlRopa,
                     "INSERT INTO Ropa (id_donacion, kilos) VALUES (%lld, %.2f);",
@@ -642,12 +672,8 @@ void donarRopa(sqlite3 *db, int id_donante) {
                 struct tm *tm_info = localtime(&t);
                 char fecha[20];
                 strftime(fecha, sizeof(fecha), "%d/%m/%Y %H:%M", tm_info);
-
-                printf("\n[EXITO] Donacion de %.2f kg de ropa registrada.\n", kilos);
+                printf("\n[EXITO] Donacion de %.2f kg de ropa registrada correctamente.\n", kilos);
                 printf("Fecha: %s\n", fecha);
-
-                // Mensaje evento más cercano
-                printf("\n--- EVENTO MAS CERCANO PARA ENTREGAR TU DONACION ---\n");
                 mostrarProximaRecogida(db, 0); // 0 = Ropa
             } else {
                 printf("[!] Error en tabla Ropa: %s\n", error);
@@ -658,12 +684,11 @@ void donarRopa(sqlite3 *db, int id_donante) {
             sqlite3_free(error);
         }
     } else if (respuesta == 0) {
-        printf("Operacion cancelada.\n");
+        printf("Operacion cancelada por el usuario.\n");
     } else {
-        printf("[!] Opcion no valida.\n");
+        printf("[!] Error: opcion no valida.\n");
     }
 }
-
 
 
 
