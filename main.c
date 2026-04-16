@@ -36,17 +36,16 @@ int main() {
         printf("\n0. Salir");
         printf("\n------------------------------");
         printf("\nSeleccione una opción: ");
-
         // Validación de entrada numérica
         if (scanf("%d", &opcion) != 1) {
             printf("\n[!] Ups, parece que no has introducido un número.");
             printf("\nPor favor, elige una opción del 0 al 2.\n");
-            
+            while (getchar() != '\n');
             opcion = -1;     // Valor neutro para repetir el bucle
             continue;
         }
          // Limpiamos el 'Enter' sobrante
-
+        while (getchar() != '\n');
         switch (opcion) {
             case 1:
                 iniciarSesion(db); // Dentro de esta función deberías usar la misma lógica de reintentos

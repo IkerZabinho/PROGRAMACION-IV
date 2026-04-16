@@ -11,383 +11,302 @@
 
 
 
-// Insertar beneficiarios
+// [GRUPO 1: BASE DE DATOS]
 
-
-// Devuelve el id_beneficiario (PK) o -1 si falla
-int insertarDatosBeneficiario(sqlite3 *db, long long id_usuario, float ing, float gas, int adu, int nin)
-{
-    char sql[400];
-    sprintf(sql, "INSERT INTO Beneficiario (id_usuario, ingresos, gastos, num_adultos, num_nino) "
-                 "VALUES (%lld, %.2f, %.2f, %d, %d);",
-            id_usuario, ing, gas, adu, nin);
-
-    if (sqlite3_exec(db, sql, 0, 0, 0) == SQLITE_OK) {
-        return (int)sqlite3_last_insert_rowid(db); // Devuelve el id_beneficiario generado
-    }
-    return -1;
-}
-
-// Devuelve el id_voluntario (PK) o -1 si falla
-int insertarDatosVoluntario(sqlite3 *db, long long id_usuario, const char *rol)
-{
-    char sql[300];
-    sprintf(sql, "INSERT INTO Voluntarios (id_usuario, rol) VALUES (%lld, '%s');", id_usuario, rol);
-
-    if (sqlite3_exec(db, sql, 0, 0, 0) == SQLITE_OK) {
-        return (int)sqlite3_last_insert_rowid(db); // Devuelve el id_voluntario generado
-    }
-    return -1;
-}
-
-
-
-void mostrarProximaRecogida(sqlite3 *db, int material) {
-    sqlite3_stmt *stmt;
-    // Buscamos eventos de tipo 0 (Recogida) que ocurran a partir de hoy
-    const char *sql =
-        "SELECT descripcion, fecha_ini, fecha_fin FROM Evento "
-        "WHERE material = ? AND tipo = 0 "
-        "AND date(fecha_ini) >= date('now') "
-        "ORDER BY fecha_ini ASC LIMIT 1;";
-
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, material);
-
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            printf("\n--- PROXIMO EVENTO DE RECOGIDA ---\n");
-            printf("Evento:  %s\n", sqlite3_column_text(stmt, 0));
-            printf("Inicio:  %s\n", sqlite3_column_text(stmt, 1));
-            printf("Fin:     %s\n", sqlite3_column_text(stmt, 2));
-            printf("--------------------------------------------\n");
-        } else {
-            // Si llega aquí es porque la consulta no devolvió filas
-            printf("\n[INFO] No hay eventos de recogida programados en el sistema.\n");
-            printf("Por favor, acude a nuestra sede central de lunes a viernes.\n");
-        }
-    } else {
-        printf("Error SQL: %s\n", sqlite3_errmsg(db));
-    }
-    sqlite3_finalize(stmt);
-}
-
-
-//funcion para condiciones de beneficiario (para registrar y cambiar)
-Beneficiario guardarCondicionesBeneficiario (){
-
-
-    Beneficiario b;
-    int correcto;
-
-    float sueldos = 0;
-    float ayudas = 0;
-    float alquiler = 0;
-    float suministros = 0;
-    float material_escolar = 0;
-    float estudios = 0;
-    float otros = 0;
-
-
-    printf("\n--- DETALLES ECONÓMICOS DEL BENEFICIARIO ---\n");
-   
-    printf("\n*responde la pregunta y pulsa enter para pasar a la siguiente pregunta\n");
-
-
-
-
-    do {
-        printf("\n> INTEGRANTES DE LA FAMILIA\n");
-        printf("Número de adultos en casa: ");
-        scanf("%d", &b.num_adultos);
-        while (getchar() != '\n')
-            ;
-        printf("Número de niños/as en casa: ");
-        scanf("%d", &b.num_ninos);
-        while (getchar() != '\n')
-            ;
-        printf("  > ¿Deseas cambiar algún dato de los integrantes de la familia? (1: Sí / 0: No): ");
-        scanf("%d", &correcto);
-
-        // limpia buffer
-        while (getchar() != '\n')
-            ;
-
-        if (correcto == 1)
-        {
-            printf("[!] Volviendo a pedir los datos de integrantes...\n");
-        }
-
-
-    } while (correcto != 0);
-
-
-    do {
-    printf("\n> INGRESOS\n");
-    printf("Sueldo mensual total: ");
-    scanf("%f", &sueldos);
-    while (getchar() != '\n');
-    printf("Otras ayudas/pensiones: ");
-    scanf("%f", &ayudas);
-    while (getchar() != '\n');
-
-
-    printf("  > ¿Deseas cambiar algún dato de los ingresos? (1: Sí / 0: No): ");
-    scanf("%d", &correcto);
-   
-
-
-        // limpia buffer
-        while (getchar() != '\n')
-            ;
-
-
-    if (correcto == 1) {
-    printf("[!] Volviendo a pedir los datos de ingresos...\n");
-
-
-    }
-    } while (correcto != 0);
-
-    do
-    {
-        printf("\n> GASTOS\n");
-        printf("Alquiler o hipoteca: ");
-        scanf("%f", &alquiler);
-        while (getchar() != '\n')
-            ;
-        printf("Luz, agua y gas (normalmente): ");
-        scanf("%f", &suministros);
-        while (getchar() != '\n')
-            ;
-        printf("Material escolar (0 si no hay): ");
-        scanf("%f", &material_escolar);
-        while (getchar() != '\n')
-            ;
-        printf("Gastos en estudios (0 si no hay): ");
-        scanf("%f", &estudios);
-        while (getchar() != '\n')
-            ;
-        printf("Otros gastos (0 si no hay): ");
-        scanf("%f", &otros);
-        while (getchar() != '\n')
-            ;
-
-    printf("  > ¿Deseas cambiar algún dato de los gastos? (1: Sí / 0: No): ");
-    scanf("%d", &correcto);
-   
-
-
-    //limpia buffer
-    while (getchar() != '\n');
-
-
-    if (correcto == 1) {
-    printf("[!] Volviendo a pedir los datos de gastos...\n");
-
-
-    }
-    } while (correcto != 0);
-
-
-    float gastosTotal = alquiler + suministros + material_escolar + estudios + otros;
-    float ingresosTotal = sueldos + ayudas;
-
-
-    //guardamos datos en structura para luego calcular ayuda
-    b.ingresos = ingresosTotal;
-    b.gastos = gastosTotal;
-
-    // funcion para calcular la ayuda que necesitarán
-
-
-
-    //funcion para calcular la ayuda que necesitarán
-   
-    evaluarBeneficiario(b);
-
-
-    return b;
-}
-
-
-
-//función para actualizar los datos de beneficiario
-int actualizarDatosBeneficiario(sqlite3 *db, int id_usuario, Beneficiario b) {
-    char sql[400];
-    char *error = 0;
-
-
-    // Usamos UPDATE para modificar la fila que ya existe
-    sprintf(sql,
-        "UPDATE Beneficiario SET ingresos = %.2f, gastos = %.2f, "
-        "num_adultos = %d, num_nino = %d WHERE id_usuario = %d;",
-        b.ingresos, b.gastos, b.num_adultos, b.num_ninos, id_usuario);
-
-
-    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
-        printf("Error al actualizar base de datos: %s\n", error);
-        sqlite3_free(error);
-        return 0;
-    }
-    return 1;
-}
-
-
-// insertar usuarios
-// Cambiamos el retorno a int para devolver el ID del perfil específico
-int insertarUsuario(sqlite3 *db, Usuario u)
-{
+// Inserta usuario génerico y devuelve su ID generado (-1 si falla)
+// Inserta un usuario y su perfil específico. Devuelve el ID del perfil o -1.
+int insertarUsuario(sqlite3 *db, Usuario u, void *datosEspecificos) {
     char sql[500];
     char *error = 0;
+    int id_usuario_gen = -1;
     int id_perfil_especifico = -1;
 
-    // 1. RECOLECTAR DATOS ESPECÍFICOS PRIMERO (en memoria)
-    char *rolVoluntario = "General";
-    Beneficiario b = {0};
-
-    if (u.tipoUsuario == BENEFICIARIO)
-    {
-        b = guardarCondicionesBeneficiario();
-    } 
-    else if (u.tipoUsuario == VOLUNTARIO)
-    {
-        int op;
-        printf("1. Profesor\n2. Entrenador\n3. Cocinero\n4. Repartidor\nSeleccione: ");
-        scanf("%d", &op);
-        if (op == 1) rolVoluntario = "profesor";
-        else if (op == 2) rolVoluntario = "entrenador";
-        else if (op == 3) rolVoluntario = "cocinero";
-        else if (op == 4) rolVoluntario = "repartidor";
-    }
-
-    // 2. INICIAR TRANSACCIÓN SQL
-    // Esto asegura que no se cree un usuario si su perfil específico falla
     sqlite3_exec(db, "BEGIN TRANSACTION;", 0, 0, 0);
 
-    // 3. INSERTAR EN TABLA PRINCIPAL (USUARIOS)
+    // 1. Insertar en Usuarios (Usamos 'tipo' que es la columna real de tu DB)
     sprintf(sql, "INSERT INTO Usuarios (nombre, apellidos, nombre_usuario, contrasena, tipo) "
                  "VALUES ('%s', '%s', '%s', '%s', %d);",
             u.nombre, u.apellidos, u.nombre_usuario, u.contrasena, u.tipoUsuario);
 
-    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK)
-    {
-        printf("Error al insertar usuario: %s\n", error);
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("[ERROR SQL Usuarios] %s\n", error);
         sqlite3_free(error);
         sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
         return -1;
     }
 
-    // 4. OBTENER EL ID DE LA CUENTA GENERAL (Foreign Key para las otras tablas)
-    long long id_gen = sqlite3_last_insert_rowid(db);
+    id_usuario_gen = (int)sqlite3_last_insert_rowid(db);
 
-    // 5. INSERTAR EN TABLA ESPECÍFICA Y CAPTURAR EL ID DE PERFIL
-    if (u.tipoUsuario == BENEFICIARIO)
-    {
-        // Esta función ahora devuelve el id_beneficiario
-        id_perfil_especifico = insertarDatosBeneficiario(db, id_gen, b.ingresos, b.gastos, b.num_adultos, b.num_ninos);
+    // 2. Insertar en tablas específicas según el rol
+    if (u.tipoUsuario == 2) { // BENEFICIARIO
+        Beneficiario *b = (Beneficiario *)datosEspecificos;
+        b->id_usuario = id_usuario_gen;
+        id_perfil_especifico = insertarDatosBeneficiario(db, *b);
+    } 
+    else if (u.tipoUsuario == 0) { // VOLUNTARIO
+        Voluntario *v = (Voluntario *)datosEspecificos;
+        v->id_usuario = id_usuario_gen;
+        id_perfil_especifico = insertarDatosVoluntario(db, *v);
+    } 
+    else if (u.tipoUsuario == 1) { // DONANTE (Ajusta el número si tu enum es distinto)
+        // Insertamos en la tabla Donantes para que el perfil exista
+        sprintf(sql, "INSERT INTO Donantes (id_usuario) VALUES (%d);", id_usuario_gen);
+        if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+            printf("[ERROR SQL Donantes] %s\n", error);
+            sqlite3_free(error);
+            id_perfil_especifico = -1; // Esto disparará el ROLLBACK abajo
+        }
+
+    if (id_perfil_especifico == -1) {
+        sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
+        return -1;
     }
-    else if (u.tipoUsuario == VOLUNTARIO)
-    {
-        // Esta función ahora devuelve el id_voluntario
-        id_perfil_especifico = insertarDatosVoluntario(db, id_gen, rolVoluntario);
+
+    sqlite3_exec(db, "COMMIT;", 0, 0, 0);
+    return id_perfil_especifico;
+}}
+
+// Eliminar usuario
+int eliminarUsuarioDB(sqlite3 *db, int id) {
+    char sql[200];
+    char *error = 0;
+    
+    sprintf(sql, "DELETE FROM Usuarios WHERE id_usuario = %d;", id);
+    
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("Error SQL: %s\n", error);
+        sqlite3_free(error);
+        return -1; // Fallo
     }
-    else if (u.tipoUsuario == DONANTE)
-    {
-        char sqlD[100];
-        sprintf(sqlD, "INSERT INTO Donantes (id_usuario) VALUES (%lld);", id_gen);
-        if (sqlite3_exec(db, sqlD, 0, 0, 0) == SQLITE_OK) {
-            id_perfil_especifico = (int)sqlite3_last_insert_rowid(db);
+    return 0; // Éxito
+}
+
+// Listar usuarios
+void listarUsuarios(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    char *sql = "SELECT id_usuario, nombre, apellidos, nombre_usuario FROM Usuarios;";
+   
+    printf("\n--- LISTA ACTUAL DE USUARIOS ---\n");
+    printf("%-10s %-20s %-20s %-20s\n", "ID", "NOMBRE", "APELLIDOS", "USUARIO");
+    printf("-------------------------------\n");
+
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            int id = sqlite3_column_int(stmt, 0);
+            const unsigned char *nombre = sqlite3_column_text(stmt, 1);
+            const unsigned char *apellidos = sqlite3_column_text(stmt, 2);
+            const unsigned char *nombre_usuario = sqlite3_column_text(stmt, 3);
+
+            printf("%-10d %-20s %-20s %-20s\n", id, nombre, apellidos, nombre_usuario);
         }
     }
+    sqlite3_finalize(stmt);
+    printf("-------------------------------\n");
+}
 
-    // 6. FINALIZAR: ¿Se crearon ambos registros correctamente?
-    if (id_perfil_especifico != -1)
-    {
-        sqlite3_exec(db, "COMMIT;", 0, 0, 0);
-        return id_perfil_especifico; // DEVOLVEMOS EL ID REAL DEL PERFIL
-    }
-    else
-    {
-        sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
-        printf("Error en datos específicos. Registro cancelado.\n");
+
+// Insertar beneficiarios
+// Inserta los datos específicos de un beneficiario. 
+int insertarDatosBeneficiario(sqlite3 *db, Beneficiario b)
+{
+    char sql[400];
+    char *error = 0;
+
+    // Usamos los campos de la estructura b
+    sprintf(sql, "INSERT INTO Beneficiario (id_usuario, ingresos, gastos, num_adultos, num_nino) "
+                 "VALUES (%d, %.2f, %.2f, %d, %d);",
+            b.id_usuario, b.ingresos, b.gastos, b.num_adultos, b.num_ninos);
+
+    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
+        return (int)sqlite3_last_insert_rowid(db); 
+    } else {
+        printf("[ERROR SQL] No se pudo insertar datos de beneficiario: %s\n", error);
+        sqlite3_free(error);
         return -1;
     }
 }
 
-
-
-
-//calcular ayuda de Beneficiario
-
-
-
-
-
-
-
-
-// Callback login
-int callbackLogin(void *data, int argc, char **argv, char **colName)
+// Insertar voluntarios
+// Inserta los datos específicos de un voluntario.
+int insertarDatosVoluntario(sqlite3 *db, Voluntario v)
 {
-    int *encontrado = (int *)data;
-    *encontrado = 1;
+    char sql[300];
+    char *error = 0;
+
+    // Usamos los campos de la estructura v
+    sprintf(sql, "INSERT INTO Voluntarios (id_usuario) VALUES (%d);",
+            v.id_usuario, v.rol);
+
+    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
+        return (int)sqlite3_last_insert_rowid(db); 
+    } else {
+        printf("[ERROR SQL] No se pudo insertar datos de voluntario: %s\n", error);
+        sqlite3_free(error);
+        return -1;
+    }
+}
+
+// Insertar Evento
+int insertarEvento(sqlite3 *db, Evento e) {
+    char sql[1000];
+    char *error = 0;
+    
+    // 1. Preparamos las fechas en el formato que SQLite entiende (AAAA-MM-DD HH:MM)
+    // Usamos los datos de tu estructura Fecha (e.fecha_inicio y e.fecha_fin)
+    char f_ini[20], f_fin[20];
+    sprintf(f_ini, "%04d-%02d-%02d %02d:%02d", 
+            e.fecha_inicio.anyo, e.fecha_inicio.mes, e.fecha_inicio.dia, 
+            e.fecha_inicio.hora, e.fecha_inicio.minutos);
+            
+    sprintf(f_fin, "%04d-%02d-%02d %02d:%02d", 
+            e.fecha_fin.anyo, e.fecha_fin.mes, e.fecha_fin.dia, 
+            e.fecha_fin.hora, e.fecha_fin.minutos);
+
+    // 2. Construimos el SQL. 
+    // IMPORTANTE: Incluimos 'material' y 'tipo' porque tu DB los pide.
+    // Usamos %d para material y tipo ya que son ENUMS (enteros).
+    sprintf(sql, "INSERT INTO Evento (descripcion, fecha_ini, fecha_fin, lim_voluntarios, material, tipo) "
+                 "VALUES ('%s', '%s', '%s', %d, '%d', '%d');",
+            e.descripcion, 
+            f_ini, 
+            f_fin, 
+            e.lim_voluntarios, 
+            (int)e.material, 
+            (int)e.tipoEvento);
+
+    // 3. Ejecutamos
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("\n[!] Error SQL al insertar: %s\n", error);
+        sqlite3_free(error);
+        return -1;
+    }
+
+    return 0; // Todo OK
+}
+
+// Insertar donación de ropa
+int insertarDonacionRopa(sqlite3 *db, Ropa r, int id_donante) {
+    char sql[400];
+    char *error = 0;
+
+    sqlite3_exec(db, "BEGIN TRANSACTION;", 0, 0, 0);
+
+    // 1. Insertamos en Donaciones (id_donacion es AUTOINCREMENT, no se pone)
+    // El '2' es el tipo para ROPA
+    sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo, fecha) VALUES (%d, 2, date('now'));", 
+            id_donante);
+    
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("Error en Donaciones: %s\n", error);
+        sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
+        sqlite3_free(error);
+        return -1;
+    }
+
+    // 2. Recuperamos el ID generado
+    int id_padre = (int)sqlite3_last_insert_rowid(db);
+
+    // 3. Insertamos en la tabla Ropa
+    sprintf(sql, "INSERT INTO Ropa (id_donacion, kilos) VALUES (%d, %.2f);", 
+            id_padre, r.kilos);
+
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("Error en Ropa: %s\n", error);
+        sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
+        sqlite3_free(error);
+        return -1;
+    }
+
+    sqlite3_exec(db, "COMMIT;", 0, 0, 0);
+    return 0;
+}
+// Insertar donación dinero
+int insertarDonacionDinero(sqlite3 *db, Dinero d, int id_donante) {
+    char sql[400];
+    char *error = 0;
+
+    sqlite3_exec(db, "BEGIN TRANSACTION;", 0, 0, 0);
+
+    // El '3' es el tipo para DINERO
+    sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo, fecha) VALUES (%d, 3, date('now'));", 
+            id_donante);
+    
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
+        return -1;
+    }
+
+    int id_padre = (int)sqlite3_last_insert_rowid(db);
+
+    sprintf(sql, "INSERT INTO Dinero (id_donacion, cantidad) VALUES (%d, %.2f);", 
+            id_padre, d.cantidad);
+    
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
+        return -1;
+    }
+
+    sqlite3_exec(db, "COMMIT;", 0, 0, 0);
+    return 0;
+}
+// Insertar donación comida
+int insertarDonacionComidaDB(sqlite3 *db, Donacion d, Comida c) {
+    char sql[400];
+    char *error = 0;
+
+    sqlite3_exec(db, "BEGIN TRANSACTION;", 0, 0, 0);
+
+    // El '1' es el tipo para COMIDA
+    sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo, fecha) VALUES (%d, 1, date('now'));", 
+            d.id_usuario);
+
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("[!] Error Donacion: %s\n", error);
+        sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
+        sqlite3_free(error);
+        return -1;
+    }
+
+    int id_padre = (int)sqlite3_last_insert_rowid(db);
+
+    sprintf(sql, "INSERT INTO Comida (id_donacion, tipo_comida, kilos) VALUES (%d, %d, %.2f);",
+            id_padre, (int)c.tipo_comida, c.kilos);
+
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("[!] Error Comida: %s\n", error);
+        sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
+        sqlite3_free(error);
+        return -1;
+    }
+
+    sqlite3_exec(db, "COMMIT;", 0, 0, 0);
     return 0;
 }
 
-
-// Comprobar login
-// int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo)  //TIPO ERABILI GABE DAO???
-// {
-//     char sql[300];
-//     int encontrado = 0;
-//     sprintf(sql, "SELECT * FROM Usuarios WHERE nombre_usuario='%s' AND contrasena='%s';", user, pass);
-
-
-//     char *error = 0;
-//     sqlite3_exec(db, sql, callbackLogin, &encontrado, &error);
-
-
-//     return encontrado;
-// }
-
-// --- Función auxiliar para no ensuciar el código principal ---
-int buscarIdEspecifico(sqlite3 *db, int id_usuario, int tipo) {
+//[GRUPO 2: LÓGICA/CONSULTAS]
+//Comprobar Login
+int comprobarLogin(sqlite3 *db, char *user, char *pass, Usuario *u_sesion) {
     sqlite3_stmt *stmt;
-    int id_final = -1;
-    const char *sql;
-
-    if (tipo == VOLUNTARIO) sql = "SELECT id_voluntario FROM Voluntarios WHERE id_usuario = ?;";
-    else if (tipo == DONANTE) sql = "SELECT id_donante FROM Donantes WHERE id_usuario = ?;";
-    else if (tipo == BENEFICIARIO) sql = "SELECT id_beneficiario FROM Beneficiario WHERE id_usuario = ?;";
-    else return id_usuario; // Para el Admin, usamos su ID de usuario normal
-
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, id_usuario);
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            id_final = sqlite3_column_int(stmt, 0);
-        }
-    }
-    sqlite3_finalize(stmt);
-    return id_final;
-}
-
-//PRUEBA
-int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo_res, int *id_res) {
-    sqlite3_stmt *stmt;
-    char *sql = "SELECT tipo, id_usuario FROM Usuarios WHERE nombre_usuario = ? AND contrasena = ?;";
+    // Seleccionamos todos los campos necesarios para rellenar la struct Usuario
+    char *sql = "SELECT id_usuario, nombre, apellidos, nombre_usuario, tipo FROM Usuarios WHERE nombre_usuario = ? AND contrasena = ?;";
     int encontrado = 0;
 
-
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-        // Enlazamos los parámetros para evitar Inyección SQL
         sqlite3_bind_text(stmt, 1, user, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, pass, -1, SQLITE_STATIC);
 
-
         if (sqlite3_step(stmt) == SQLITE_ROW) {
-            // "Extraemos" los valores de la fila encontrada
-            *tipo_res = sqlite3_column_int(stmt, 0);
-            *id_res = sqlite3_column_int(stmt, 1);
+            // Rellenamos la estructura campo a campo
+            u_sesion->id_usuario = sqlite3_column_int(stmt, 0);
+            
+            // Copiamos los strings de la DB a los arrays fijos de la struct
+            strncpy(u_sesion->nombre, (const char*)sqlite3_column_text(stmt, 1), sizeof(u_sesion->nombre) - 1);
+            strncpy(u_sesion->apellidos, (const char*)sqlite3_column_text(stmt, 2), sizeof(u_sesion->apellidos) - 1);
+            strncpy(u_sesion->nombre_usuario, (const char*)sqlite3_column_text(stmt, 3), sizeof(u_sesion->nombre_usuario) - 1);
+            
+            u_sesion->tipoUsuario = (TipoUsuario)sqlite3_column_int(stmt, 4);
+            
             encontrado = 1;
         }
     }
@@ -395,637 +314,936 @@ int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo_res, int *id_r
     return encontrado;
 }
 
+// Devuelve 1 si el voluntario ya tiene otro evento ese día
+int tieneChoqueDeFechas(sqlite3 *db, int id_voluntario, int id_evento_nuevo) {
+    sqlite3_stmt *stmt;
+    char fecha_objetivo[20] = "";
+    int choque = 0;
 
-// Mostrar usuarios
-int callbackMostrar(void *data, int argc, char **argv, char **colName)
-{
-    printf("\n--- Usuario ---\n");
-    for (int i = 0; i < argc; i++)
-    {
-        // Contraseña ez azaltzeko
-        if (strcmp(colName[i], "contrasena") == 0)
-            continue;
-        printf("%s: %s\n", colName[i], argv[i] ? argv[i] : "NULL");
+    // A. Obtener la fecha del evento al que se quiere apuntar
+    const char *sql_f = "SELECT date(fecha_ini) FROM Evento WHERE id_evento = ?;";
+    if (sqlite3_prepare_v2(db, sql_f, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_evento_nuevo);
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            strcpy(fecha_objetivo, (const char*)sqlite3_column_text(stmt, 0));
+        }
+        sqlite3_finalize(stmt);
     }
-    return 0;
+
+    // B. Buscar si el voluntario ya tiene algo ese día (Evento o Taller)
+    // Usamos UNION para mirar en las dos tablas de relación a la vez
+    const char *sql_check = 
+        "SELECT COUNT(*) FROM ("
+        "  SELECT date(e.fecha_ini) as fecha FROM Participaciones p "
+        "  JOIN Evento e ON p.id_evento = e.id_evento WHERE p.id_voluntario = ? "
+        "  UNION ALL "
+        "  SELECT date(t.fecha) as fecha FROM Impartir i "
+        "  JOIN Taller t ON i.id_taller = t.id_taller WHERE i.id_voluntario = ?"
+        ") WHERE fecha = ?;";
+
+    if (sqlite3_prepare_v2(db, sql_check, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_voluntario);
+        sqlite3_bind_int(stmt, 2, id_voluntario);
+        sqlite3_bind_text(stmt, 3, fecha_objetivo, -1, SQLITE_STATIC);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            choque = sqlite3_column_int(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    return (choque > 0); 
+}
+// Devuelve 1 si el evento ha llegado a su límite
+int estaEventoLleno(sqlite3 *db, int id_e) {
+    sqlite3_stmt *stmt;
+    int lleno = 0;
+
+    // La consulta obtiene el cupo máximo y cuántas participaciones hay ya registradas
+    const char *sql = "SELECT E.lim_voluntarios, (SELECT COUNT(*) FROM Participaciones WHERE id_evento = ?) "
+                      "FROM Evento E WHERE E.id_evento = ?;";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_e);
+        sqlite3_bind_int(stmt, 2, id_e);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            int cupo_maximo = sqlite3_column_int(stmt, 0);
+            int ocupados = sqlite3_column_int(stmt, 1);
+
+            if (ocupados >= cupo_maximo) {
+                lleno = 1; // El evento está lleno
+            }
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        printf("[!] Error al comprobar el cupo del evento: %s\n", sqlite3_errmsg(db));
+    }
+
+    return lleno;
 }
 
+// Evaluar la ayuda que necesita el beneficiario
+void evaluarBeneficiario(Beneficiario b) {
+    float renta = b.ingresos - b.gastos;
+   
+    // Cálculos de umbrales mensuales
+    float gastoComidaMensual = (b.num_adultos * 150.0f) + (b.num_ninos * 140.0f);
+    float gastoRopaMensual = (b.num_adultos * 5.50f) + (b.num_ninos * 9.0f);
+    float umbralTotal = gastoComidaMensual + gastoRopaMensual;
 
-void mostrarUsuarios(sqlite3 *db)
-{
-    char *sql = "SELECT * FROM Usuarios;";
-    char *error = 0;
-    if (sqlite3_exec(db, sql, callbackMostrar, 0, &error) != SQLITE_OK)
+
+    printf("\n===========================================");
+    printf("\n      RESULTADO DEL ANÁLISIS SOCIAL");
+    printf("\n===========================================");
+
+
+    // Lógica de Escenarios
+    if (renta > umbralTotal)
     {
-        printf("Error al mostrar usuarios: %s\n", error);
+        // --- AUTOSUFICIENTE ---
+        printf("\nESTADO: Evaluación Finalizada -> Autosuficiente");
+        printf("\nTras analizar tu renta disponible, el sistema indica que puedes cubrir");
+        printf("\nlas necesidades básicas de alimentación y vestimenta por tu cuenta.");
+        printf("\nPriorizamos nuestros recursos para casos en situación de mayor urgencia.");
+        printf("\n-------------------------------------------");
+        printf("\nSi tu situación económica cambia, puedes solicitar una nueva evaluación.");
+    }
+    else if (renta >= gastoComidaMensual && renta <= umbralTotal)
+    {
+        // --- ESCENARIO A ---
+        printf("\nESTADO: Evaluación Finalizada -> Escenario A");
+        printf("\nTras analizar tu renta disponible, consideramos que cubres la alimentación");
+        printf("\nbásica, por lo tanto, recibirás apoyo específico en vestimenta.");
+        printf("\n-------------------------------------------");
+        mostrarAyudaRopa(b);
+    }
+    else if (renta > 0 && renta < gastoComidaMensual) {
+        // --- ESCENARIO B ---
+        printf("\nESTADO: Evaluación Finalizada -> Escenario B");
+        printf("\nTras analizar tu renta disponible, el sistema indica que necesitas apoyo");
+        printf("\ntanto en alimentación semanal como en vestimenta semestral.");
+        printf("\n-------------------------------------------");
+        mostrarAyudaComida(b);
+        mostrarAyudaRopa(b);
+    }
+    else {
+        // --- ESCENARIO C ---
+        printf("\nESTADO: Evaluación Finalizada -> Escenario C");
+        printf("\nTras analizar tu renta disponible, el sistema detecta una situación de");
+        printf("\nemergencia. Recibirás ayuda económica, alimentación y vestimenta.");
+        printf("\n-------------------------------------------");
+        float dinero = calcularAyudaDinero(b);
+        printf("\n > AYUDA ECONÓMICA: %.2f euros/mes", dinero);
+        mostrarAyudaComida(b);
+        mostrarAyudaRopa(b);
+    }
+    printf("\n===========================================\n");
+}
+
+// Función para actualizar los datos de beneficiario
+int actualizarDatosBeneficiario(sqlite3 *db, int id_perfil, Beneficiario b) {
+    char sql[400];
+    char *error = 0;
+
+
+    // Usamos UPDATE para modificar la fila que ya existe
+    sprintf(sql,
+        "UPDATE Beneficiario SET ingresos = %.2f, gastos = %.2f, "
+        "num_adultos = %d, num_nino = %d WHERE id_beneficiario = %d;",
+        b.ingresos, b.gastos, b.num_adultos, b.num_ninos, id_perfil);
+
+
+    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+        printf("Error al actualizar base de datos: %s\n", error);
         sqlite3_free(error);
+        return 0;
     }
+    evaluarBeneficiario(b);
+    return 1;
 }
 
 
-// DONAZIUAK
 
+//[GRUPO 3: INTERFAZ]
 
-//DINERO
-void donarDinero(sqlite3 *db, int id_donante) {
-    sqlite3_stmt *check;
-    const char *sql_check = "SELECT COUNT(*) FROM Donantes WHERE id_donante = ?;";
-    int existe = 0;
-    if (sqlite3_prepare_v2(db, sql_check, -1, &check, 0) == SQLITE_OK) {
-        sqlite3_bind_int(check, 1, id_donante);
-        if (sqlite3_step(check) == SQLITE_ROW)
-            existe = sqlite3_column_int(check, 0);
-    }
-    sqlite3_finalize(check);
+// Guardar condiciones de beneficiario
+Beneficiario guardarCondicionesBeneficiario() {
+    Beneficiario b = {0}; // Inicializamos a 0
+    int correcto;
+    float sueldos, ayudas, alquiler, suministros, material_escolar, estudios, otros;
 
-    if (!existe) {
-        printf("[!] Error: ID de donante no valido.\n");
-        return;
-    }
+    printf("\n--- DETALLES ECONÓMICOS DEL BENEFICIARIO ---\n");
+    printf("\n* Responde a la pregunta y pulsa enter para continuar.\n");
 
-    float cantidad;
-    char sql[300];
-    char *error = 0;
-    int respuesta;
+    // 1. INTEGRANTES
+    do {
+        printf("\n> INTEGRANTES DE LA FAMILIA\n");
+        printf("Número de adultos en casa: ");
+        scanf("%d", &b.num_adultos);
+        printf("Número de niños/as en casa: ");
+        scanf("%d", &b.num_ninos);
+        
+        printf("  > ¿Deseas cambiar algún dato de los integrantes? (1: Sí / 0: No): ");
+        scanf("%d", &correcto);
+        while (getchar() != '\n'); // Limpia buffer
 
-    printf("\n--- REALIZAR DONACION DE DINERO ---\n");
-    printf("Introduce la cantidad a donar: ");
-    if (scanf("%f", &cantidad) != 1) {
-        printf("[!] Error: debes introducir un numero valido.\n");
+        if (correcto == 1) printf("[!] Reintentando integrantes...\n");
+    } while (correcto != 0);
+
+    // 2. INGRESOS
+    do {
+        printf("\n> INGRESOS\n");
+        printf("Sueldo mensual total: ");
+        scanf("%f", &sueldos);
+        printf("Otras ayudas/pensiones: ");
+        scanf("%f", &ayudas);
+        
+        printf("  > ¿Deseas cambiar algún dato de los ingresos? (1: Sí / 0: No): ");
+        scanf("%d", &correcto);
         while (getchar() != '\n');
+
+        if (correcto == 1) printf("[!] Reintentando ingresos...\n");
+    } while (correcto != 0);
+
+    // 3. GASTOS
+    do {
+        printf("\n> GASTOS\n");
+        printf("Alquiler o hipoteca: ");
+        scanf("%f", &alquiler);
+        printf("Luz, agua y gas: ");
+        scanf("%f", &suministros);
+        printf("Material escolar: ");
+        scanf("%f", &material_escolar);
+        printf("Gastos en estudios: ");
+        scanf("%f", &estudios);
+        printf("Otros gastos: ");
+        scanf("%f", &otros);
+
+        printf("  > ¿Deseas cambiar algún dato de los gastos? (1: Sí / 0: No): ");
+        scanf("%d", &correcto);
+        while (getchar() != '\n');
+
+        if (correcto == 1) printf("[!] Reintentando gastos...\n");
+    } while (correcto != 0);
+
+    // CALCULAMOS TOTALES Y GUARDAMOS EN LA ESTRUCTURA
+    b.ingresos = sueldos + ayudas;
+    b.gastos = alquiler + suministros + material_escolar + estudios + otros;
+
+    // Llamamos a tu lógica de evaluación
+    evaluarBeneficiario(b);
+
+    return b;
+}
+
+// RegistrarUsuario
+void registrarUsuario(sqlite3 *db) {
+    Usuario u;
+    char buffer[100];
+    int rolElegido;
+    void *datosE = NULL;
+    Beneficiario b = {0};
+    Voluntario v = {0};
+
+    printf("\n--- REGISTRO DE NUEVO USUARIO ---\n");
+    printf("Elige tu rol:\n1. Voluntario\n2. Donante\n3. Beneficiario\nRol (1-3): ");
+    
+    if (scanf("%d", &rolElegido) != 1 || rolElegido < 1 || rolElegido > 3) {
+        printf("Rol no válido.\n");
+        while (getchar() != '\n'); 
         return;
     }
-    // VALIDAR que no queden caracteres extra en el buffer
+    
+    u.tipoUsuario = (TipoUsuario)(rolElegido - 1);
+
+    // Captura con arrays fijos (usando strcpy)
+    printf("Nombre: ");
+    scanf("%s", u.nombre); // Se guarda directo en el array de la struct
+
+    printf("Apellidos: ");
+    while (getchar() != '\n'); 
+    fgets(buffer, sizeof(buffer), stdin);
+    buffer[strcspn(buffer, "\n")] = 0;
+    strncpy(u.apellidos, buffer, sizeof(u.apellidos) - 1);
+
+    printf("Nombre de usuario: ");
+    scanf("%s", u.nombre_usuario);
+
+    printf("Contraseña: ");
+    scanf("%s", u.contrasena);
+
+    // LÓGICA DE PERFILES (Lo que añadimos para que sea "Rico en estructuras")
+    if (u.tipoUsuario == 2) {
+        b = guardarCondicionesBeneficiario(); // Esta es la que ya arreglamos antes
+        datosE = &b;
+    } 
+    else if (u.tipoUsuario == 0) {
+        //printf("Elija su rol (Profesor, Repartidor...): ");
+        //scanf("%s", v.rol);
+        datosE = &v;
+    }
+
+    // Llamamos a la función que gestiona la DB
+// ... después de capturar los datos ...
+    int id_perfil_especifico = insertarUsuario(db, u, datosE);
+
+    if (id_perfil_especifico != -1) {
+        printf("\n[OK] Registro completado con éxito.\n");
+    } else {
+        printf("\n[!] ERROR: No se pudo registrar. Puede que el usuario ya exista.\n");
+    }
+
+    printf("\nPresiona ENTER para volver al menú principal...");
+    fflush(stdin); // Limpia teclado
+    getchar(); 
+    getchar();
+    // NOTA: Ya no hay frees porque no hay strdups. ¡Mucho más limpio!
+}
+
+// Iniciar Sesion
+void iniciarSesion(sqlite3 *db) {
+    char user[50], pass[50];
+    Usuario sesion; // Estructura de "sesion" para guardar todo lo que sabemos del usuario
+
+    printf("\n--- INICIAR SESIÓN ---\n");
+    printf("\nUsuario: ");
+    scanf("%s", user);
+    printf("Contraseña: ");
+    scanf("%s", pass);
+
+    // Ahora comprobarLogin RELLENA la estructura 'sesion'
+    if (comprobarLogin(db, user, pass, &sesion)) {
+        
+        // Usamos sesion.id_usuario (el de la tabla Usuarios) para buscar el perfil específico
+        int id_perfil = buscarIdEspecifico(db, sesion.id_usuario, sesion.tipoUsuario);
+        
+        if (id_perfil != -1) {
+            // ¡Mira qué bien queda ahora saludar por el nombre!
+            printf("\n¡Bienvenido, %s %s!\n", 
+                   sesion.nombre, sesion.apellidos, id_perfil);
+            
+            if (sesion.tipoUsuario == ADMINISTRADOR) {
+                menuAdministrador(db);
+            } else {
+                // Pasamos el tipo (enum) y el id_perfil (FK)
+                menuPrincipal(db, (int)sesion.tipoUsuario, id_perfil);
+            }
+        } else {
+            printf("Error: No se encontró un perfil asociado a este usuario.\n");
+        }
+    } else {
+        printf("Error: Usuario o contraseña incorrectos.\n");
+    }
+}
+
+// Crear Evento
+void crearEvento(sqlite3 *db) {
+    Evento e; // Nuestra estructura única
+    int temp_material;
+
+    printf("\n--- CREAR EVENTO ---\n");
+    printf("Descripción: ");
+    scanf(" %[^\n]", e.descripcion); // Guardamos directo en el array de la struct
+
+    printf("Tipo de evento (0 = Ropa, 1 = Comida): ");
+    scanf("%d", &temp_material);
+    e.material = (Material)temp_material;
+
+    printf("Límite de voluntarios: ");
+    scanf("%d", &e.lim_voluntarios);
+
+    // Mantenemos tus validaciones potentes de fecha
+    do {
+        printf("Fecha inicio (DD/MM/AAAA HH:MM): ");
+        if (leer_y_validar_fecha("", &e.fecha_inicio)) {
+            break;
+        }
+        printf(" Error: La fecha de inicio debe ser válida y futura.\n");
+    } while (1);
+
+    do {
+        printf("Fecha final (DD/MM/AAAA HH:MM): ");
+        if (leer_y_validar_fecha("", &e.fecha_fin)) {
+            // Comparamos usando los campos de la struct
+            if (comparar_fechas(e.fecha_inicio, e.fecha_fin) == 1) {
+                break;
+            }
+            printf(" Error: La fecha final debe ser posterior a la de inicio.\n");
+        } else {
+            printf(" Error: Formato incorrecto o fecha pasada.\n");
+        }
+    } while (1);
+
+    // Llamamos a la lógica de base de datos
+    if (insertarEvento(db, e) == 0) {
+        printf("Evento registrado correctamente en el sistema.\n");
+    } else {
+        printf("Hubo un problema al guardar el evento.\n");
+    }
+}
+
+// Apuntarse a un evento
+void apuntarseEvento(sqlite3 *db, int id_voluntario) {
+    Participacion p;
+    p.id_voluntario = id_voluntario;
+    sqlite3_stmt *stmt;
+    char *error = 0;
+
+    printf("\n--- APUNTARSE A UN EVENTO ---\n");
+    printf("\nEventos disponibles en los que aún no participas:\n");
+
+    // 1. Mostrar disponibles usando SENTENCIAS PREPARADAS (Sustituye al callback)
+    const char *sql_list = 
+        "SELECT id_evento, descripcion, fecha_ini, tipo, material FROM Evento "
+        "WHERE date(fecha_ini) >= date('now') "
+        "AND id_evento NOT IN (SELECT id_evento FROM Participaciones WHERE id_voluntario = ?);";
+
+    if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_voluntario);
+
+        printf("\n%-4s | %-10s | %-10s | %-18s | %s\n", "ID", "TIPO", "MATERIAL", "FECHA", "DESCRIPCIÓN");
+        printf("------------------------------------------------------------------------------------\n");
+
+        int encontrados = 0;
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            encontrados = 1;
+            int id = sqlite3_column_int(stmt, 0);
+            const char *desc = (const char*)sqlite3_column_text(stmt, 1);
+            const char *fecha = (const char*)sqlite3_column_text(stmt, 2);
+            int tipo_int = sqlite3_column_int(stmt, 3);
+            int mat_int = sqlite3_column_int(stmt, 4);
+
+            // Traducción de enums a texto (lo que antes hacía el callback)
+            char *txtTipo = (tipo_int == 0) ? "Recogida" : "Reparto";
+            char *txtMat = (mat_int == 0) ? "Ropa" : "Comida";
+
+            printf("%-4d | %-10s | %-10s | %-18s | %s\n", id, txtTipo, txtMat, fecha, desc);
+        }
+        
+        if (!encontrados) {
+            printf("[INFO] No hay eventos nuevos disponibles para ti en este momento.\n");
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        printf("Error al consultar eventos: %s\n", sqlite3_errmsg(db));
+    }
+
+    printf("------------------------------------------------------------------------------------\n");
+    printf("Introduce el ID del evento (0 para cancelar): ");
+    if (scanf("%d", &p.id_evento) != 1) {
+        while (getchar() != '\n'); // Limpiar si meten letras
+        return;
+    }
+    if (p.id_evento <= 0) return;
+
+    // 2. Comprobar Choque de Fechas (Se queda igual)
+    if (tieneChoqueDeFechas(db, p.id_voluntario, p.id_evento)) {
+        printf("\n¡ERROR! Ya tienes otro compromiso registrado para ese mismo día.\n");
+        return;
+    }
+
+    // 3. Comprobar Cupo (Se queda igual)
+    if (estaEventoLleno(db, p.id_evento)) {
+        printf("\n¡ERROR! El evento ya tiene suficientes voluntarios.\n");
+        return;
+    }
+
+    // 4. Inserción final usando la estructura Participacion
+    const char *sql_ins = "INSERT INTO Participaciones (id_voluntario, id_evento) VALUES (?, ?);";
+    
+    if (sqlite3_prepare_v2(db, sql_ins, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, p.id_voluntario);
+        sqlite3_bind_int(stmt, 2, p.id_evento);
+
+        if (sqlite3_step(stmt) == SQLITE_DONE) {
+            printf("\n[OK] ¡Inscripción realizada con éxito! Gracias por tu colaboración.\n");
+        } else {
+            printf("\n[ERROR] No se pudo completar la inscripción: %s\n", sqlite3_errmsg(db));
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        printf("\n[ERROR] Error de preparación: %s\n", sqlite3_errmsg(db));
+    }
+}
+
+// Leer y validar la fecha
+int leer_y_validar_fecha(const char *mensaje, Fecha *f)
+{
+    printf("%s", mensaje);
+    if (scanf("%d/%d/%d %d:%d", &f->dia, &f->mes, &f->anyo, &f->hora, &f->minutos) != 5)
     {
-        int c = getchar();
-        if (c != '\n' && c != EOF) {
-            printf("[!] Error: debes introducir solo un numero valido.\n");
-            while (getchar() != '\n');
-            return;
+        while (getchar() != '\n')
+            ;
+        return 0;
+    }
+    while (getchar() != '\n')
+        ;
+    int dias_max;
+    if (f->mes < 1 || f->mes > 12 || f->hora < 0 || f->hora > 23 || f->minutos < 0 || f->minutos > 59)
+        return 0;
+
+    if (f->mes == 2)
+    {
+        if (es_bisiesto(f->anyo))
+        {
+            dias_max = 29;
+        }
+        else
+        {
+            dias_max = 28;
         }
     }
 
-    if (cantidad <= 0) {
-        printf("La cantidad debe ser mayor que 0.\n");
-        return;
+    else if (f->mes == 4 || f->mes == 6 || f->mes == 9 || f->mes == 11)
+        dias_max = 30;
+    else
+        dias_max = 31;
+
+    if (f->dia < 1 || f->dia > dias_max)
+        return 0;
+    struct tm temp = {0};
+    temp.tm_mday = f->dia;
+    temp.tm_mon = f->mes - 1;      // Los meses en C van de 0 a 11
+    temp.tm_year = f->anyo - 1900; // El año cuenta desde 1900
+    temp.tm_hour = f->hora;
+    temp.tm_min = f->minutos;
+    temp.tm_sec = 0;
+    temp.tm_isdst = -1; // Para que el sistema ajuste horario de verano solo
+
+    time_t tiempo_usuario = mktime(&temp); // Convertimos la fecha del usuario a segundos
+    time_t tiempo_ahora;                   // Creamos la "caja" para guardar el tiempo
+    tiempo_ahora = time(NULL);
+    if (tiempo_usuario <= tiempo_ahora)
+    {
+        printf("Error: La fecha debe ser posterior a la actual.\n");
+        return 0; // Fecha ya pasada
     }
 
-    printf("¿Estas seguro de que quieres donar %.2f EUR?\n0. No\n1. Si\nSeleccion: ", cantidad);
-    if (scanf("%d", &respuesta) != 1) {
-        printf("[!] Error: opcion no valida.\n");
+    return 1; // Fecha valida
+}
+
+// Donar Ropa
+void donarRopa(sqlite3 *db, int id_usuario) {
+    Ropa r;
+    int respuesta;
+
+    printf("\n--- REALIZAR DONACIÓN DE ROPA ---\n");
+    printf("Cantidad en kilogramos: ");
+    
+    // Validación de entrada
+    if (scanf("%f", &r.kilos) != 1 || r.kilos <= 0) {
+        printf("[!] Error: Debes introducir un peso válido mayor que 0.\n");
         while (getchar() != '\n');
         return;
     }
+
+    // Limpiamos buffer tras el scanf
+    while (getchar() != '\n');
+
+    printf("¿Confirmas donar %.2f kg de ropa?\n0. No\n1. Sí\nSelección: ", r.kilos);
+    scanf("%d", &respuesta);
     while (getchar() != '\n');
 
     if (respuesta == 1) {
-        sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo, fecha) VALUES (%d, 1, datetime('now'));", id_donante);
-
-        if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
-            long long id_padre = sqlite3_last_insert_rowid(db);
-
-            char sqlDinero[400];
-            sprintf(sqlDinero, "INSERT INTO Dinero (cantidad, id_donacion) VALUES (%.2f, %lld);",
-                    cantidad, id_padre);
-
-            if (sqlite3_exec(db, sqlDinero, 0, 0, &error) == SQLITE_OK) {
-                time_t t = time(NULL);
-                struct tm *tm_info = localtime(&t);
-                char fecha[20];
-                strftime(fecha, sizeof(fecha), "%d/%m/%Y %H:%M", tm_info);
-                printf("\n[EXITO] Se han registrado %.2f EUR correctamente.\n", cantidad);
-                printf("Fecha: %s\n", fecha);
-            } else {
-                printf("[!] Error en tabla Dinero: %s\n", error);
-                sqlite3_free(error);
-            }
+        // Llamamos a la función que usa las estructuras
+        if (insertarDonacionRopa(db, r, id_usuario) == 0) {
+            printf("\n[ÉXITO] Tu donación de %.2f kg ha sido registrada.\n", r.kilos);
+            // Aquí llamarías a mostrarProximaRecogida si la tienes
         } else {
-            printf("[!] Error en tabla Donaciones: %s\n", error);
-            sqlite3_free(error);
+            printf("\n[!] No se pudo completar la donación en la base de datos.\n");
         }
-    } else if (respuesta == 0) {
-        printf("Operacion cancelada por el usuario.\n");
     } else {
-        printf("[!] Error: opcion no valida.\n");
+        printf("Operación cancelada.\n");
     }
 }
 
-// En funciones.c - añadir estas dos funciones
+// Donar dinero
+void donarDinero(sqlite3 *db, int id_donante) {
+    Dinero d; // Usamos tu estructura
+    int confirmar;
 
-// COMIDA
+    printf("\n--- DONACIÓN DE DINERO ---\n");
+    printf("Cantidad: ");
+    if (scanf("%f", &d.cantidad) != 1 || d.cantidad <= 0) {
+        printf("Error en cantidad.\n");
+        while(getchar()!='\n'); return;
+    }
+
+    printf("¿Confirmar %.2f€? (1:Si / 0:No): ", d.cantidad);
+    scanf("%d", &confirmar);
+
+    if (confirmar == 1) {
+        // En una sola línea llamamos a la base de datos
+        if (insertarDonacionDinero(db, d, id_donante) == SQLITE_OK) {
+            printf("[EXITO] Guardado.\n");
+        }
+    }
+}
+
+// Donar comida
 void donarComida(sqlite3 *db, int id_donante) {
-    float kilos;
-    char sql[300];
-    char *error = 0;
+    Donacion d;
+    Comida c;
     int respuesta, seleccion;
     const char *nombresCategorias[] = {"", "Carbohidratos", "Legumbres", "Conservas", "Lacteos", "Infantil"};
 
     printf("\n--- REALIZAR DONACION DE COMIDA ---\n");
 
-    // 1. Selección de categoría con limpieza de buffer única
+    // 1. Selección de categoría (Validación original)
     do {
         printf("Seleccione el tipo de alimento:\n");
-        printf("1. %s\n2. %s\n3. %s\n4. %s\n5. %s\n",
-               nombresCategorias[1], nombresCategorias[2], nombresCategorias[3],
-               nombresCategorias[4], nombresCategorias[5]);
+        for(int i=1; i<=5; i++) printf("%d. %s\n", i, nombresCategorias[i]);
         printf("Seleccion: ");
         
         if (scanf("%d", &seleccion) != 1) {
             printf("[!] Error: Introduce un numero.\n");
-            while (getchar() != '\n'); // Limpia letras
+            while (getchar() != '\n'); 
             seleccion = -1;
             continue;
         }
-        while (getchar() != '\n'); // Limpia el ENTER tras el número
+        while (getchar() != '\n');
 
         if (seleccion < 1 || seleccion > 5)
             printf("[!] Opcion no valida, elige entre 1 y 5.\n");
     } while (seleccion < 1 || seleccion > 5);
 
-    // 2. Validación robusta para la cantidad (Solución al 3f3)
+    // Asignamos a la estructura Comida (usando tu Enum)
+    c.tipo_comida = (TipoComida)seleccion;
+
+    // 2. Validación de Kilogramos (Tu lógica robusta 3f3)
     printf("Cantidad en kilogramos: ");
-    if (scanf("%f", &kilos) != 1) {
+    if (scanf("%f", &c.kilos) != 1) {
         printf("[!] Error: debes introducir un numero valido.\n");
         while (getchar() != '\n'); 
         return;
     }
     
-    // Comprobar si quedó "basura" en el buffer (como la 'f' de '3f3')
-    int c = getchar();
-    if (c != '\n' && c != EOF) {
+    int ch = getchar();
+    if (ch != '\n' && ch != EOF) {
         printf("[!] Error: Formato incorrecto. No incluyas letras en la cantidad.\n");
-        while (getchar() != '\n'); // Limpia el resto de la línea
+        while (getchar() != '\n'); 
         return;
     }
 
-    if (kilos <= 0) { 
+    if (c.kilos <= 0) { 
         printf("[!] Los kilogramos deben ser mayor que 0.\n"); 
         return; 
     }
 
-    // 3. Confirmación
+    // 3. Confirmación y guardado
     printf("¿Confirmas donar %.2f kg de %s?\n0. No\n1. Si\nSeleccion: ",
-           kilos, nombresCategorias[seleccion]);
+           c.kilos, nombresCategorias[seleccion]);
     
     if (scanf("%d", &respuesta) != 1) {
-        printf("[!] Error: opcion no valida.\n");
         while (getchar() != '\n');
         return;
     }
     while (getchar() != '\n');
 
     if (respuesta == 1) {
-        sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo, fecha) "
-                     "VALUES (%d, 2, datetime('now'));", id_donante);
+        // Rellenamos la estructura Donacion antes de enviar
+        d.id_usuario = id_donante;
+        d.tipoDonacion = COMIDAD; // Asumo que tienes este enum para el tipo 2
 
-        if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
-            long long id_padre = sqlite3_last_insert_rowid(db);
-            char sqlComida[400];
-            sprintf(sqlComida,
-                    "INSERT INTO Comida (tipo_comida, kilos, id_donacion) "
-                    "VALUES ('%s', %.2f, %lld);",
-                    nombresCategorias[seleccion], kilos, id_padre);
-
-            if (sqlite3_exec(db, sqlComida, 0, 0, &error) == SQLITE_OK) {
-                printf("\n[EXITO] Donacion registrada correctamente.\n");
-                // Llamamos a la función del evento
-                mostrarProximaRecogida(db, 1); 
-            } else {
-                printf("[!] Error: %s\n", error);
-                sqlite3_free(error);
-            }
+        if (insertarDonacionComidaDB(db, d, c) == 0) {
+            printf("\n[EXITO] Donacion registrada correctamente.\n");
+            // Mantenemos tu función de feedback
+            mostrarProximaRecogida(db, COMIDA); 
         }
     } else {
         printf("Operacion cancelada.\n");
     }
 }
 
+// Apuntarse beneficiario a taller
+void apuntarseTaller(sqlite3 *db, int id_beneficiario) {
+    sqlite3_stmt *stmt;
+    int id_taller;
 
+    printf("\n--- TALLERES DISPONIBLES ---\n");
 
+    // 1. Mostrar talleres en los que el beneficiario NO está inscrito todavía
+    // Nota: En tu DB la tabla es 'Taller' y las columnas son 'id_taller', 'tipo', 'descripcion'
+    const char *sql_list = "SELECT id_taller, tipo, descripcion FROM Taller "
+                           "WHERE id_taller NOT IN (SELECT id_taller FROM Asistencia WHERE id_beneficiario = ?);";
 
+    if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_beneficiario);
+        
+        int encontrados = 0;
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            encontrados++;
+            printf("ID: %d | Tipo: %s | %s\n", 
+                   sqlite3_column_int(stmt, 0), 
+                   sqlite3_column_text(stmt, 1), 
+                   sqlite3_column_text(stmt, 2));
+        }
+        sqlite3_finalize(stmt);
 
-// ROPA
-void donarRopa(sqlite3 *db, int id_donante) {
-    sqlite3_stmt *check;
-    const char *sql_check = "SELECT COUNT(*) FROM Donantes WHERE id_donante = ?;";
-    int existe = 0;
-    if (sqlite3_prepare_v2(db, sql_check, -1, &check, 0) == SQLITE_OK) {
-        sqlite3_bind_int(check, 1, id_donante);
-        if (sqlite3_step(check) == SQLITE_ROW)
-            existe = sqlite3_column_int(check, 0);
-    }
-    sqlite3_finalize(check);
-
-    if (!existe) {
-        printf("[!] Error: ID de donante no valido.\n");
-        return;
-    }
-
-    float kilos;
-    char sql[300];
-    char *error = 0;
-    int respuesta;
-
-    printf("\n--- REALIZAR DONACION DE ROPA ---\n");
-    printf("Cantidad en kilogramos: ");
-    if (scanf("%f", &kilos) != 1) {
-        printf("[!] Error: debes introducir un numero valido.\n");
-        while (getchar() != '\n');
-        return;
-    }
-    // VALIDAR que no queden caracteres extra en el buffer
-    {
-        int c = getchar();
-        if (c != '\n' && c != EOF) {
-            printf("[!] Error: debes introducir solo un numero valido.\n");
-            while (getchar() != '\n');
+        if (encontrados == 0) {
+            printf("No hay talleres nuevos disponibles para ti en este momento.\n");
             return;
         }
-    }
-
-    if (kilos <= 0) {
-        printf("[!] Error: los kilogramos deben ser mayor que 0.\n");
-        return;
-    }
-
-    printf("¿Confirmas donar %.2f kg de ropa?\n0. No\n1. Si\nSeleccion: ", kilos);
-    if (scanf("%d", &respuesta) != 1) {
-        printf("[!] Error: opcion no valida.\n");
-        while (getchar() != '\n');
-        return;
-    }
-    while (getchar() != '\n');
-
-    if (respuesta == 1) {
-        sprintf(sql, "INSERT INTO Donaciones (id_donante, tipo, fecha) VALUES (%d, 3, datetime('now'));", id_donante);
-
-        if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
-            long long id_padre = sqlite3_last_insert_rowid(db);
-
-            char sqlRopa[400];
-            sprintf(sqlRopa,
-                    "INSERT INTO Ropa (id_donacion, kilos) VALUES (%lld, %.2f);",
-                    id_padre, kilos);
-
-            if (sqlite3_exec(db, sqlRopa, 0, 0, &error) == SQLITE_OK) {
-                time_t t = time(NULL);
-                struct tm *tm_info = localtime(&t);
-                char fecha[20];
-                strftime(fecha, sizeof(fecha), "%d/%m/%Y %H:%M", tm_info);
-                printf("\n[EXITO] Donacion de %.2f kg de ropa registrada correctamente.\n", kilos);
-                printf("Fecha: %s\n", fecha);
-                mostrarProximaRecogida(db, 0); // 0 = Ropa
-            } else {
-                printf("[!] Error en tabla Ropa: %s\n", error);
-                sqlite3_free(error);
-            }
-        } else {
-            printf("[!] Error en tabla Donaciones: %s\n", error);
-            sqlite3_free(error);
-        }
-    } else if (respuesta == 0) {
-        printf("Operacion cancelada por el usuario.\n");
     } else {
-        printf("[!] Error: opcion no valida.\n");
-    }
-}
-
-
-
-
-
-
-
-// EVENTUAK
-
-
-
-
-
-
-// ROLAN ARABERA MENUA
-
-
-
-
-
-
-// Funciones de menú
-// HAU ZABANA GEHIXKI BADAO NERIA ZABANA JARRI BERRIZ!!
-/*
-void iniciarSesion(sqlite3 *db) {
-    char user[50], pass[50];
-    printf("\n--- INICIAR SESIÓN ---\n");
-    printf("Usuario: ");
-    scanf("%s", user);
-    printf("Contraseña: ");
-    scanf("%s", pass);
-
-
-    if (comprobarLogin(db, user, pass)) {
-        printf("\n¡Bienvenido %s!\n", user);
-    } else {
-        printf("\nError: Usuario o contraseña incorrectos.\n");
-    }
-}
-    */
-
-
-// INICIAR SESION 2.0
-void iniciarSesion(sqlite3 *db)
-{
-
-
-    char user[50], pass[50];
-    int tipo_detectado = -1;
-    int id_detectado = -1;
-    printf("\n--- INICIAR SESIÓN ---\n");
-
-
-    int tipo;
-
-
-    printf("\nUsuario: ");
-    scanf("%s", user);
-
-
-    printf("Contraseña: ");
-    scanf("%s", pass);
-
-    if (comprobarLogin(db, user, pass, &tipo_detectado, &id_detectado)) {
-        // id_detectado aquí es el de la tabla 'Usuarios' (ej: 20)
-        
-        int id_perfil = buscarIdEspecifico(db, id_detectado, tipo_detectado);
-        
-        if (id_perfil != -1) {
-            printf("\n¡Bienvenido! Entrando como perfil ID: %d\n", id_perfil);
-            
-            if (tipo_detectado == ADMINISTRADOR) {
-                menuAdministrador(db);
-            } else {
-                // Pasamos id_perfil (ej: 5), NO id_detectado (ej: 20)
-                menuPrincipal(db, tipo_detectado, id_perfil);
-            }
-        } else {
-            printf("Error: No se encontró un perfil asociado a este usuario.\n");
-        }
-    }
-}
-
-
-void registrarUsuario(sqlite3 *db)
-{
-    Usuario nuevoUsuario;
-    char buffer[100]; // Un poco más grande por si los apellidos son largos
-    int rolElegido;
-
-    printf("\n--- REGISTRO DE NUEVO USUARIO ---\n");
-    printf("Elige tu rol:\n1. Voluntario\n2. Donante\n3. Beneficiario\nRol (1-3): ");
-    
-    if (scanf("%d", &rolElegido) != 1 || rolElegido < 1 || rolElegido > 3)
-    {
-        printf("Rol no válido. Volviendo al menú principal...\n");
-        while (getchar() != '\n'); // Limpiar buffer
+        printf("[!] Error al consultar talleres: %s\n", sqlite3_errmsg(db));
         return;
     }
+
+    printf("\nIntroduce el ID del taller al que quieres asistir (0 para cancelar): ");
+    if (scanf("%d", &id_taller) != 1 || id_taller <= 0) return;
+
+    // 2. Inserción en la tabla Asistencia usando BIND (más seguro que sprintf)
+    const char *sql_ins = "INSERT INTO Asistencia (id_beneficiario, id_taller) VALUES (?, ?);";
+
+    if (sqlite3_prepare_v2(db, sql_ins, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_beneficiario);
+        sqlite3_bind_int(stmt, 2, id_taller);
+
+        if (sqlite3_step(stmt) == SQLITE_DONE) {
+            printf("\n[OK] Te has inscrito correctamente en el taller %d.\n", id_taller);
+        } else {
+            // Esto puede fallar si el ID del taller no existe (FK constraint)
+            printf("\n[!] Error al inscribirse: %s\n", sqlite3_errmsg(db));
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        printf("\n[!] Error de preparación: %s\n", sqlite3_errmsg(db));
+    }
+}
+
+
+
+// Asignar profesor
+// Función que usa el Administrador para asignar un voluntario
+void asignarVoluntarioTaller(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    int id_voluntario, id_taller;
+
+    printf("\n--- LISTA DE TALLERES DISPONIBLES ---\n");
+    // 1. Consultamos la tabla Taller (ajusta los nombres de columna si varían)
+    const char *sql_t = "SELECT id_taller, nombre, fecha FROM Taller;"; 
     
-    // Asignar el tipo (0: Voluntario, 1: Donante, 2: Beneficiario)
-    nuevoUsuario.tipoUsuario = (TipoUsuario)(rolElegido - 1);
-
-    // Captura de datos personales
-    printf("Nombre: ");
-    scanf("%s", buffer);
-    nuevoUsuario.nombre = strdup(buffer);
-
-    printf("Apellidos: ");
-    while (getchar() != '\n'); // Limpiar buffer para el fgets
-    fgets(buffer, sizeof(buffer), stdin);
-    buffer[strcspn(buffer, "\n")] = 0;
-    nuevoUsuario.apellidos = strdup(buffer);
-
-    printf("Nombre de usuario: ");
-    scanf("%s", buffer);
-    nuevoUsuario.nombre_usuario = strdup(buffer);
-
-    printf("Contraseña: ");
-    scanf("%s", buffer);
-    nuevoUsuario.contrasena = strdup(buffer);
-
-    // --- LA CLAVE ESTÁ AQUÍ ---
-    // Llamamos a la función maestra que ya creamos. 
-    // Esta función devuelve el ID del PERFIL (id_beneficiario, id_voluntario, etc.)
-    int id_perfil_especifico = insertarUsuario(db, nuevoUsuario);
-
-    if (id_perfil_especifico != -1)
-    {
-        printf("\n[SISTEMA] Registro completado con éxito. Accediendo a tu menú...\n");
-
-        // Guardamos el tipo para el menú antes de liberar la estructura
-        int tipo_final = (int)nuevoUsuario.tipoUsuario;
-
-        // Liberamos memoria de los strdup
-        free(nuevoUsuario.nombre);
-        free(nuevoUsuario.apellidos);
-        free(nuevoUsuario.nombre_usuario);
-        free(nuevoUsuario.contrasena);
-
-        // 3. Entramos al menú con el ID que nos ha devuelto insertarUsuario
-        menuPrincipal(db, tipo_final, id_perfil_especifico);
+    int hay_talleres = 0;
+    if (sqlite3_prepare_v2(db, sql_t, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            hay_talleres = 1;
+            printf("ID Taller: %d | Nombre: %s | Fecha: %s\n", 
+                   sqlite3_column_int(stmt, 0), 
+                   sqlite3_column_text(stmt, 1),
+                   sqlite3_column_text(stmt, 2));
+        }
+        sqlite3_finalize(stmt);
     }
-    else
-    {
-        printf("\n[ERROR] No se pudo completar el registro. Volviendo...\n");
 
-        // Liberamos memoria igualmente para evitar fugas
-        free(nuevoUsuario.nombre);
-        free(nuevoUsuario.apellidos);
-        free(nuevoUsuario.nombre_usuario);
-        free(nuevoUsuario.contrasena);
+    if (!hay_talleres) {
+        printf("[!] No hay talleres registrados en la tabla 'Taller'.\n");
+        return;
+    }
+
+    // 2. LISTAR VOLUNTARIOS (Como antes)
+    printf("\n--- VOLUNTARIOS REGISTRADOS ---\n");
+    const char *sql_v = "SELECT v.id_voluntario, u.nombre FROM Voluntarios v "
+                        "JOIN Usuarios u ON v.id_usuario = u.id_usuario;";
+    if (sqlite3_prepare_v2(db, sql_v, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("ID Voluntario: %d | Nombre: %s\n", 
+                   sqlite3_column_int(stmt, 0), 
+                   sqlite3_column_text(stmt, 1));
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    printf("\nIntroduce el ID del Taller: ");
+    scanf("%d", &id_taller);
+    printf("Introduce el ID del Voluntario: ");
+    scanf("%d", &id_voluntario);
+
+    // 3. VERIFICAR SI EL VOLUNTARIO YA TIENE ALGO ESE DÍA
+    // Obtenemos la fecha del taller seleccionado
+    char fecha_taller[20] = "";
+    const char *sql_f = "SELECT date(fecha) FROM Taller WHERE id_taller = ?;";
+    if (sqlite3_prepare_v2(db, sql_f, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_taller);
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            strcpy(fecha_taller, (const char*)sqlite3_column_text(stmt, 0));
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    // Comprobamos si el voluntario ya está en Participaciones en esa fecha
+    const char *sql_solape = 
+        "SELECT COUNT(*) FROM Participaciones p "
+        "JOIN Evento e ON p.id_evento = e.id_evento "
+        "WHERE p.id_voluntario = ? AND date(e.fecha_ini) = ?;";
+
+    int ocupado = 0;
+    if (sqlite3_prepare_v2(db, sql_solape, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_voluntario);
+        sqlite3_bind_text(stmt, 2, fecha_taller, -1, SQLITE_STATIC);
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            ocupado = sqlite3_column_int(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    if (ocupado > 0) {
+        printf("\n[ERROR] El voluntario ya tiene un evento el dia %s.\n", fecha_taller);
+        return;
+    }
+
+    // 4. INSERTAR EN TU TABLA DE ASIGNACIÓN (Ajusta el nombre si no es Participaciones)
+    // Si tienes una tabla específica para asignar voluntarios a talleres, cámbiala aquí
+    const char *sql_ins = "INSERT INTO ParticipacionesTaller (id_voluntario, id_taller) VALUES (?, ?);";
+    
+    if (sqlite3_prepare_v2(db, sql_ins, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_voluntario);
+        sqlite3_bind_int(stmt, 2, id_taller);
+
+        if (sqlite3_step(stmt) == SQLITE_DONE) {
+            printf("\n[OK] Asignacion completada con exito.\n");
+        } else {
+            printf("\n[ERROR] No se pudo asignar: %s\n", sqlite3_errmsg(db));
+        }
+        sqlite3_finalize(stmt);
     }
 }
-// FUNCIONES PARA VOLUNTARIO
-int callbackGetID(void *data, int argc, char **argv, char **colName) {
-    int *id_dest = (int *)data;
-    if (argc > 0 && argv[0] != NULL) {
-        *id_dest = atoi(argv[0]);
-    }
-    return 0;
-}
-
-void apuntarseEvento(sqlite3 *db, int id_voluntario) 
-{
-    int id_evento_elegido = -1;
-    char sql[700]; // Un poco más de espacio para la consulta larga
+// Borrar un evento
+void borrarEvento(sqlite3 *db) {
+    int id_borrar;
+    char sql[200];
     char *error = 0;
-    
-    printf("\n--- APUNTARSE A UN EVENTO ---\n");
 
-    // 1. Mostrar eventos disponibles (FILTRANDO los que ya está apuntado)
-    printf("\nEventos disponibles en los que aún no participas:\n");
-    
-    sprintf(sql, 
-            "SELECT id_evento, descripcion, fecha_ini, material, tipo FROM Evento "
-            "WHERE date(fecha_ini) BETWEEN date('now') AND date('now', '+3 months') "
-            "AND id_evento NOT IN (SELECT id_evento FROM Participaciones WHERE id_voluntario = %d);",
-            id_voluntario);
+    printf("\n--- ELIMINAR EVENTO ---\n");
+    // Reutilizamos el listado para que el admin vea qué borrar
+    listarEventos(db); 
 
-    if (sqlite3_exec(db, sql, callbackMostrarEventos, 0, &error) != SQLITE_OK) {
-        printf("Error al cargar eventos: %s\n", error);
-        sqlite3_free(error);
-    }
+    printf("\nIntroduce el ID del evento a eliminar (0 para cancelar): ");
+    scanf("%d", &id_borrar);
 
-    printf("----------------------------------------------------------\n");
-    printf("Introduce el ID del evento (0 para cancelar): ");
-    if (scanf("%d", &id_evento_elegido) != 1 || id_evento_elegido <= 0) return;
+    if (id_borrar <= 0) return;
 
-    // 2. Comprobar si ya está ocupado ese día (por OTRO evento distinto)
-    int ya_ocupado = 0;
-    sprintf(sql,
-            "SELECT COUNT(*) FROM Participaciones P "
-            "JOIN Evento E1 ON P.id_evento = E1.id_evento "
-            "WHERE P.id_voluntario = %d AND date(E1.fecha_ini) = "
-            "(SELECT date(fecha_ini) FROM Evento WHERE id_evento = %d);",
-            id_voluntario, id_evento_elegido);
+    // Eliminamos de la tabla Evento
+    // Nota: Si tienes FK con ON DELETE CASCADE, se borrarán también las participaciones
+    sprintf(sql, "DELETE FROM Evento WHERE id_evento = %d;", id_borrar);
 
-    sqlite3_exec(db, sql, callbackCheckFecha, &ya_ocupado, &error);
-    
-    if (ya_ocupado) {
-        printf("\n¡ERROR! Ya tienes otro compromiso registrado para ese mismo día.\n");
-        return;
-    }
-
-    // 3. Comprobar cupo máximo
-    int evento_lleno = 0;
-    sprintf(sql, 
-            "SELECT COUNT(P.id_voluntario), E.lim_voluntarios "
-            "FROM Evento E "
-            "LEFT JOIN Participaciones P ON E.id_evento = P.id_evento "
-            "WHERE E.id_evento = %d "
-            "GROUP BY E.id_evento;", 
-            id_evento_elegido);
-
-    sqlite3_exec(db, sql, callbackCheckCupo, &evento_lleno, &error);
-    
-    if (evento_lleno) {
-        printf("\n¡ERROR! El evento ya tiene suficientes voluntarios.\n");
-        return;
-    }
-
-    // 4. Inserción final
-    sprintf(sql, "INSERT INTO Participaciones (id_voluntario, id_evento) VALUES (%d, %d);",
-            id_voluntario, id_evento_elegido);
-   
     if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
-        printf("\n¡Inscripción realizada con éxito! Gracias por tu colaboración.\n");
+        printf("\n[OK] Evento eliminado correctamente.\n");
     } else {
-        printf("\nError al realizar la inscripción: %s\n", error);
+        printf("\n[!] Error al borrar: %s\n", error);
         sqlite3_free(error);
     }
 }
-//Función callbackMostrarEventos
-int callbackMostrarEventos(void *data, int argc, char **argv, char **colName)
-{
-    char *material = "Desconocido";
-    if (argv[4]) {
-        if (strcmp(argv[4], "0") == 0) {
-            material = "Ropa";
-        } else if (strcmp(argv[4], "1") == 0) {
-            material = "Comida";
+//listar eventos
+void listarEventos(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    // Seleccionamos los datos clave de los eventos
+    const char *sql = "SELECT id_evento, descripcion, fecha_ini, material, tipo FROM Evento ORDER BY fecha_ini ASC;";
+
+    printf("\n%-5s | %-25s | %-18s | %-10s | %-10s\n", "ID", "DESCRIPCIÓN", "FECHA", "MATERIAL", "TIPO");
+    printf("--------------------------------------------------------------------------------------\n");
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        int hay_eventos = 0;
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            hay_eventos = 1;
+            int id = sqlite3_column_int(stmt, 0);
+            const char *desc = (const char *)sqlite3_column_text(stmt, 1);
+            const char *fecha = (const char *)sqlite3_column_text(stmt, 2);
+            const char *mat_raw = (const char *)sqlite3_column_text(stmt, 3);
+            const char *tipo_raw = (const char *)sqlite3_column_text(stmt, 4);
+
+            // Convertimos los códigos de la DB a texto legible
+            // Según tu DB: material '0'=Ropa, '1'=Comida | tipo '0'=Donación, '1'=Reparto
+            char *mat_txt = (strcmp(mat_raw, "0") == 0) ? "Ropa" : "Comida";
+            char *tipo_txt = (strcmp(tipo_raw, "0") == 0) ? "Donación" : "Reparto";
+
+            printf("%-5d | %-25s | %-18s | %-10s | %-10s\n", 
+                   id, 
+                   desc ? desc : "Sin desc.", 
+                   fecha ? fecha : "---", 
+                   mat_txt, 
+                   tipo_txt);
         }
-    }
-    char *tipo = "Desconocido";
-    if (argv[3]) {
-        if (strcmp(argv[3], "0") == 0) {
-            tipo = "Recogida";
-        } else if (strcmp(argv[3], "1") == 0) {
-            tipo = "Reparto";
+
+        if (!hay_eventos) {
+            printf("No hay eventos registrados en la base de datos.\n");
         }
-    }
-   printf("ID: %-4s | Tipo: %-10s | Material: %-10s | Fecha: %-16s | Descripcion: %s\n", 
-           argv[0] ? argv[0] : "NULL", //ID
-           tipo, //TIPO
-           material, //MATERIAL
-           argv[2] ? argv[2] : "NULL", //Fecha inicio
-           argv[1] ? argv[1] : "NULL"); //Descripcion
-    return 0;
-}//los signos de interrogacion son como escribir esto
-/*if (argv[0] != NULL) {
-    printf("%s", argv[0]);
-} else {
-    printf("?");
-}
-*/
-
-
-
-// Callback para verificar si hay hueco en el evento
-// Retorna 1 en el "data" si está lleno, 0 si hay espacio
-int callbackCheckCupo(void *data, int argc, char **argv, char **colName) {
-    int *esta_lleno = (int *)data;
-   
-    // argv[0] = inscritos actualmente, argv[1] = max_voluntarios
-    int actuales = argv[0] ? atoi(argv[0]) : 0;
-    int maximo = argv[1] ? atoi(argv[1]) : 0;
-
-
-    if (actuales >= maximo) {
-        *esta_lleno = 1; // Está lleno
+        sqlite3_finalize(stmt);
     } else {
-        *esta_lleno = 0; // Hay sitio
+        printf("[!] Error al listar eventos: %s\n", sqlite3_errmsg(db));
+    }
+    printf("--------------------------------------------------------------------------------------\n");
+}
+// Dar baja usuario
+void darBajaUsuario(sqlite3 *db) {
+    int id_eliminar;
+    int confirmar;
+
+    printf("\n--- DAR DE BAJA USUARIO ---\n");
+    listarUsuarios(db); // Ayudamos al admin a ver los IDs
+
+    printf("Introduce ID del usuario para eliminar (0 para cancelar): ");
+    if (scanf("%d", &id_eliminar) != 1 || id_eliminar <= 0) {
+        printf("Operación cancelada.\n");
+        return;
     }
 
-    //printf("DEBUG: Inscritos: %d, Máximo permitido: %d\n", actuales, maximo);
-    return 0;
+    printf("¿Estás seguro de eliminar al usuario %d?\n0. No\n1. Sí\nSelección: ", id_eliminar);
+    scanf("%d", &confirmar);
+
+    if (confirmar == 1) {
+        // Aquí ocurre la magia: llamamos a la lógica de DB
+        if (eliminarUsuarioDB(db, id_eliminar) == 0) {
+            printf("\n[ÉXITO] Usuario %d eliminado correctamente.\n", id_eliminar);
+        } else {
+            printf("\n[!] No se pudo eliminar el usuario.\n");
+        }
+    } else {
+        printf("Operación cancelada.\n");
+    }
 }
-
-
-//Función para que verifique fecha, el voluntario no podrá apuntarse a 2 eventos del mismo día
-int callbackCheckFecha(void *data, int argc, char **argv, char **colName) {
-    int *existe = (int *)data;
-    if (atoi(argv[0]) > 0)
-    {
-        *existe = 1;
-    }; // Si el COUNT es > 0, hay colisión
-    return 0;
-}
-
 
 //función para consultar eventos a los que está apuntado
 void consultarMisEventos(sqlite3 *db, int id_voluntario) {
-    char sql[600];
-    char *error = 0;
-
-
-    printf("\n--- CALENDARIO DE MIS EVENTOS ---\n");
-    printf("%-5s | %-25s | %-20s\n", "ID", "DESCRIPCIÓN", "FECHA INICIO");
-    printf("------------------------------------------------------------\n");
-
-
-// Usamos datetime('now') para comparar contra cadenas que incluyen hora
-    sprintf(sql,
-        "SELECT E.id_evento, E.descripcion, E.fecha_ini "
+    sqlite3_stmt *stmt;
+    char *sql_list = 
+        "SELECT E.id_evento, E.descripcion, E.fecha_ini, E.tipo, E.material "
         "FROM Evento E "
         "JOIN Participaciones P ON E.id_evento = P.id_evento "
-        "WHERE P.id_voluntario = %d AND E.fecha_ini >= datetime('now', 'localtime') "
-        "ORDER BY E.fecha_ini ASC;", id_voluntario);
+        "WHERE P.id_voluntario = ? AND E.fecha_ini >= datetime('now', 'localtime') "
+        "ORDER BY E.fecha_ini ASC;";
 
+    printf("\n--- CALENDARIO DE MIS EVENTOS ---\n");
+    printf("%-5s | %-12s | %-10s | %-18s | %s\n", "ID", "TIPO", "MATERIAL", "FECHA", "DESCRIPCIÓN");
+    printf("------------------------------------------------------------------------------------\n");
 
-    // Reutilizamos el callback que ya tenemos para mostrar eventos
-    if (sqlite3_exec(db, sql, callbackMostrarEventos, 0, &error) != SQLITE_OK)
-    {
-        printf("Error al consultar tus eventos: %s\n", error);
-        sqlite3_free(error);
+    if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_voluntario);
+
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            int id = sqlite3_column_int(stmt, 0);
+            const char *desc = (const char*)sqlite3_column_text(stmt, 1);
+            const char *fecha = (const char*)sqlite3_column_text(stmt, 2);
+            int tipo_int = sqlite3_column_int(stmt, 3);
+            int mat_int = sqlite3_column_int(stmt, 4);
+
+            // Lógica que antes estaba en el callback, ahora aquí (o usando tus Enums)
+            char *txtTipo = (tipo_int == 0) ? "Recogida" : "Reparto";
+            char *txtMat = (mat_int == 0) ? "Ropa" : "Comida";
+
+            printf("%-5d | %-12s | %-10s | %-18s | %s\n", id, txtTipo, txtMat, fecha, desc);
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        printf("Error al preparar la consulta: %s\n", sqlite3_errmsg(db));
     }
-   
-    printf("------------------------------------------------------------\n");
+    printf("------------------------------------------------------------------------------------\n");
 
-    // --- LÓGICA CON 0/1 PARA DESAPUNTARSE ---
-    int opcion;
-    int id_borrar;
-
+    // --- LÓGICA DE DESAPUNTARSE (Se queda igual porque es un DELETE) ---
+    int opcion, id_borrar;
     printf("¿Quieres desapuntarte de alguno? (1: Sí / 0: No): ");
     if (scanf("%d", &opcion) != 1) {
-        // Limpiamos el buffer en caso de que metan una letra por error
         while (getchar() != '\n');
         return;
     }
@@ -1033,61 +1251,71 @@ void consultarMisEventos(sqlite3 *db, int id_voluntario) {
     if (opcion == 1) {
         printf("Introduce el ID del evento: ");
         scanf("%d", &id_borrar);
-
-        sprintf(sql, "DELETE FROM Participaciones WHERE id_voluntario = %d AND id_evento = %d;", 
+        
+        char sql_del[200];
+        sprintf(sql_del, "DELETE FROM Participaciones WHERE id_voluntario = %d AND id_evento = %d;", 
                 id_voluntario, id_borrar);
-
-        if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
-            // Comprobamos si realmente existía esa relación
-            if (sqlite3_changes(db) > 0) {
-                printf("\n[OK] Te has desapuntado con éxito del evento %d.\n", id_borrar);
-            } else {
-                printf("\n[!] No estás inscrito en ningún evento con ID %d.\n", id_borrar);
-            }
+        
+        char *error = 0;
+        if (sqlite3_exec(db, sql_del, 0, 0, &error) == SQLITE_OK) {
+            if (sqlite3_changes(db) > 0) printf("\n[OK] Te has desapuntado con éxito.\n");
+            else printf("\n[!] No estabas inscrito en ese evento.\n");
         } else {
-            printf("\nError al procesar la baja: %s\n", error);
+            printf("\nError: %s\n", error);
             sqlite3_free(error);
         }
-    } else {
-        printf("Volviendo al menú...\n");
     }
-
 }
-
 
 //función para ver eventos a los que he acudido
 void consultarHistorialEventos(sqlite3 *db, int id_voluntario) {
-    char sql[700];
-    char *error = 0;
-
-    printf("\n--- HISTORIAL DE EVENTOS ACUDIDOS ---\n");
-    printf("%-5s | %-25s | %-20s\n", "ID", "DESCRIPCION", "FECHA");
-    printf("------------------------------------------------------------\n");
-
-    sprintf(sql,
-        "SELECT E.id_evento, E.descripcion, E.fecha_ini, E.material, E.tipo "
+    sqlite3_stmt *stmt;
+    const char *sql = 
+        "SELECT E.id_evento, E.descripcion, E.fecha_ini, E.tipo, E.material "
         "FROM Evento E "
         "JOIN Participaciones P ON E.id_evento = P.id_evento "
-        "WHERE P.id_voluntario = %d AND date(E.fecha_ini) < date('now') "  
-        "ORDER BY E.fecha_ini DESC;",
-        id_voluntario);
+        "WHERE P.id_voluntario = ? AND date(E.fecha_ini) < date('now') "
+        "ORDER BY E.fecha_ini DESC;";
 
-    int rc = sqlite3_exec(db, sql, callbackMostrarEventos, 0, &error);
+    printf("\n--- HISTORIAL DE EVENTOS PASADOS ---\n");
+    printf("%-5s | %-12s | %-10s | %-18s | %s\n", "ID", "TIPO", "MATERIAL", "FECHA", "DESCRIPCIÓN");
+    printf("------------------------------------------------------------------------------------\n");
 
-    if (rc != SQLITE_OK) {
-        printf("Error al consultar el historial: %s\n", error);
-        sqlite3_free(error);
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_voluntario);
+
+        int hay_eventos = 0;
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            hay_eventos = 1;
+            int id = sqlite3_column_int(stmt, 0);
+            const char *desc = (const char*)sqlite3_column_text(stmt, 1);
+            const char *fecha = (const char*)sqlite3_column_text(stmt, 2);
+            int tipo_int = sqlite3_column_int(stmt, 3);
+            int mat_int = sqlite3_column_int(stmt, 4);
+
+            // Traducimos los Enums a texto para el usuario
+            char *txtTipo = (tipo_int == 0) ? "Recogida" : "Reparto";
+            char *txtMat = (mat_int == 0) ? "Ropa" : "Comida";
+
+            printf("%-5d | %-12s | %-10s | %-18s | %s\n", id, txtTipo, txtMat, fecha, desc);
+        }
+        
+        if (!hay_eventos) {
+            printf("\n[INFO] Aún no has participado en eventos anteriores.\n");
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        printf("Error SQL: %s\n", sqlite3_errmsg(db));
     }
 
-    printf("------------------------------------------------------------\n");
+    printf("------------------------------------------------------------------------------------\n");
     printf("Presione Enter para volver...");
     while (getchar() != '\n');
     getchar();
 }
 
-
-
-void listarDonaciones(sqlite3 *db, int id_usuario) {
+// Listar donaciones
+void listarDonaciones(sqlite3 *db, int id_donante) {
     sqlite3_stmt *stmt;
     const char *sql =
         "SELECT d.tipo, r.kilos, c.tipo_comida, c.kilos, din.cantidad, d.fecha "
@@ -1102,7 +1330,7 @@ void listarDonaciones(sqlite3 *db, int id_usuario) {
         return;
     }
 
-    sqlite3_bind_int(stmt, 1, id_usuario);
+    sqlite3_bind_int(stmt, 1, id_donante);
 
     printf("\n%-12s | %-45s | %-20s\n", "TIPO", "DETALLES", "FECHA");
     printf("------------------------------------------------------------\n");
@@ -1151,221 +1379,95 @@ void listarDonaciones(sqlite3 *db, int id_usuario) {
     sqlite3_finalize(stmt);
 }
 
+// crear evento de reparto de comida cada martes automaticamente
 void crearEventoMartesAutomatico(sqlite3 *db) {
-    time_t t = time(NULL);
-    struct tm *tm_info = localtime(&t);
-
-    int dia_semana = tm_info->tm_wday; // 0=domingo
-    
-    int dias_hasta_martes = (2 - dia_semana + 7) % 7;
-    if (dias_hasta_martes == 0) dias_hasta_martes = 7;
-
-    tm_info->tm_mday += dias_hasta_martes;
-    mktime(tm_info);
-
-    char fecha_ini[20], fecha_fin[20];
-
-    strftime(fecha_ini, sizeof(fecha_ini), "%Y-%m-%d 16:00", tm_info);
-    strftime(fecha_fin, sizeof(fecha_fin), "%Y-%m-%d 20:00", tm_info);
-
-    char sql_check[300];
-    sprintf(sql_check,
-        "SELECT COUNT(*) FROM Evento "
-        "WHERE fecha_ini = '%s' AND material = 1 AND tipo = 1;",
-        fecha_ini);
-
-    int existe = 0;
-    sqlite3_exec(db, sql_check, callbackCheckFecha, &existe, NULL);
-
-    if (existe) return;
-
-    char sql_insert[500];
-    sprintf(sql_insert,
-        "INSERT INTO Evento (material, descripcion, fecha_ini, fecha_fin, tipo, lim_voluntarios) "
-        "VALUES (1, 'Reparto semanal de comida', '%s', '%s', 1, 20);",
-        fecha_ini, fecha_fin);
-
-    sqlite3_exec(db, sql_insert, 0, 0, 0);
-}
-
-void asegurarEventoRopa(sqlite3 *db) {
     sqlite3_stmt *stmt;
-    const char *sql_check = "SELECT COUNT(*) FROM Evento "
-                            "WHERE material = 0 AND tipo = 1;";  // Busca CUALQUIER evento de ropa
+    char *error = 0;
     
+    // 1. COMPROBACIÓN: ¿Ya existe el evento para el próximo martes?
+    // Usamos date() sobre la columna para comparar solo el día, ignorando la hora guardada
+    const char *sql_check = "SELECT COUNT(*) FROM Evento "
+                            "WHERE descripcion = 'Reparto semanal comida' "
+                            "AND date(fecha_ini) = date('now', 'weekday 2');";
+
     int existe = 0;
     if (sqlite3_prepare_v2(db, sql_check, -1, &stmt, 0) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
             existe = sqlite3_column_int(stmt, 0);
         }
+        sqlite3_finalize(stmt);
     }
-    sqlite3_finalize(stmt);
-    
-    
-    
-    
-    // Crear evento de ropa para dentro de 1 mes
-    char *sql_insert =
-        "INSERT INTO Evento (material, descripcion, fecha_ini, fecha_fin, tipo, lim_voluntarios) "
-        "VALUES (0, 'Reparto de ropa', "
-        "datetime('now','+1 month','start of month'), "
-        "datetime('now','+1 month','start of month','+4 hours'), 1, 15);";
-    
 
-}
-
-void registrarRecogidaRopa(sqlite3 *db, int id_beneficiario, int id_evento) {
-    // Obtener id_usuario
-    sqlite3_stmt *stmt;
-    int id_usuario = -1;
-    const char *sql_get_user = "SELECT id_usuario FROM Beneficiario WHERE id_beneficiario = ?;";
-    if (sqlite3_prepare_v2(db, sql_get_user, -1, &stmt, 0) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, id_beneficiario);
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            id_usuario = sqlite3_column_int(stmt, 0);
+    // 2. INSERCIÓN: Solo si no existe, lo creamos cumpliendo el formato HH:MM
+    if (existe == 0) {
+        /* Explicación de los valores:
+           - material: '1' (Comida)
+           - tipo: '1' (Reparto)
+           - fecha_ini/fin: Usamos strftime para cumplir el CHECK constraint de tu DB
+           - lim_voluntarios: Es el nombre que sale en tu captura (no 'cupo')
+        */
+        const char *sql_insert = 
+            "INSERT INTO Evento (material, descripcion, fecha_ini, fecha_fin, tipo, lim_voluntarios) "
+            "VALUES ('1', 'Reparto semanal comida', "
+            "strftime('%Y-%m-%d 09:00', 'now', 'weekday 2'), " 
+            "strftime('%Y-%m-%d 11:00', 'now', 'weekday 2'), " 
+            "'1', 20);";
+        
+        if (sqlite3_exec(db, sql_insert, 0, 0, &error) == SQLITE_OK) {
+            printf("[SISTEMA] Evento automatico de los martes creado (Reparto semanal comida).\n");
+        } else {
+            // Si esto falla ahora, te dirá exactamente qué restricción no cumples
+            printf("[!] Error al crear evento automatico: %s\n", error);
+            sqlite3_free(error);
         }
-    }
-    sqlite3_finalize(stmt);
-
-    if (id_usuario == -1) {
-        printf("Error: Beneficiario no encontrado.\n");
-        return;
-    }
-
-    // Verificar si ya existe la participación
-    const char *sql_check = "SELECT COUNT(*) FROM Participaciones WHERE id_usuario = ? AND id_evento = ?;";
-    if (sqlite3_prepare_v2(db, sql_check, -1, &stmt, 0) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, id_usuario);
-        sqlite3_bind_int(stmt, 2, id_evento);
-        if (sqlite3_step(stmt) == SQLITE_ROW && sqlite3_column_int(stmt, 0) > 0) {
-            printf("El beneficiario ya tiene registrada esta recogida.\n");
-            sqlite3_finalize(stmt);
-            return;
-        }
-    }
-    sqlite3_finalize(stmt);
-
-    // Insertar
-    char sql[300];
-    sprintf(sql, "INSERT INTO Participaciones (id_usuario, id_evento) VALUES (%d, %d);", id_usuario, id_evento);
-    char *error = 0;
-    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
-        printf("Recogida de ropa registrada correctamente.\n");
     } else {
-        printf("Error: %s\n", error);
-        sqlite3_free(error);
+        // Descomenta si quieres ver el log de que todo está en orden
+        // printf("[SISTEMA] El evento del proximo martes ya esta registrado.\n");
     }
 }
 
-void registrarRecogidaRopaInterfaz(sqlite3 *db) {
-    int id_beneficiario, id_evento;
-    listarBeneficiarios(db);
-    printf("Introduce el ID del beneficiario: ");
-    scanf("%d", &id_beneficiario);
-    listarEventosRopaFuturos(db);
-    printf("Introduce el ID del evento de ropa: ");
-    scanf("%d", &id_evento);
-    registrarRecogidaRopa(db, id_beneficiario, id_evento);
+
+// crear evento reparto ropa
+void crearEventoJuevesRopaAutomatico(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    char *error = 0;
+    
+    // 1. COMPROBACIÓN: ¿Ya existe la recogida de ropa para el próximo jueves?
+    // 'weekday 4' es el Jueves en SQLite
+    const char *sql_check = "SELECT COUNT(*) FROM Evento "
+                            "WHERE descripcion = 'Recogida semanal ropa' "
+                            "AND date(fecha_ini) = date('now', 'weekday 4');";
+
+    int existe = 0;
+    if (sqlite3_prepare_v2(db, sql_check, -1, &stmt, 0) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            existe = sqlite3_column_int(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    // 2. INSERCIÓN: Si no existe, creamos el evento para el jueves
+    if (existe == 0) {
+        // material: '0' (Ropa), tipo: '0' (Recogida)
+        // Usamos strftime para cumplir el CHECK constraint YYYY-MM-DD HH:MM
+        const char *sql_insert = 
+            "INSERT INTO Evento (material, descripcion, fecha_ini, fecha_fin, tipo, lim_voluntarios) "
+            "VALUES ('0', 'Recogida semanal ropa', "
+            "strftime('%Y-%m-%d 10:00', 'now', 'weekday 4'), " 
+            "strftime('%Y-%m-%d 13:00', 'now', 'weekday 4'), " 
+            "'0', 15);";
+        
+        if (sqlite3_exec(db, sql_insert, 0, 0, &error) == SQLITE_OK) {
+            printf("[SISTEMA] Evento automatico de los jueves creado (Recogida semanal ropa).\n");
+        } else {
+            printf("[!] Error al crear evento ropa: %s\n", error);
+            sqlite3_free(error);
+        }
+    }
 }
 
-void menuPrincipal(sqlite3 *db, int tipo, int id_perfil)
-{
 
-
-    int opcion;
-
-
-    do {
-        printf("\n======= MENU PRINCIPAL =======");
-
-
-        // Mostrar opciones ESPECÍFICAS según el tipo
-        if (tipo == VOLUNTARIO)
-        { // tipo 0
-            printf("\n1. Apuntarse a un evento");
-            printf("\n2. Consultar calendario de mis eventos"); // despauntarse calendario barrun zaudela ingo deu
-            printf("\n3. Consultar historial de mi voluntariado");
-            printf("\n4. Registrar recogida de ropa de beneficiario");
-
-
-        }
-        else if (tipo == DONANTE) { // tipo 1
-            printf("\n1. Realizar donación de dinero");
-            printf("\n2. Realizar donación de comida");
-            printf("\n3. Realizar donación de ropa");
-            printf("\n4. Consultar historial de mis donaciones");
-        }
-        else if (tipo == BENEFICIARIO) { // tipo 2
-            printf("\n1. Cambiar condiciones"); //iuel registrar condiciones registratzeakun derrigorra bezela jarri??
-            printf("\n2. Consultar horarios para recoger ayudas");
-            printf("\n3. Ver proximos talleres");
-        }
-       
-        printf("\n0. Cerrar sesión");
-        printf("\nSeleccione una opción: ");
-        scanf("%d", &opcion);
-
-
-        switch(opcion) {
-            case 1:
-            if(tipo == VOLUNTARIO) {
-                apuntarseEvento(db, id_perfil);
-            }
-            else if (tipo == DONANTE)
-            {
-                donarDinero(db, id_perfil);
-            }
-            else if (tipo == BENEFICIARIO)
-            {
-                Beneficiario b_actualizada = guardarCondicionesBeneficiario(); // 2. Los mandamos a la base de datos para que el cambio sea real
-                if (actualizarDatosBeneficiario(db, id_perfil, b_actualizada))
-                {
-                    printf("\n---------------------------------------------------------");
-                    printf("\n[SISTEMA] Tus condiciones se han actualizado correctamente en tu perfil.\n");
-                }
-            }
-                break;
-
-
-            case 2:
-                if(tipo == VOLUNTARIO) {
-                    consultarMisEventos(db, id_perfil);
-                } else if(tipo == DONANTE) {
-                    donarComida(db, id_perfil);
-                } else if(tipo == BENEFICIARIO) {
-                    printf("\nCONSULTAR HORARIOS DE AYUDAS\n");
-                    verProximoRepartoComida(db);
-                    printf("\n");
-                    verProximoRepartoRopa(db, id_perfil);
-                    printf("\nInformacion adicional:\n");
-                    printf("  - Comida: Todos los martes a las 18:00\n");
-                    printf("  - Ropa: Cada 6 meses desde tu ultima recogida\n");
-                }
-                break;
-
-            case 3:
-                if(tipo == VOLUNTARIO) {
-                    consultarHistorialEventos(db, id_perfil);
-                } else if(tipo == DONANTE) {
-                    donarRopa(db, id_perfil);
-                } else if(tipo==BENEFICIARIO){
-                    verTalleresProximos(db);
-                }
-                break;
-           
-            case 4:
-                if(tipo == VOLUNTARIO) {
-                    registrarRecogidaRopaInterfaz(db);
-                }
-                break;
-
-
-        }
-    } while (opcion != 0);
-}
-
-// FUNCIONES PARA BENEFICIARIO (mostrar proximo evento de ropa que les toca)
-//obtener el id beneficiaro
+// Ver proximo evento de reparto de comida para beneficiario
 void verProximoRepartoComida(sqlite3 *db) {
     sqlite3_stmt *stmt;
     const char *sql = "SELECT descripcion, fecha_ini, fecha_fin FROM Evento "
@@ -1389,7 +1491,58 @@ void verProximoRepartoComida(sqlite3 *db) {
     sqlite3_finalize(stmt);
 }
 
+// ver proximo reparto ropa
+void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario) {
+    sqlite3_stmt *stmt;
+    char ultima_fecha[20] = "";
 
+    // 1. Buscamos la última vez que el beneficiario recibió ropa
+    // Nota: Aquí buscamos en tu tabla de registros de ayuda/recogida
+    const char *sql_last = "SELECT MAX(fecha) FROM RecogidasRopa WHERE id_beneficiario = ?;";
+
+    if (sqlite3_prepare_v2(db, sql_last, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_beneficiario);
+        if (sqlite3_step(stmt) == SQLITE_ROW && sqlite3_column_text(stmt, 0) != NULL) {
+            strcpy(ultima_fecha, (const char*)sqlite3_column_text(stmt, 0));
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    // 2. Comprobamos si han pasado los 6 meses
+    if (strlen(ultima_fecha) > 0) {
+        const char *sql_diff = "SELECT julianday('now') - julianday(?);";
+        if (sqlite3_prepare_v2(db, sql_diff, -1, &stmt, 0) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, ultima_fecha, -1, SQLITE_STATIC);
+            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                double dias = sqlite3_column_double(stmt, 0);
+                if (dias < 180) {
+                    printf("\n[INFO] Ultima recogida: %s", ultima_fecha);
+                    printf("\nDebes esperar a que pasen 180 dias (faltan %.0f).\n", 180 - dias);
+                    return;
+                }
+            }
+            sqlite3_finalize(stmt);
+        }
+    }
+
+    // 3. Si puede recoger, mostramos el próximo evento de los jueves
+    const char *sql_next = "SELECT fecha_ini FROM Evento "
+                           "WHERE material = '0' AND tipo = '0' AND date(fecha_ini) >= date('now') "
+                           "ORDER BY fecha_ini ASC LIMIT 1;";
+
+    if (sqlite3_prepare_v2(db, sql_next, -1, &stmt, 0) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("\n[DISPONIBLE] Puedes acudir al proximo reparto el dia: %s\n", sqlite3_column_text(stmt, 0));
+        } else {
+            printf("\nNo hay repartos de ropa programados actualmente.\n");
+        }
+        sqlite3_finalize(stmt);
+    }
+}
+//igual tenemos que moner '1'
+
+// Ver proximo evento reparo de ropa
+/*
 void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario) {
     sqlite3_stmt *stmt;
     char fecha_corte[11] = "1900-01-01";
@@ -1473,6 +1626,391 @@ void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario) {
     }
     sqlite3_finalize(stmt);
 }
+*/
+
+void verProximaRecogidaRopa(sqlite3 *db, int id_voluntario) {
+    sqlite3_stmt *stmt;
+    char ultima_fecha[20] = "";
+
+    // 1. Obtener última participación (Ropa = '0', Recogida = '0')
+    const char *sql_last = 
+        "SELECT MAX(e.fecha_ini) FROM Participaciones p "
+        "JOIN Evento e ON p.id_evento = e.id_evento "
+        "WHERE p.id_voluntario = ? AND e.material = '0' AND e.tipo = '0';";
+
+    if (sqlite3_prepare_v2(db, sql_last, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_voluntario);
+        if (sqlite3_step(stmt) == SQLITE_ROW && sqlite3_column_text(stmt, 0) != NULL) {
+            strcpy(ultima_fecha, (const char*)sqlite3_column_text(stmt, 0));
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    // 2. Validar los 6 meses (180 días)
+    if (strlen(ultima_fecha) > 0) {
+        const char *sql_diff = "SELECT julianday('now') - julianday(?);";
+        if (sqlite3_prepare_v2(db, sql_diff, -1, &stmt, 0) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, ultima_fecha, -1, SQLITE_STATIC);
+            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                double dias = sqlite3_column_double(stmt, 0);
+                if (dias < 180) {
+                    printf("\n[DENEGADO] Han pasado %.0f dias. Faltan %.0f para los 180.\n", dias, 180 - dias);
+                    sqlite3_finalize(stmt);
+                    return; 
+                }
+            }
+            sqlite3_finalize(stmt);
+        }
+    }
+
+    // 3. Mostrar próximos 6 meses
+    const char *sql_list = "SELECT descripcion, fecha_ini FROM Evento WHERE material = '0' AND tipo = '0' "
+                           "AND date(fecha_ini) >= date('now') ORDER BY fecha_ini ASC LIMIT 6;";
+
+    printf("\n--- PROXIMAS RECOGIDAS DE ROPA ---\n");
+    if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("- %s: %s\n", sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 0));
+        }
+        sqlite3_finalize(stmt);
+    }
+}
+// Ver proximos talleres
+void verTalleresProximos(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    // Añadimos el filtro de fecha para que solo salgan los futuros
+    const char *sql = "SELECT tipo, descripcion, fecha_ini, fecha_fin FROM Taller "
+                      "WHERE date(fecha_ini) >= date('now') "
+                      "ORDER BY fecha_ini ASC;";
+
+    printf("\n--- LISTA DE PRÓXIMOS TALLERES ---\n");
+    printf("%-15s | %-25s | %-17s | %-17s\n", "TIPO", "DESCRIPCIÓN", "INICIO", "FIN");
+    printf("----------------------------------------------------------------------------------\n");
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        int hay_talleres = 0;
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            hay_talleres = 1;
+            const char *tipo = (const char *)sqlite3_column_text(stmt, 0);
+            const char *desc = (const char *)sqlite3_column_text(stmt, 1);
+            const char *ini  = (const char *)sqlite3_column_text(stmt, 2);
+            const char *fin  = (const char *)sqlite3_column_text(stmt, 3);
+
+            // Usamos un operador ternario para evitar que el programa falle si hay nulos
+            printf("%-15s | %-25s | %-17s | %-17s\n", 
+                   tipo ? tipo : "General", 
+                   desc ? desc : "Sin descripción", 
+                   ini  ? ini  : "---", 
+                   fin  ? fin  : "---");
+        }
+        
+        if (!hay_talleres) {
+            printf("No hay talleres programados para los próximos días.\n");
+        }
+    } else {
+        printf("Error al consultar la tabla Taller: %s\n", sqlite3_errmsg(db));
+    }
+
+    sqlite3_finalize(stmt);
+    printf("----------------------------------------------------------------------------------\n");
+}
+
+
+// Calcular ayuda de dinero para beneficiario
+float calcularAyudaDinero(Beneficiario b) {
+    float renta = b.ingresos - b.gastos;
+    // Cubrimos el déficit mensual + un pequeño bono de emergencia
+    return fabsf(renta) + 50.0f; // fabsf(valor absoluto)
+}
+
+//Ayuda alimentación semanal
+void mostrarAyudaComida(Beneficiario b) {
+    float totalArrozPasta = (b.num_adultos * 1.0f) + (b.num_ninos * 0.75f);
+    float totalLegumbres = (b.num_adultos + b.num_ninos) * 0.5f;
+    float totalLeche = (b.num_adultos * 2.0f) + (b.num_ninos * 4.0f);
+    int totalConservas = (b.num_adultos * 3) + (b.num_ninos * 2);
+
+
+    printf("\n[ALIMENTACIÓN SEMANAL]");  
+    printf("\n > Arroz/Pasta:        %.2f kg", totalArrozPasta);
+    printf("\n > Legumbres:          %.2f kg", totalLegumbres);
+    printf("\n > Leche:              %.0f litros", totalLeche);
+    printf("\n > Conservas:          %d latas", totalConservas);
+}
+
+
+//Ayuda ropa semestral
+void mostrarAyudaRopa(Beneficiario b) {
+    int camNinos = b.num_ninos * 3;
+    int panNinos = b.num_ninos * 2;
+    int sudNinos = b.num_ninos * 1;
+
+
+    int camAdultos = b.num_adultos * 2;
+    int panAdultos = b.num_adultos * 1;
+
+
+    printf("\n[VESTIMENTA SEMESTRAL]"); 
+    if (b.num_ninos > 0) {
+        printf("\n > NIÑOS/AS: %d camisetas, %d pantalones, %d sudaderas",
+                camNinos, panNinos, sudNinos);
+    }
+    if (b.num_adultos > 0) {
+        printf("\n > ADULTOS: %d camisetas, %d pantalones",
+                camAdultos, panAdultos);
+    }
+}
+
+// Menu principal
+void menuPrincipal(sqlite3 *db, int tipo, int id_perfil)
+{
+
+
+    int opcion;
+
+
+    do {
+        printf("\n======= MENU PRINCIPAL =======");
+
+
+        // Mostrar opciones ESPECÍFICAS según el tipo
+        if (tipo == VOLUNTARIO)
+        { // tipo 0
+            printf("\n1. Apuntarse a un evento");
+            printf("\n2. Consultar calendario de mis eventos"); // despauntarse calendario barrun zaudela ingo deu
+            printf("\n3. Consultar historial de mi voluntariado");
+
+
+        }
+        else if (tipo == DONANTE) { // tipo 1
+            printf("\n1. Realizar donación de dinero");
+            printf("\n2. Realizar donación de comida");
+            printf("\n3. Realizar donación de ropa");
+            printf("\n4. Consultar historial de mis donaciones");
+        }
+        else if (tipo == BENEFICIARIO) { // tipo 2
+            printf("\n1. Cambiar condiciones"); //iuel registrar condiciones registratzeakun derrigorra bezela jarri??
+            printf("\n2. Consultar horarios para recoger ayudas");
+            printf("\n3. Ver proximos talleres");
+        }
+       
+        printf("\n0. Cerrar sesión");
+        printf("\nSeleccione una opción: ");
+        scanf("%d", &opcion);
+
+
+        switch(opcion) {
+            case 1:
+            if(tipo == VOLUNTARIO) {
+                apuntarseEvento(db, id_perfil);
+            }
+            else if (tipo == DONANTE)
+            {
+                donarDinero(db, id_perfil);
+            }
+            else if (tipo == BENEFICIARIO)
+            {
+                Beneficiario b_actualizada = guardarCondicionesBeneficiario(); // 2. Los mandamos a la base de datos para que el cambio sea real
+                if (actualizarDatosBeneficiario(db, id_perfil, b_actualizada))
+                {
+                    printf("\n---------------------------------------------------------");
+                    printf("\n[SISTEMA] Tus condiciones se han actualizado correctamente en tu perfil.\n");
+                }
+            }
+                break;
+
+
+            case 2:
+                if(tipo == VOLUNTARIO) {
+                    consultarMisEventos(db, id_perfil);
+                } else if(tipo == DONANTE) {
+                    donarComida(db, id_perfil);
+                } else if(tipo == BENEFICIARIO) {
+                    printf("\nCONSULTAR HORARIOS DE AYUDAS\n");
+                    verProximoRepartoComida(db);
+                    printf("\n");
+                    verProximoRepartoRopa(db, id_perfil);
+                    printf("\nInformacion adicional:\n");
+                    printf("  - Comida: Todos los martes a las 18:00\n");
+                    printf("  - Ropa: Cada 6 meses desde tu ultima recogida\n");
+                }
+                break;
+
+            case 3:
+                if(tipo == VOLUNTARIO) {
+                    consultarHistorialEventos(db, id_perfil);
+                } else if(tipo == DONANTE) {
+                    donarRopa(db, id_perfil);
+                } else if(tipo==BENEFICIARIO){
+                    verTalleresProximos(db);
+                }
+                break;
+           
+            case 4:
+                if (tipo == DONANTE) {
+                    listarDonaciones(db, id_perfil);
+                }
+                break;
+
+
+        }
+    } while (opcion != 0);
+}
+
+// --- Función auxiliar para no ensuciar el código principal ---
+int buscarIdEspecifico(sqlite3 *db, int id_usuario, int tipo) {
+    sqlite3_stmt *stmt;
+    int id_final = -1;
+    const char *sql;
+
+    if (tipo == VOLUNTARIO) sql = "SELECT id_voluntario FROM Voluntarios WHERE id_usuario = ?;";
+    else if (tipo == DONANTE) sql = "SELECT id_donante FROM Donantes WHERE id_usuario = ?;";
+    else if (tipo == BENEFICIARIO) sql = "SELECT id_beneficiario FROM Beneficiario WHERE id_usuario = ?;";
+    else return id_usuario; // Para el Admin, usamos su ID de usuario normal
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_usuario);
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            id_final = sqlite3_column_int(stmt, 0);
+        }
+    }
+    sqlite3_finalize(stmt);
+    return id_final;
+}
+
+
+//A PARTIR DE AQUÍ SIN ARREGLAR
+
+void mostrarProximaRecogida(sqlite3 *db, int material) {
+    sqlite3_stmt *stmt;
+    // Buscamos eventos de tipo 0 (Recogida) que ocurran a partir de hoy
+    const char *sql =
+        "SELECT descripcion, fecha_ini, fecha_fin FROM Evento "
+        "WHERE material = ? AND tipo = 0 "
+        "AND date(fecha_ini) >= date('now') "
+        "ORDER BY fecha_ini ASC LIMIT 1;";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, material);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("\n--- PROXIMO EVENTO DE RECOGIDA ---\n");
+            printf("Evento:  %s\n", sqlite3_column_text(stmt, 0));
+            printf("Inicio:  %s\n", sqlite3_column_text(stmt, 1));
+            printf("Fin:     %s\n", sqlite3_column_text(stmt, 2));
+            printf("--------------------------------------------\n");
+        } else {
+            // Si llega aquí es porque la consulta no devolvió filas
+            printf("\n[INFO] No hay eventos de recogida programados en el sistema.\n");
+            printf("Por favor, acude a nuestra sede central de lunes a viernes.\n");
+        }
+    } else {
+        printf("Error SQL: %s\n", sqlite3_errmsg(db));
+    }
+    sqlite3_finalize(stmt);
+}
+
+
+void asegurarEventoRopa(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    char *error = 0;
+
+    printf("[SISTEMA] Verificando calendario de recogida de ropa (6 meses)...\n");
+
+    for (int i = 0; i < 6; i++) {
+        char sql_check[256];
+        char sql_insert[512];
+        int existe = 0;
+
+        // 1. Preparamos la consulta para comprobar si hay evento en el mes 'i'
+        // date('now', '+i month', 'start of month') busca en el rango de ese mes específico
+        sprintf(sql_check, 
+            "SELECT COUNT(*) FROM Evento "
+            "WHERE material = '0' AND tipo = '0' "
+            "AND strftime('%%m-%%Y', fecha_ini) = strftime('%%m-%%Y', 'now', '+%d month');", i);
+
+        if (sqlite3_prepare_v2(db, sql_check, -1, &stmt, 0) == SQLITE_OK) {
+            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                existe = sqlite3_column_int(stmt, 0);
+            }
+            sqlite3_finalize(stmt);
+        }
+
+        // 2. Si no hay evento para ese mes, lo creamos
+        if (existe == 0) {
+            sprintf(sql_insert, 
+                "INSERT INTO Evento (material, descripcion, fecha_ini, fecha_fin, tipo, lim_voluntarios) "
+                "VALUES ('0', 'Recogida Mensual Ropa', "
+                "strftime('%%Y-%%m-15 10:00', 'now', '+%d month'), " // El día 15 de cada mes
+                "strftime('%%Y-%%m-15 14:00', 'now', '+%d month'), " 
+                "'0', 25);", i, i);
+
+            if (sqlite3_exec(db, sql_insert, 0, 0, &error) != SQLITE_OK) {
+                printf("[!] Error creando evento mes %d: %s\n", i, error);
+                sqlite3_free(error);
+            } else {
+                printf("[+] Creado evento de ropa para el mes +%d.\n", i);
+            }
+        }
+    }
+}
+
+void registrarRecogidaRopa(sqlite3 *db, int id_beneficiario, int id_evento) {
+    sqlite3_stmt *stmt;
+    const char *sql = "INSERT INTO RecogidaRopa (id_beneficiario, id_evento, fecha_recogida) VALUES (?, ?, date('now'));";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_beneficiario);
+        sqlite3_bind_int(stmt, 2, id_evento);
+
+        if (sqlite3_step(stmt) == SQLITE_DONE) {
+            printf("\n[OK] Recogida registrada con éxito.\n");
+        } else {
+            printf("\n[!] Error: Puede que esa recogida ya esté registrada.\n");
+        }
+        sqlite3_finalize(stmt);
+    }
+}
+
+void registrarRecogidaRopaInterfaz(sqlite3 *db) {
+    int id_beneficiario, id_evento;
+
+    printf("\n--- REGISTRAR ENTREGA DE ROPA ---\n");
+
+    // 1. Listar beneficiarios (Asegúrate de que esta función existe)
+    // Si no tienes listarBeneficiarios, puedes usar un SELECT rápido aquí
+    printf("\nLISTA DE BENEFICIARIOS:\n");
+    const char *sql_b = "SELECT b.id_beneficiario, u.nombre, u.apellidos FROM Beneficiario b "
+                        "JOIN Usuarios u ON b.id_usuario = u.id_usuario;";
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, sql_b, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("ID: %d | %s %s\n", sqlite3_column_int(stmt, 0), 
+                   sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2));
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    printf("\nIntroduce el ID del beneficiario: ");
+    if (scanf("%d", &id_beneficiario) != 1) return;
+
+    // 2. Listar eventos de ropa (Material '0' es ropa en tu DB)
+    printf("\nEVENTOS DE ROPA DISPONIBLES:\n");
+    const char *sql_e = "SELECT id_evento, descripcion, fecha_ini FROM Evento WHERE material = '0';";
+    if (sqlite3_prepare_v2(db, sql_e, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("ID: %d | %s (%s)\n", sqlite3_column_int(stmt, 0), 
+                   sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2));
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    printf("\nIntroduce el ID del evento de ropa: ");
+    if (scanf("%d", &id_evento) != 1) return;
+
+    // 3. Llamar a la función que guarda en la tabla RecogidaRopa
+    registrarRecogidaRopa(db, id_beneficiario, id_evento);
+}
 
 void registrarRecogidaRopaAdmin(sqlite3 *db) {
     sqlite3_stmt *stmt;
@@ -1517,166 +2055,11 @@ void registrarRecogidaRopaAdmin(sqlite3 *db) {
     registrarRecogidaRopa(db, id_beneficiario, id_evento);
 }
 
-//FUNCIONES PARA BENEFICIARIO (ver talleres)
 
-void verTalleresProximos(sqlite3 *db) {
-    sqlite3_stmt *stmt;
-    // Usamos el nombre de tabla 'Taller' que mencionaste antes
-    char *sql = "SELECT tipo, descripcion, fecha_ini, fecha_fin FROM Taller;";
-
-    printf("\n--- LISTA DE PRÓXIMOS TALLERES ---\n");
-    printf("%-15s %-25s %-20s %-20s\n", "TIPO", "DESCRIPCIÓN", "INICIO", "FIN");
-    printf("--------------------------------------------------------------------------------\n");
-
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
-        while (sqlite3_step(stmt) == SQLITE_ROW) {
-            // Siguiendo tu formato: obtenemos los datos de las columnas
-            const unsigned char *tipo = sqlite3_column_text(stmt, 0);
-            const unsigned char *descripcion = sqlite3_column_text(stmt, 1);
-            const unsigned char *fecha_ini = sqlite3_column_text(stmt, 2);
-            const unsigned char *fecha_fin = sqlite3_column_text(stmt, 3);
-
-            // Imprimimos con el formato de columnas alineadas
-            printf("%-15s %-25s %-20s %-20s\n", 
-                   tipo, 
-                   descripcion, 
-                   fecha_ini, 
-                   fecha_fin);
-        }
-    } else {
-        // Añadimos un aviso por si la consulta falla (tabla mal escrita, etc.)
-        printf("Error al preparar la consulta: %s\n", sqlite3_errmsg(db));
-    }
-
-    sqlite3_finalize(stmt);
-    printf("--------------------------------------------------------------------------------\n");
-}
-//Ayuda de dinero
-float calcularAyudaDinero(Beneficiario b) {
-    float renta = b.ingresos - b.gastos;
-    // Cubrimos el déficit mensual + un pequeño bono de emergencia
-    return fabsf(renta) + 50.0f; // fabsf(valor absoluto)
-}
-
-
-//Ayuda alimentación semanal
-void mostrarAyudaComida(Beneficiario b) {
-    float totalArrozPasta = (b.num_adultos * 1.0f) + (b.num_ninos * 0.75f);
-    float totalLegumbres = (b.num_adultos + b.num_ninos) * 0.5f;
-    float totalLeche = (b.num_adultos * 2.0f) + (b.num_ninos * 4.0f);
-    int totalConservas = (b.num_adultos * 3) + (b.num_ninos * 2);
-
-
-    printf("\n[ALIMENTACIÓN SEMANAL - RECOGIDA MARTES 18:00]");   //la recogida cómo lo gestionamos??
-    printf("\n > Arroz/Pasta:        %.2f kg", totalArrozPasta);
-    printf("\n > Legumbres:          %.2f kg", totalLegumbres);
-    printf("\n > Leche:              %.0f litros", totalLeche);
-    printf("\n > Conservas:          %d latas", totalConservas);
-}
-
-
-//Ayuda ropa semestral
-void mostrarAyudaRopa(Beneficiario b) {
-    int camNinos = b.num_ninos * 3;
-    int panNinos = b.num_ninos * 2;
-    int sudNinos = b.num_ninos * 1;
-
-
-    int camAdultos = b.num_adultos * 2;
-    int panAdultos = b.num_adultos * 1;
-
-
-    printf("\n[VESTIMENTA SEMESTRAL - PRÓXIMA CAMPAÑA]");  //la fecha cómo la ponemos???
-    if (b.num_ninos > 0) {
-        printf("\n > NIÑOS/AS: %d camisetas, %d pantalones, %d sudaderas",
-                camNinos, panNinos, sudNinos);
-    }
-    if (b.num_adultos > 0) {
-        printf("\n > ADULTOS: %d camisetas, %d pantalones",
-                camAdultos, panAdultos);
-    }
-}
-
-
-//Evaluar la ayuda que necesita
-void evaluarBeneficiario(Beneficiario b) {
-    float renta = b.ingresos - b.gastos;
-   
-    // Cálculos de umbrales mensuales
-    float gastoComidaMensual = (b.num_adultos * 150.0f) + (b.num_ninos * 140.0f);
-    float gastoRopaMensual = (b.num_adultos * 5.50f) + (b.num_ninos * 9.0f);
-    float umbralTotal = gastoComidaMensual + gastoRopaMensual;
-
-
-    printf("\n===========================================");
-    printf("\n      RESULTADO DEL ANÁLISIS SOCIAL");
-    printf("\n===========================================");
-
-
-    // Lógica de Escenarios
-    if (renta > umbralTotal)
-    {
-        // --- AUTOSUFICIENTE ---
-        printf("\nESTADO: Evaluación Finalizada -> Autosuficiente");
-        printf("\nTras analizar tu renta disponible, el sistema indica que puedes cubrir");
-        printf("\nlas necesidades básicas de alimentación y vestimenta por tu cuenta.");
-        printf("\nPriorizamos nuestros recursos para casos en situación de mayor urgencia.");
-        printf("\n-------------------------------------------");
-        printf("\nSi tu situación económica cambia, puedes solicitar una nueva evaluación.");
-    }
-    else if (renta >= gastoComidaMensual && renta <= umbralTotal)
-    {
-        // --- ESCENARIO A ---
-        printf("\nESTADO: Evaluación Finalizada -> Escenario A");
-        printf("\nTras analizar tu renta disponible, consideramos que cubres la alimentación");
-        printf("\nbásica, por lo tanto, recibirás apoyo específico en vestimenta.");
-        printf("\n-------------------------------------------");
-        mostrarAyudaRopa(b);
-    }
-    else if (renta > 0 && renta < gastoComidaMensual) {
-        // --- ESCENARIO B ---
-        printf("\nESTADO: Evaluación Finalizada -> Escenario B");
-        printf("\nTras analizar tu renta disponible, el sistema indica que necesitas apoyo");
-        printf("\ntanto en alimentación semanal como en vestimenta semestral.");
-        printf("\n-------------------------------------------");
-        mostrarAyudaComida(b);
-        mostrarAyudaRopa(b);
-    }
-    else {
-        // --- ESCENARIO C ---
-        printf("\nESTADO: Evaluación Finalizada -> Escenario C");
-        printf("\nTras analizar tu renta disponible, el sistema detecta una situación de");
-        printf("\nemergencia. Recibirás ayuda económica, alimentación y vestimenta.");
-        printf("\n-------------------------------------------");
-        float dinero = calcularAyudaDinero(b);
-        printf("\n > AYUDA ECONÓMICA: %.2f euros/mes", dinero);
-        mostrarAyudaComida(b);
-        mostrarAyudaRopa(b);
-    }
-    printf("\n===========================================\n");
-}
 
 
 //ADMINISTRADOR
-void listarUsuarios(sqlite3 *db) {
-    sqlite3_stmt *stmt;
-    char *sql = "SELECT id_usuario, nombre FROM Usuarios;";
-   
-    printf("\n--- LISTA ACTUAL DE USUARIOS ---\n");
-    printf("%-10s %-20s\n", "ID", "NOMBRE");
-    printf("-------------------------------\n");
 
-
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
-        while (sqlite3_step(stmt) == SQLITE_ROW) {
-            int id = sqlite3_column_int(stmt, 0);
-            const unsigned char *nombre = sqlite3_column_text(stmt, 1);
-            printf("%-10d %-20s\n", id, nombre);
-        }
-    }
-    sqlite3_finalize(stmt);
-    printf("-------------------------------\n");
-}
 int es_bisiesto(int a)
 {
     if (a % 400 == 0)
@@ -1686,61 +2069,6 @@ int es_bisiesto(int a)
     if (a % 4 == 0)
         return 1;
     return 0;
-}
-
-int leer_y_validar_fecha(const char *mensaje, Fecha *f)
-{
-    printf("%s", mensaje);
-    if (scanf("%d/%d/%d %d:%d", &f->dia, &f->mes, &f->anyo, &f->hora, &f->minutos) != 5)
-    {
-        while (getchar() != '\n')
-            ;
-        return 0;
-    }
-    while (getchar() != '\n')
-        ;
-    int dias_max;
-    if (f->mes < 1 || f->mes > 12 || f->hora < 0 || f->hora > 23 || f->minutos < 0 || f->minutos > 59)
-        return 0;
-
-    if (f->mes == 2)
-    {
-        if (es_bisiesto(f->anyo))
-        {
-            dias_max = 29;
-        }
-        else
-        {
-            dias_max = 28;
-        }
-    }
-
-    else if (f->mes == 4 || f->mes == 6 || f->mes == 9 || f->mes == 11)
-        dias_max = 30;
-    else
-        dias_max = 31;
-
-    if (f->dia < 1 || f->dia > dias_max)
-        return 0;
-    struct tm temp = {0};
-    temp.tm_mday = f->dia;
-    temp.tm_mon = f->mes - 1;      // Los meses en C van de 0 a 11
-    temp.tm_year = f->anyo - 1900; // El año cuenta desde 1900
-    temp.tm_hour = f->hora;
-    temp.tm_min = f->minutos;
-    temp.tm_sec = 0;
-    temp.tm_isdst = -1; // Para que el sistema ajuste horario de verano solo
-
-    time_t tiempo_usuario = mktime(&temp); // Convertimos la fecha del usuario a segundos
-    time_t tiempo_ahora;                   // Creamos la "caja" para guardar el tiempo
-    tiempo_ahora = time(NULL);
-    if (tiempo_usuario <= tiempo_ahora)
-    {
-        printf("Error: La fecha debe ser posterior a la actual.\n");
-        return 0; // Fecha ya pasada
-    }
-
-    return 1; // Fecha valida
 }
 
 int comparar_fechas(Fecha f1, Fecha f2)
@@ -1802,164 +2130,7 @@ void listarEventosRopaFuturos(sqlite3 *db) {
     }
     sqlite3_finalize(stmt);
 }
-void crearEvento(sqlite3 *db)
-{
-    char descripcion[100];
-    int tipo, material, limite;
-    Fecha inicio, final;
 
-
-    printf("\n--- Crear Evento ---\n");
-    printf("Descripción: ");
-    scanf(" %[^\n]", descripcion); // Para leer con espacios
-
-
-    printf("Tipo de evento (0 = Recogida, 1 = Reparto): ");
-    scanf("%d", &tipo);
-
-    printf("Material para recogoda/reparto (0 = Ropa, 1 = Comida): ");
-    scanf("%d", &material);
-
-    printf("Límite de voluntarios: ");
-    scanf("%d", &limite);
-    do
-    {
-        printf("Fecha inicio (DD/MM/AAAA HH:MM): ");
-        if (leer_y_validar_fecha("", &inicio))
-        {
-            break;
-        }
-        printf(" Error: La fecha de inicio debe ser valida y futura.\n");
-    } while (1);
-
-    do
-    {
-        printf("Fecha final (DD/MM/AAAA HH:MM): ");
-        if (leer_y_validar_fecha("", &final))
-        {
-            // Validar que 'final' sea después de 'inicio'
-            if (comparar_fechas(inicio, final) == 1)
-            {
-                break;
-            }
-            printf(" Error: La fecha final debe ser posterior a la de inicio.\n");
-        }
-        else
-        {
-            printf(" Error: Formato incorrecto o fecha pasada.\n");
-        }
-    } while (1);
-
-    char sql[300];
-    sprintf(sql,
-            "INSERT INTO Evento (material, descripcion, fecha_ini, fecha_fin, tipo, lim_voluntarios) "
-            "VALUES (%d, '%s', '%04d-%02d-%02d %02d:%02d', '%04d-%02d-%02d %02d:%02d', %d, %d);",
-            material,
-            descripcion,
-            inicio.anyo, inicio.mes, inicio.dia, inicio.hora, inicio.minutos, // Fecha Inicio
-            final.anyo, final.mes, final.dia, final.hora, final.minutos,      // Fecha Fin
-            tipo,
-            limite);
-    char *error = 0;
-    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK)
-    {
-        printf("Error al crear evento: %s\n", error); // berrize menure bueltatzie nahi deu??
-        sqlite3_free(error);
-    }
-    else
-    {
-        printf("Evento registrado correctamente\n");
-    }
-}
-
-// Usuariuei baja eman
-void darBajaUsuario(sqlite3 *db)
-{
-    int id_eliminar;
-    char sql[200];
-    char *error = 0;
-
-
-    printf("\n--- DAR DE BAJA USUARIO ---\n");
-    listarUsuarios(db);
-
-
-    printf("Introduce ID del usuario para eliminar (0 para cancelar): ");
-    scanf("%d", &id_eliminar);
-    if (id_eliminar <= 0)
-    {
-        printf("Operación cancelada.\n");
-        return;
-    }
-
-
-    int confirmar;
-    printf("¿Estás seguro de eliminar usuario %d?\n0. No\n1. Sí\nSelección: ", id_eliminar);
-    scanf("%d", &confirmar);
-    if (confirmar != 1)
-    {
-        printf("Operación cancelada.\n");
-        return;
-    }
-
-
-   
-    sprintf(sql, "DELETE FROM Usuarios WHERE id_usuario = %d;", id_eliminar);
-
-
-
-
-   
-    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
-        printf("\n[ÉXITO] Usuario %d eliminado correctamente.\n", id_eliminar);
-    }
-    else
-    {
-        printf("Error al eliminar usuario: %s\n", error);
-        sqlite3_free(error);
-    }
-}
-
-
-// Borrar un evento
-void borrarEvento(sqlite3 *db) {
-    int id_evento;
-    printf("\n--- GESTIÓN DE BORRADO ---");
-    // ... (muestras eventos) ...
-    
-    printf("\nIntroduce el ID del evento que deseas eliminar (0 para cancelar): ");
-    if (scanf("%d", &id_evento) != 1 || id_evento == 0) {
-        printf("Operación cancelada o entrada no válida.\n");
-        
-        return;
-    }
-    
-
-    // Comprobar si existe antes de borrar
-    // (Opcional, pero da mejor feedback)
-    
-    char sql[300];
-    char *error = 0;
-    
-    // Primero limpiamos participaciones
-    sprintf(sql, "DELETE FROM Participaciones WHERE id_evento = %d;", id_evento);
-    sqlite3_exec(db, sql, 0, 0, &error);
-
-    sprintf(sql, "DELETE FROM Evento WHERE id_evento = %d;", id_evento);
-    int rc = sqlite3_exec(db, sql, 0, 0, &error);
-
-    if (rc == SQLITE_OK) {
-        // sqlite3_changes te dice si realmente se borró algo
-        if (sqlite3_changes(db) > 0) {
-            printf("\n[ÉXITO] El evento %d ha sido eliminado correctamente.\n", id_evento);
-        } else {
-            printf("\n[AVISO] No se encontró ningún evento con el ID %d.\n", id_evento);
-        }
-    } else {
-        printf("\n[ERROR] No pudimos procesar la solicitud: %s\n", error);
-        sqlite3_free(error);
-    }
-}
 
 
 // Admiñan menua
@@ -1974,6 +2145,7 @@ void menuAdministrador(sqlite3 *db) {
         printf("\n3. Listar usuarios registrados");
         printf("\n4. Dar de baja a un usuario");
         printf("\n5. Registrar recogida de ropa");
+        printf("\n6. Asignar voluntario a taller");
         printf("\n0. Cerrar sesión");
         printf("\n----------------------------------");
         printf("\nSeleccione una opción: ");
@@ -1992,9 +2164,9 @@ void menuAdministrador(sqlite3 *db) {
             case 3: listarUsuarios(db); break;
             case 4: darBajaUsuario(db); break;
             case 5: registrarRecogidaRopaAdmin(db); break;
+            case 6: asignarVoluntarioTaller(db); break;
             case 0: printf("\nFinalizando sesión administrativa. ¡Buen día!\n"); break;
             default: printf("\n[!] Esa opción no está en el menú. Inténtalo de nuevo.\n"); break;
         }
     } while (opcion != 0);
 }
-
