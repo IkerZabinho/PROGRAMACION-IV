@@ -12,6 +12,7 @@ int comprobarLogin(sqlite3 *db, char *user, char *pass, int *tipo, int *id_res);
 int callbackMostrar(void *data, int argc, char **argv, char **colName);
 void mostrarUsuarios(sqlite3 *db);
 
+void mostrarProximaRecogida(sqlite3 *db, int material);
 void donarDinero(sqlite3 *db, int id_usuario);
 void donarComida(sqlite3 *db, int id_usuario);
 void donarRopa(sqlite3 *db, int id_usuario);
@@ -64,6 +65,6 @@ void listarUsuarios(sqlite3 *db);
 void crearEventoMartesAutomatico(sqlite3 *db);
 void asegurarEventoRopa(sqlite3 *db);
 
-void mostrarFechaEntrega(int tipo);
+
 
 #endif
