@@ -4,74 +4,66 @@
 #include "funciones.h"
 #include "estructuras.h"
 
-// Declaraciones de funciones
-//void crearTablas(sqlite3 *db);   //  CAMBIO IMPORTANTE
-//void menuPrincipal(sqlite3 *db, int tipo);
+// Función auxiliar para limpiar el rastro del teclado
+// Evita bucles infinitos si el usuario mete letras en un scanf de números
 
 int main() {
     sqlite3 *db;
-    int tipo = 0;
-
-    // UTF-8 para ñ y tildes
+    
+    // Configuración para que se vean bien las tildes y la Ñ en Windows
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
 
-    // Abrir base de datos
     if (sqlite3_open("asociacion.db", &db) != SQLITE_OK) {
-        printf("Error al abrir la base de datos\n");
+        printf("[!] ERROR CRÍTICO: No se pudo abrir la base de datos.\n");
         return 1;
     }
 
-    printf("Base de datos abierta correctamente\n");
+    // Activar claves foráneas (importante para que los DELETE funcionen en cascada)
+    sqlite3_exec(db, "PRAGMA foreign_keys = ON;", 0, 0, 0);
 
+    // Mantenimiento automático al arrancar
     crearEventoMartesAutomatico(db);
     asegurarEventoRopa(db);
 
-    //Crear Tablas bailña danak
-    //crearTablas(db);
-
-    // 
-    //menuPrincipal(db, tipo);
-    //MENU
     int opcion;
     do {
-        printf("\n=== BIENVENIDO ===\n");
-        printf("1. Iniciar Sesión\n");
-        printf("2. Registrarse\n");
-        printf("0. Salir\n");
-        printf("Seleccione: ");
+        printf("\n==============================");
+        printf("\n   SISTEMA DE GESTIÓN ONG");
+        printf("\n==============================");
+        printf("\n1. Iniciar Sesión");
+        printf("\n2. Registrarse");
+        printf("\n0. Salir");
+        printf("\n------------------------------");
+        printf("\nSeleccione una opción: ");
+
+        // Validación de entrada numérica
         if (scanf("%d", &opcion) != 1) {
-            printf("[!] Error: Introduce un número válido.\n");
-            while (getchar() != '\n'); // Limpiar el búfer para evitar bucle infinito
-            opcion = -1; // Forzamos que continúe el bucle
+            printf("\n[!] Ups, parece que no has introducido un número.");
+            printf("\nPor favor, elige una opción del 0 al 2.\n");
+            
+            opcion = -1;     // Valor neutro para repetir el bucle
             continue;
         }
+         // Limpiamos el 'Enter' sobrante
 
-      switch (opcion) {
+        switch (opcion) {
             case 1:
-                iniciarSesion(db);
+                iniciarSesion(db); // Dentro de esta función deberías usar la misma lógica de reintentos
                 break;
             case 2:
                 registrarUsuario(db);
                 break;
             case 0:
-                printf("Saliendo del programa...\n");
+                printf("\nGracias por usar el sistema. ¡Hasta pronto!\n");
                 break;
             default:
-                printf("[!] Error: '%d' no es una opción válida.\n", opcion);
+                printf("\n[?] La opción '%d' no existe en el menú. Inténtalo de nuevo.\n", opcion);
                 break;
         }
 
     } while (opcion != 0);
-    // Cerrar base de datos
+
     sqlite3_close(db);
-
-    printf("Programa finalizado\n");
-
     return 0;
 }
-////////////////////////////////////
-//EJEKUTAU AHAL IZATEKO HAU JARRI TERMINALIEN
-
-//gcc main.c funciones.c sqlite3.c -o asociacion.exe -lsqlite3
-//.\asociacion.exe

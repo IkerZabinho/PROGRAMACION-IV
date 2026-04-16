@@ -5,24 +5,17 @@ void crearTablas(sqlite3 *db)
     char *error = 0;
 
     char *sql =
-        "CREATE TABLE IF NOT EXISTS Usuarios ("
-        "id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "nombre TEXT,"
-        "apellidos TEXT,"
-        "nombre_usuario TEXT UNIQUE,"
-        "contrasena TEXT,"
-        "tipo INTEGER);"
+    "CREATE TABLE IF NOT EXISTS Usuarios ("
+    "id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,"
+    "nombre TEXT, apellidos TEXT, nombre_usuario TEXT UNIQUE, contrasena TEXT, tipo INTEGER);" // <--- AQUÍ ";"
 
-        "CREATE TABLE IF NOT EXISTS Donaciones ("
-        "id_donacion INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "id_usuario INTEGER,"
-        "tipo INTEGER);"
+    "CREATE TABLE IF NOT EXISTS Donaciones ("
+    "id_donacion INTEGER PRIMARY KEY AUTOINCREMENT,"
+    "id_usuario INTEGER, tipo INTEGER);" // <--- AQUÍ ";"
 
-        "CREATE TABLE IF NOT EXISTS Eventos ("
-        "id_evento INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "descripcion TEXT,"
-        "tipo INTEGER,"
-        "lim_voluntarios INTEGER);";
+    "CREATE TABLE IF NOT EXISTS Eventos ("
+    "id_evento INTEGER PRIMARY KEY AUTOINCREMENT,"
+    "descripcion TEXT, tipo INTEGER, lim_voluntarios INTEGER);";
 
     if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK)
     {

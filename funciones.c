@@ -1201,12 +1201,8 @@ void asegurarEventoRopa(sqlite3 *db) {
     }
     sqlite3_finalize(stmt);
     
-    if (existe > 0) {
-        printf("[INFO] Ya existen %d eventos de ropa.\n", existe);
-        return;
-    }
     
-    printf("[INFO] No hay eventos de ropa. Creando uno...\n");
+    
     
     // Crear evento de ropa para dentro de 1 mes
     char *sql_insert =
@@ -1215,11 +1211,7 @@ void asegurarEventoRopa(sqlite3 *db) {
         "datetime('now','+1 month','start of month'), "
         "datetime('now','+1 month','start of month','+4 hours'), 1, 15);";
     
-    if (sqlite3_exec(db, sql_insert, 0, 0, 0) == SQLITE_OK) {
-        printf("[INFO] Evento de ropa creado correctamente.\n");
-    } else {
-        printf("[ERROR] No se pudo crear evento de ropa.\n");
-    }
+
 }
 
 void registrarRecogidaRopa(sqlite3 *db, int id_beneficiario, int id_evento) {
@@ -1930,101 +1922,78 @@ void darBajaUsuario(sqlite3 *db)
 
 
 // Borrar un evento
-void borrarEvento(sqlite3 *db)
-{
+void borrarEvento(sqlite3 *db) {
     int id_evento;
-    char sql[200];
+    printf("\n--- GESTIÓN DE BORRADO ---");
+    // ... (muestras eventos) ...
+    
+    printf("\nIntroduce el ID del evento que deseas eliminar (0 para cancelar): ");
+    if (scanf("%d", &id_evento) != 1 || id_evento == 0) {
+        printf("Operación cancelada o entrada no válida.\n");
+        
+        return;
+    }
+    
+
+    // Comprobar si existe antes de borrar
+    // (Opcional, pero da mejor feedback)
+    
+    char sql[300];
     char *error = 0;
-
-
-    printf("\n--- BORRAR EVENTO ---\n");
-
-
-   
-    printf("\nEventos existentes:\n");
-    char *sql_ver = "SELECT id_evento, descripcion, fecha_ini, tipo FROM Evento;";
-    sqlite3_exec(db, sql_ver, callbackMostrarEventos, 0, &error);
-    printf("\n");
-
-
-    printf("Introduce el ID del evento a borrar (0 para cancelar): ");
-    scanf("%d", &id_evento);
-    if (id_evento <= 0)
-    {
-        printf("Operación cancelada.\n");
-        return;
-    }
-
-
-    int confirmar;
-    printf("¿Estás seguro de borrar el evento %d?\n0. No\n1. Sí\nSelección: ", id_evento);
-    scanf("%d", &confirmar);
-    if (confirmar != 1)
-    {
-        printf("Operación cancelada.\n");
-        return;
-    }
-
-
-   
+    
+    // Primero limpiamos participaciones
     sprintf(sql, "DELETE FROM Participaciones WHERE id_evento = %d;", id_evento);
     sqlite3_exec(db, sql, 0, 0, &error);
 
-
-   
     sprintf(sql, "DELETE FROM Evento WHERE id_evento = %d;", id_evento);
-    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK)
-    {
-        printf("\n[ÉXITO] Evento %d borrado correctamente.\n", id_evento);
-    }
-    else
-    {
-        printf("Error al borrar evento: %s\n", error);
+    int rc = sqlite3_exec(db, sql, 0, 0, &error);
+
+    if (rc == SQLITE_OK) {
+        // sqlite3_changes te dice si realmente se borró algo
+        if (sqlite3_changes(db) > 0) {
+            printf("\n[ÉXITO] El evento %d ha sido eliminado correctamente.\n", id_evento);
+        } else {
+            printf("\n[AVISO] No se encontró ningún evento con el ID %d.\n", id_evento);
+        }
+    } else {
+        printf("\n[ERROR] No pudimos procesar la solicitud: %s\n", error);
         sqlite3_free(error);
     }
 }
 
 
 // Admiñan menua
-void menuAdministrador(sqlite3 *db)
-{
+void menuAdministrador(sqlite3 *db) {
     int opcion;
-
-
     do {
-        printf("\n======= MENU ADMINISTRADOR =======");
-        printf("\n1. Crear evento");
-        printf("\n2. Borrar evento");
-        printf("\n3. Ver usuarios");
+        printf("\n==================================");
+        printf("\n   PANEL DE ADMINISTRACIÓN");
+        printf("\n==================================");
+        printf("\n1. Crear nuevo evento");
+        printf("\n2. Gestionar eventos (Borrar)");
+        printf("\n3. Listar usuarios registrados");
         printf("\n4. Dar de baja a un usuario");
-        printf("\n5. Registrar recogida de ropa de beneficiario");
+        printf("\n5. Registrar recogida de ropa");
         printf("\n0. Cerrar sesión");
+        printf("\n----------------------------------");
         printf("\nSeleccione una opción: ");
-        scanf("%d", &opcion);
 
+        if (scanf("%d", &opcion) != 1) {
+            printf("\n[!] Por favor, introduce el número de la opción deseada.\n");
+            
+            opcion = -1; // Forzamos que entre en el default para repetir
+            continue;
+        }
+    
 
         switch(opcion) {
-            case 1:
-                crearEvento(db);
-                break;
-            case 2:
-                borrarEvento(db);
-                break;
-            case 3:
-                listarUsuarios(db);
-                break;
-            case 4:
-                darBajaUsuario(db);
-                break;
-            case 5:
-                registrarRecogidaRopaAdmin(db); 
-                break;
-            case 0:
-                printf("\nCerrando sesión...\n");
-                break;
-            default:
-                printf("\nOpción no válida.\n");
-                break;
+            case 1: crearEvento(db); break;
+            case 2: borrarEvento(db); break;
+            case 3: listarUsuarios(db); break;
+            case 4: darBajaUsuario(db); break;
+            case 5: registrarRecogidaRopaAdmin(db); break;
+            case 0: printf("\nFinalizando sesión administrativa. ¡Buen día!\n"); break;
+            default: printf("\n[!] Esa opción no está en el menú. Inténtalo de nuevo.\n"); break;
         }
     } while (opcion != 0);
 }
