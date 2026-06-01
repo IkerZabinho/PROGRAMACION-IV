@@ -1,7 +1,9 @@
 #include "Clases.h"
 #include <iostream>
-#include <cstdio>  // Para sprintf
-#include <cstring> // Para strcmp
+#include <cstdio>   
+#include <cstring>  
+#include <cmath>    
+#include <sstream>  
 
 using namespace std;
 using namespace GestionONG;
@@ -32,43 +34,42 @@ TipoUsuario Usuario::getTipo() const {
 }
 
 // ============================================================================
-    // IMPLEMENTACIÓN DE GETTERS
-    // ============================================================================
-    std::string Usuario::getNombre() const {
-        return nombre;
-    }
+// IMPLEMENTACIÓN DE GETTERS
+// ============================================================================
+std::string Usuario::getNombre() const {
+    return nombre;
+}
 
-    std::string Usuario::getApellidos() const {
-        return apellidos;
-    }
+std::string Usuario::getApellidos() const {
+    return apellidos;
+}
 
-    std::string Usuario::getNombreUsuario() const {
-        return nombre_usuario;
-    }
+std::string Usuario::getNombreUsuario() const {
+    return nombre_usuario;
+}
 
-    std::string Usuario::getContrasena() const {
-        return contrasena;
-    }
+std::string Usuario::getContrasena() const {
+    return contrasena;
+}
 
-    // ============================================================================
-    // IMPLEMENTACIÓN DE SETTERS
-    // ============================================================================
-    void Usuario::setNombre(const std::string& nom) {
-        nombre = nom;
-    }
+// ============================================================================
+// IMPLEMENTACIÓN DE SETTERS
+// ============================================================================
+void Usuario::setNombre(const std::string& nom) {
+    nombre = nom;
+}
 
-    void Usuario::setApellidos(const std::string& ape) {
-        apellidos = ape;
-    }
+void Usuario::setApellidos(const std::string& ape) {
+    apellidos = ape;
+}
 
-    void Usuario::setNombreUsuario(const std::string& user) {
-        nombre_usuario = user;
-    }
+void Usuario::setNombreUsuario(const std::string& user) {
+    nombre_usuario = user;
+}
 
-    void Usuario::setContrasena(const std::string& pass) {
-        contrasena = pass;
-    }
-
+void Usuario::setContrasena(const std::string& pass) {
+    contrasena = pass;
+}
 
 
 Beneficiario::Beneficiario(int idU, string nom, string ape, string user, string pass, 
@@ -98,7 +99,7 @@ int Beneficiario::getNumNinos() const {
 
 // --- DEFINICIÓN DE SETTERS ---
 void Beneficiario::setIngresos(float i) { 
-    ingresos = i; 
+    value_type: ingresos = i; 
 }
 void Beneficiario::setGastos(float g) { 
     gastos = g; 
@@ -125,18 +126,19 @@ Donante::Donante(int idU, string nom, string ape, string user, string pass, int 
 
 
 // ============================================================================
-// 2. MÉTODOS DE INSERCIÓN ESPECÍFICOS (De las clases hijas)
+// 2. MÉTODOS DE INSERCIÓN ESPECÍFICOS (Uso de ostringstream para seguridad)
 // ============================================================================
 
 int Beneficiario::insertarDatosBeneficiario(sqlite3 *db) {
-    char sql[400];
     char *error = 0;
+    ostringstream sql;
 
-    sprintf(sql, "INSERT INTO Beneficiario (id_usuario, ingresos, gastos, num_adultos, num_nino) "
-                 "VALUES (%d, %.2f, %.2f, %d, %d);",
-            this->id_usuario, this->ingresos, this->gastos, this->num_adultos, this->num_ninos);
+    // Construcción segura de la query
+    sql << "INSERT INTO Beneficiario (id_usuario, ingresos, gastos, num_adultos, num_nino) "
+        << "VALUES (" << this->id_usuario << ", " << this->ingresos << ", " << this->gastos << ", " 
+        << this->num_adultos << ", " << this->num_ninos << ");";
 
-    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
+    if (sqlite3_exec(db, sql.str().c_str(), 0, 0, &error) == SQLITE_OK) {
         return (int)sqlite3_last_insert_rowid(db); 
     } else {
         cout << "[ERROR SQL] No se pudo insertar datos de beneficiario: " << error << endl;
@@ -146,14 +148,12 @@ int Beneficiario::insertarDatosBeneficiario(sqlite3 *db) {
 }
 
 int Voluntario::insertarDatosVoluntario(sqlite3 *db) {
-    char sql[300];
     char *error = 0;
+    ostringstream sql;
 
-    // Nota: Mantenemos tu SQL original. Si en tu tabla 'Voluntarios' añades la columna 'rol', 
-    // recuerda cambiar el SQL a: "INSERT INTO Voluntarios (id_usuario, rol) VALUES (%d, '%s');"
-    sprintf(sql, "INSERT INTO Voluntarios (id_usuario) VALUES (%d);", this->id_usuario);
+    sql << "INSERT INTO Voluntarios (id_usuario) VALUES (" << this->id_usuario << ");";
 
-    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
+    if (sqlite3_exec(db, sql.str().c_str(), 0, 0, &error) == SQLITE_OK) {
         return (int)sqlite3_last_insert_rowid(db); 
     } else {
         cout << "[ERROR SQL] No se pudo insertar datos de voluntario: " << error << endl;
@@ -163,12 +163,12 @@ int Voluntario::insertarDatosVoluntario(sqlite3 *db) {
 }
 
 int Donante::insertarDatosDonante(sqlite3 *db) {
-    char sql[400];
     char *error = 0;
+    ostringstream sql;
 
-    sprintf(sql, "INSERT INTO Donantes (id_usuario) VALUES (%d);", this->id_usuario);
+    sql << "INSERT INTO Donantes (id_usuario) VALUES (" << this->id_usuario << ");";
 
-    if (sqlite3_exec(db, sql, 0, 0, &error) == SQLITE_OK) {
+    if (sqlite3_exec(db, sql.str().c_str(), 0, 0, &error) == SQLITE_OK) {
         return (int)sqlite3_last_insert_rowid(db); 
     } else {
         cout << "[ERROR SQL] No se pudo insertar datos de donante: " << error << endl;
@@ -183,19 +183,19 @@ int Donante::insertarDatosDonante(sqlite3 *db) {
 // ============================================================================
 
 int Usuario::insertarUsuario(sqlite3 *db, const Usuario& u, void* datosEspecificos) {
-    char sql[500];
     char *error = 0;
     int id_usuario_gen = -1;
     int id_perfil_especifico = -1;
 
     sqlite3_exec(db, "BEGIN TRANSACTION;", 0, 0, 0);
 
-    // 1. Insertar en la tabla común Usuarios (usamos .c_str() para los strings de C++)
-    sprintf(sql, "INSERT INTO Usuarios (nombre, apellidos, nombre_usuario, contrasena, tipo) "
-                 "VALUES ('%s', '%s', '%s', '%s', %d);",
-            u.nombre.c_str(), u.apellidos.c_str(), u.nombre_usuario.c_str(), u.contrasena.c_str(), (int)u.tipo);
+    // Evitamos desbordamientos concatenando los std::string nativos de C++
+    ostringstream sql;
+    sql << "INSERT INTO Usuarios (nombre, apellidos, nombre_usuario, contrasena, tipo) VALUES ('"
+        << u.nombre << "', '" << u.apellidos << "', '" << u.nombre_usuario << "', '" 
+        << u.contrasena << "', " << (int)u.tipo << ");";
 
-    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+    if (sqlite3_exec(db, sql.str().c_str(), 0, 0, &error) != SQLITE_OK) {
         cout << "[ERROR SQL Usuarios] " << error << endl;
         sqlite3_free(error);
         sqlite3_exec(db, "ROLLBACK;", 0, 0, 0);
@@ -207,7 +207,7 @@ int Usuario::insertarUsuario(sqlite3 *db, const Usuario& u, void* datosEspecific
     // 2. Insertar en las tablas secundarias según el tipo de usuario
     if (u.tipo == BENEFICIARIO) { 
         Beneficiario *b = (Beneficiario *)datosEspecificos;
-        b->id_usuario = id_usuario_gen; // Gracias al 'friend class', podemos modificarlo
+        b->id_usuario = id_usuario_gen; 
         id_perfil_especifico = b->insertarDatosBeneficiario(db);
     } 
     else if (u.tipo == VOLUNTARIO) { 
@@ -237,12 +237,12 @@ int Usuario::insertarUsuario(sqlite3 *db, const Usuario& u, void* datosEspecific
 // ============================================================================
 
 int Usuario::eliminarUsuarioDB(sqlite3 *db, int id) {
-    char sql[200];
     char *error = 0;
+    ostringstream sql;
     
-    sprintf(sql, "DELETE FROM Usuarios WHERE id_usuario = %d;", id);
+    sql << "DELETE FROM Usuarios WHERE id_usuario = " << id << ";";
     
-    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+    if (sqlite3_exec(db, sql.str().c_str(), 0, 0, &error) != SQLITE_OK) {
         cout << "Error SQL al eliminar: " << error << endl;
         sqlite3_free(error);
         return -1; 
@@ -261,11 +261,16 @@ void Usuario::listarUsuarios(sqlite3 *db) {
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             int id = sqlite3_column_int(stmt, 0);
-            const unsigned char *nombre = sqlite3_column_text(stmt, 1);
-            const unsigned char *apellidos = sqlite3_column_text(stmt, 2);
-            const unsigned char *nombre_usuario = sqlite3_column_text(stmt, 3);
+            
+            // Tratamiento seguro de cadenas devueltas por SQLite
+            const unsigned char *txtNombre = sqlite3_column_text(stmt, 1);
+            const unsigned char *txtApellidos = sqlite3_column_text(stmt, 2);
+            const unsigned char *txtUser = sqlite3_column_text(stmt, 3);
 
-            printf("%-10d %-20s %-20s %-20s\n", id, nombre, apellidos, nombre_usuario);
+            printf("%-10d %-20s %-20s %-20s\n", id, 
+                   txtNombre ? (const char*)txtNombre : "", 
+                   txtApellidos ? (const char*)txtApellidos : "", 
+                   txtUser ? (const char*)txtUser : "");
         }
     }
     sqlite3_finalize(stmt);
@@ -283,17 +288,20 @@ int Usuario::comprobarLogin(sqlite3 *db, const string& user, const string& pass,
     int encontrado = 0;
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-        // En C++ usamos .c_str() para pasar los std::string a SQLite
         sqlite3_bind_text(stmt, 1, user.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, pass.c_str(), -1, SQLITE_STATIC);
 
         if (sqlite3_step(stmt) == SQLITE_ROW) {
             u_sesion->id_usuario = sqlite3_column_int(stmt, 0);
             
-            // Asignación directa y segura de cadenas nativas de C++ std::string
-            u_sesion->nombre = (const char*)sqlite3_column_text(stmt, 1);
-            u_sesion->apellidos = (const char*)sqlite3_column_text(stmt, 2);
-            u_sesion->nombre_usuario = (const char*)sqlite3_column_text(stmt, 3);
+            // CORREGIDO: Verificación de nulos antes de asignar al std::string para evitar crashes
+            const unsigned char* n = sqlite3_column_text(stmt, 1);
+            const unsigned char* a = sqlite3_column_text(stmt, 2);
+            const unsigned char* u = sqlite3_column_text(stmt, 3);
+
+            u_sesion->nombre = n ? (const char*)n : "";
+            u_sesion->apellidos = a ? (const char*)a : "";
+            u_sesion->nombre_usuario = u ? (const char*)u : "";
             u_sesion->tipo = (TipoUsuario)sqlite3_column_int(stmt, 4);
             
             encontrado = 1;
@@ -338,7 +346,7 @@ void Beneficiario::mostrarAyudaComida() const {
 
 float Beneficiario::calcularAyudaDinero() const {
     float renta = this->ingresos - this->gastos;
-    // Usamos std::abs de la librería <cmath>, que es la forma correcta en C++
+    // std::abs requiere de <cmath>
     return std::abs(int(renta)) + 50.0f; 
 }
 
@@ -359,7 +367,6 @@ void Beneficiario::evaluarBeneficiario() const {
     cout << "\n===========================================";
 
     if (renta > umbralTotal) {
-        // --- AUTOSUFICIENTE ---
         cout << "\nESTADO: Evaluación Finalizada -> Autosuficiente";
         cout << "\nTras analizar tu renta disponible, el sistema indica que puedes cubrir";
         cout << "\nlas necesidades básicas de alimentación y vestimenta por tu cuenta.";
@@ -368,7 +375,6 @@ void Beneficiario::evaluarBeneficiario() const {
         cout << "\nSi tu situación económica cambia, puedes solicitar una nueva evaluación.";
     }
     else if (renta >= gastoComidaMensual && renta <= umbralTotal) {
-        // --- ESCENARIO A ---
         cout << "\nESTADO: Evaluación Finalizada -> Escenario A";
         cout << "\nTras analizar tu renta disponible, consideramos que cubres la alimentación";
         cout << "\nbásica, por lo tanto, recibirás apoyo específico en vestimenta.";
@@ -376,7 +382,6 @@ void Beneficiario::evaluarBeneficiario() const {
         this->mostrarAyudaRopa(); 
     }
     else if (renta > 0 && renta < gastoComidaMensual) {
-        // --- ESCENARIO B ---
         cout << "\nESTADO: Evaluación Finalizada -> Escenario B";
         cout << "\nTras analizar tu renta disponible, el sistema indica que necesitas apoyo";
         cout << "\ntanto en alimentación semanal como en vestimenta semestral.";
@@ -385,14 +390,12 @@ void Beneficiario::evaluarBeneficiario() const {
         this->mostrarAyudaRopa();
     }
     else {
-        // --- ESCENARIO C ---
         cout << "\nESTADO: Evaluación Finalizada -> Escenario C";
         cout << "\nTras analizar tu renta disponible, el sistema detecta una situación de";
         cout << "\nemergencia. Recibirás ayuda económica, alimentación y vestimenta.";
         cout << "\n-------------------------------------------";
         
         float dinero = this->calcularAyudaDinero();
-        // Usamos un pequeño printf para formatear los decimales del dinero de forma sencilla
         printf("\n > AYUDA ECONÓMICA: %.2f euros/mes", dinero);
         
         this->mostrarAyudaComida();
@@ -400,22 +403,21 @@ void Beneficiario::evaluarBeneficiario() const {
     }
     cout << "\n===========================================\n" << endl;
 }
+
 int Beneficiario::actualizarDatosBeneficiario(sqlite3 *db, int id_perfil) {
-    char sql[400];
     char *error = 0;
+    ostringstream sql;
 
-    sprintf(sql,
-        "UPDATE Beneficiario SET ingresos = %.2f, gastos = %.2f, "
-        "num_adultos = %d, num_nino = %d WHERE id_beneficiario = %d;",
-        this->ingresos, this->gastos, this->num_adultos, this->num_ninos, id_perfil);
+    sql << "UPDATE Beneficiario SET ingresos = " << this->ingresos << ", gastos = " << this->gastos 
+        << ", num_adultos = " << this->num_adultos << ", num_nino = " << this->num_ninos 
+        << " WHERE id_beneficiario = " << id_perfil << ";";
 
-    if (sqlite3_exec(db, sql, 0, 0, &error) != SQLITE_OK) {
+    if (sqlite3_exec(db, sql.str().c_str(), 0, 0, &error) != SQLITE_OK) {
         cout << "Error al actualizar base de datos: " << error << endl;
         sqlite3_free(error);
         return 0;
     }
     
-    // Llamamos al método interno directamente
     this->evaluarBeneficiario();
     return 1;
 }
