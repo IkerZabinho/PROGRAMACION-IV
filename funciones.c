@@ -8,6 +8,7 @@
 #include "sqlite3.h"
 #include <time.h>
 
+// Clase config
 
 int cargar_configuracion(const char *filename, Config *conf) {
     FILE *file = fopen(filename, "r");
@@ -33,6 +34,9 @@ int cargar_configuracion(const char *filename, Config *conf) {
     fclose(file);
     return 1;
 }
+// listo
+
+// Funciones globales meteremos los 2 en clase estática de control
 void generarReporteResumen(sqlite3 *db, const char *nombreArchivo) {
     FILE *f = fopen(nombreArchivo, "w");
     if (f == NULL) return;
@@ -61,6 +65,7 @@ void generarReporteResumen(sqlite3 *db, const char *nombreArchivo) {
 
     fclose(f);
 }
+// listo
 
 // Esta es una función auxiliar para que SQLite escriba en el archivo
 int callback_escribir_fichero(void *data, int argc, char **argv, char **azColName) {
@@ -71,6 +76,7 @@ int callback_escribir_fichero(void *data, int argc, char **argv, char **azColNam
     fprintf(f, "\n");
     return 0;
 }
+// listo
 
 // [GRUPO 1: BASE DE DATOS]
 
@@ -144,6 +150,7 @@ int eliminarUsuarioDB(sqlite3 *db, int id) {
     }
     return 0; // Éxito
 }
+// listo
 
 // Listar usuarios
 void listarUsuarios(sqlite3 *db) {
@@ -168,7 +175,7 @@ void listarUsuarios(sqlite3 *db) {
     sqlite3_finalize(stmt);
     printf("-------------------------------\n");
 }
-
+// listo
 
 // Insertar beneficiarios
 // Inserta los datos específicos de un beneficiario. 
@@ -190,6 +197,7 @@ int insertarDatosBeneficiario(sqlite3 *db, Beneficiario b)
         return -1;
     }
 }
+// listo
 
 // Insertar voluntarios
 // Inserta los datos específicos de un voluntario.
@@ -210,6 +218,8 @@ int insertarDatosVoluntario(sqlite3 *db, Voluntario v)
         return -1;
     }
 }
+// listo
+
 // Insertar donantes
 // Inserta los datos específicos de un donante. 
 int insertarDatosDonante(sqlite3 *db, Donante d)
@@ -230,6 +240,8 @@ int insertarDatosDonante(sqlite3 *db, Donante d)
         return -1;
     }
 }
+// listo
+
 // Insertar Evento
 int insertarEvento(sqlite3 *db, Evento e) {
     char sql[1000];
@@ -267,6 +279,7 @@ int insertarEvento(sqlite3 *db, Evento e) {
 
     return 0; // Todo OK
 }
+// listo
 
 // Insertar donación de ropa
 int insertarDonacionRopa(sqlite3 *db, Ropa r, int id_donante) {
@@ -366,6 +379,13 @@ int insertarDonacionComidaDB(sqlite3 *db, Donacion d, Comida c) {
     sqlite3_exec(db, "COMMIT;", 0, 0, 0);
     return 0;
 }
+// listo los 3
+
+
+
+
+
+
 
 //[GRUPO 2: LÓGICA/CONSULTAS]
 //Comprobar Login
@@ -396,7 +416,7 @@ int comprobarLogin(sqlite3 *db, char *user, char *pass, Usuario *u_sesion) {
     sqlite3_finalize(stmt);
     return encontrado;
 }
-
+// listo
 // Devuelve 1 si el voluntario ya tiene otro evento ese día
 int tieneChoqueDeFechas(sqlite3 *db, int id_voluntario, int id_evento_nuevo) {
     sqlite3_stmt *stmt;
@@ -437,6 +457,8 @@ int tieneChoqueDeFechas(sqlite3 *db, int id_voluntario, int id_evento_nuevo) {
 
     return (choque > 0); 
 }
+// listo
+
 // Devuelve 1 si el evento ha llegado a su límite
 int estaEventoLleno(sqlite3 *db, int id_e) {
     sqlite3_stmt *stmt;
@@ -465,6 +487,7 @@ int estaEventoLleno(sqlite3 *db, int id_e) {
 
     return lleno;
 }
+// listo
 
 // Evaluar la ayuda que necesita el beneficiario
 void evaluarBeneficiario(Beneficiario b) {
@@ -523,6 +546,7 @@ void evaluarBeneficiario(Beneficiario b) {
     }
     printf("\n===========================================\n");
 }
+// listo
 
 // Función para actualizar los datos de beneficiario
 int actualizarDatosBeneficiario(sqlite3 *db, int id_perfil, Beneficiario b) {
@@ -545,6 +569,8 @@ int actualizarDatosBeneficiario(sqlite3 *db, int id_perfil, Beneficiario b) {
     evaluarBeneficiario(b);
     return 1;
 }
+// listo
+
 
 
 
@@ -1207,6 +1233,7 @@ void crearTaller(sqlite3 *db) {
         }
             }
 }
+
 /*
 // Asignar profesor
 // Función que usa el Administrador para asignar un voluntario
@@ -1302,6 +1329,7 @@ void asignarVoluntarioTaller(sqlite3 *db) {
         sqlite3_finalize(stmt);
     }
 }*/
+
 // Borrar un evento
 void borrarEvento(sqlite3 *db) {
     int id_borrar;
@@ -1916,6 +1944,7 @@ float calcularAyudaDinero(Beneficiario b) {
     // Cubrimos el déficit mensual + un pequeño bono de emergencia
     return fabsf(renta) + 50.0f; // fabsf(valor absoluto)
 }
+// listo
 
 //Ayuda alimentación semanal
 void mostrarAyudaComida(Beneficiario b) {
@@ -1931,7 +1960,7 @@ void mostrarAyudaComida(Beneficiario b) {
     printf("\n > Leche:              %.0f litros", totalLeche);
     printf("\n > Conservas:          %d latas", totalConservas);
 }
-
+// listo
 
 //Ayuda ropa semestral
 void mostrarAyudaRopa(Beneficiario b) {
@@ -1954,6 +1983,7 @@ void mostrarAyudaRopa(Beneficiario b) {
                 camAdultos, panAdultos);
     }
 }
+// listo
 
 // Menu principal
 void menuPrincipal(sqlite3 *db, int tipo, int id_perfil)
@@ -2071,6 +2101,8 @@ int buscarIdEspecifico(sqlite3 *db, int id_usuario, int tipo) {
     sqlite3_finalize(stmt);
     return id_final;
 }
+
+
 
 
 //A PARTIR DE AQUÍ SIN ARREGLAR
