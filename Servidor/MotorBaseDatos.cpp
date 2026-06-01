@@ -9,7 +9,7 @@ using namespace std;
 bool autenticarUsuarioSQL(sqlite3* db, PaqueteRed& paqueteIn, PaqueteRed& paqueteOut) {
     sqlite3_stmt* stmt;
     // Buscamos el ID, la contraseña y el tipo (rol) en tu tabla de Usuarios
-    string sql = "SELECT id, contrasena, tipo FROM Usuarios WHERE usuario = ?;";
+    string sql = "SELECT id_usuario, contrasena, tipo FROM Usuarios WHERE nombre_usuario = ?;";
     
     int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
     if (rc != SQLITE_OK) {
