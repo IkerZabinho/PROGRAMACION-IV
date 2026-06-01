@@ -1,0 +1,58 @@
+[Mon Jun 01 14:11:44 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 01 14:11:44 2026] Cargando configuracion...
+[Mon Jun 01 14:11:44 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 01 14:11:44 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 01 14:17:31 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 01 14:17:31 2026] Cargando configuracion...
+[Mon Jun 01 14:17:31 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 01 14:17:31 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 01 14:18:01 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 01 14:18:01 2026] Cargando configuracion...
+[Mon Jun 01 14:18:01 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 01 14:18:01 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 01 18:20:05 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 01 18:20:05 2026] Cargando configuracion...
+[Mon Jun 01 18:20:05 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 01 18:20:06 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 01 18:53:11 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 01 18:53:11 2026] Cargando configuracion...
+[Mon Jun 01 18:53:11 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 01 18:53:11 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 01 19:04:32 2026] Cliente conectado al socket.
+[Mon Jun 01 19:04:32 2026] Procesando Login Real para: IkerZabala
+[Mon Jun 01 19:04:32 2026] ERROR SQL: No se pudo preparar la consulta de login.
+[Mon Jun 01 19:04:32 2026] LOGIN FALLIDO: IkerZabala -> [ERROR] Error interno en el servidor.
+[Mon Jun 01 19:04:32 2026] Cliente desconectado del socket.
+[Mon Jun 01 19:11:38 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 01 19:11:38 2026] Cargando configuracion...
+[Mon Jun 01 19:11:38 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 01 19:11:38 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 01 19:12:07 2026] Cliente conectado al socket.
+[Mon Jun 01 19:12:07 2026] Procesando Login Real para: IkerZabala
+[Mon Jun 01 19:12:07 2026] LOGIN EXITOSO: IkerZabala (ID: 1)
+[Mon Jun 01 19:12:07 2026] Cliente desconectado del socket.
+[Mon Jun 01 19:50:10 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 01 19:50:10 2026] Cargando configuracion...
+[Mon Jun 01 19:50:10 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 01 19:50:10 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 01 19:51:39 2026] Cliente conectado al socket.
+[Mon Jun 01 19:51:39 2026] Cliente desconectado del socket.
+[Mon Jun 01 19:56:42 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 01 19:56:42 2026] Cargando configuracion...
+[Mon Jun 01 19:56:42 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 01 19:56:42 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 01 19:57:01 2026] Cliente conectado al socket.
+[Mon Jun 01 19:57:01 2026] Procesando Login Real para: IkerZabala
+[Mon Jun 01 19:57:01 2026] LOGIN EXITOSO: IkerZabala (ID: 1)
+[Mon Jun 01 19:57:01 2026] Cliente desconectado del socket.
+[Mon Jun 01 19:57:15 2026] Cliente conectado al socket.
+[Mon Jun 01 19:57:15 2026] Procesando Login Real para: admin
+[Mon Jun 01 19:57:15 2026] LOGIN EXITOSO: admin (ID: 2)
+[Mon Jun 01 19:57:15 2026] Cliente desconectado del socket.
+[Mon Jun 01 20:04:04 2026] Cliente conectado al socket.
+[Mon Jun 01 20:04:04 2026] Procesando registro de Voluntario: Arowis
+[Mon Jun 01 20:04:04 2026] Cliente desconectado del socket.
+[Mon Jun 01 20:04:19 2026] Cliente conectado al socket.
+[Mon Jun 01 20:04:19 2026] Procesando Login Real para: Arowis
+[Mon Jun 01 20:04:19 2026] LOGIN EXITOSO: Arowis (ID: 39)
+[Mon Jun 01 20:04:19 2026] Cliente desconectado del socket.

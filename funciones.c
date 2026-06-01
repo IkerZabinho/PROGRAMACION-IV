@@ -8,6 +8,7 @@
 #include "sqlite3.h"
 #include <time.h>
 
+// Clase config
 
 int cargar_configuracion(const char *filename, Config *conf) {
     FILE *file = fopen(filename, "r");
@@ -33,6 +34,49 @@ int cargar_configuracion(const char *filename, Config *conf) {
     fclose(file);
     return 1;
 }
+// listo
+
+// Funciones globales meteremos los 2 en clase estática de control
+void generarReporteResumen(sqlite3 *db, const char *nombreArchivo) {
+    FILE *f = fopen(nombreArchivo, "w");
+    if (f == NULL) return;
+
+    fprintf(f, "=== RESUMEN DE LA ONG ===\n");
+    
+    // 1. Usuarios
+    fprintf(f, "\n[USUARIOS]\n");
+    sqlite3_exec(db, "SELECT nombre_usuario, tipo FROM Usuarios;", 
+                 callback_escribir_fichero, f, 0);
+
+    // 2. Donaciones de Dinero
+    fprintf(f, "\n[DONACIONES DINERO]\n");
+    sqlite3_exec(db, "SELECT id_dinero, cantidad FROM Dinero;", 
+                 callback_escribir_fichero, f, 0);
+
+    // 3. Ropa
+    fprintf(f, "\n[DONACIONES  ROPA]\n");
+    sqlite3_exec(db, "SELECT id_ropa, kilos FROM Ropa;", 
+                 callback_escribir_fichero, f, 0);
+    // 4.Comida
+    fprintf(f, "\n[DONACIONES  COMIDA]\n");
+    sqlite3_exec(db, "SELECT id_comida, tipo_comida,kilos FROM Comida;", 
+                 callback_escribir_fichero, f, 0);
+
+
+    fclose(f);
+}
+// listo
+
+// Esta es una función auxiliar para que SQLite escriba en el archivo
+int callback_escribir_fichero(void *data, int argc, char **argv, char **azColName) {
+    FILE *f = (FILE *)data;
+    for (int i = 0; i < argc; i++) {
+        fprintf(f, "%s: %s | ", azColName[i], argv[i] ? argv[i] : "N/A");
+    }
+    fprintf(f, "\n");
+    return 0;
+}
+// listo
 
 // [GRUPO 1: BASE DE DATOS]
 
@@ -106,6 +150,7 @@ int eliminarUsuarioDB(sqlite3 *db, int id) {
     }
     return 0; // Éxito
 }
+// listo
 
 // Listar usuarios
 void listarUsuarios(sqlite3 *db) {
@@ -130,7 +175,7 @@ void listarUsuarios(sqlite3 *db) {
     sqlite3_finalize(stmt);
     printf("-------------------------------\n");
 }
-
+// listo
 
 // Insertar beneficiarios
 // Inserta los datos específicos de un beneficiario. 
@@ -152,6 +197,7 @@ int insertarDatosBeneficiario(sqlite3 *db, Beneficiario b)
         return -1;
     }
 }
+// listo
 
 // Insertar voluntarios
 // Inserta los datos específicos de un voluntario.
@@ -172,6 +218,8 @@ int insertarDatosVoluntario(sqlite3 *db, Voluntario v)
         return -1;
     }
 }
+// listo
+
 // Insertar donantes
 // Inserta los datos específicos de un donante. 
 int insertarDatosDonante(sqlite3 *db, Donante d)
@@ -192,6 +240,8 @@ int insertarDatosDonante(sqlite3 *db, Donante d)
         return -1;
     }
 }
+// listo
+
 // Insertar Evento
 int insertarEvento(sqlite3 *db, Evento e) {
     char sql[1000];
@@ -229,6 +279,7 @@ int insertarEvento(sqlite3 *db, Evento e) {
 
     return 0; // Todo OK
 }
+// listo
 
 // Insertar donación de ropa
 int insertarDonacionRopa(sqlite3 *db, Ropa r, int id_donante) {
@@ -328,6 +379,13 @@ int insertarDonacionComidaDB(sqlite3 *db, Donacion d, Comida c) {
     sqlite3_exec(db, "COMMIT;", 0, 0, 0);
     return 0;
 }
+// listo los 3
+
+
+
+
+
+
 
 //[GRUPO 2: LÓGICA/CONSULTAS]
 //Comprobar Login
@@ -358,7 +416,7 @@ int comprobarLogin(sqlite3 *db, char *user, char *pass, Usuario *u_sesion) {
     sqlite3_finalize(stmt);
     return encontrado;
 }
-
+// listo
 // Devuelve 1 si el voluntario ya tiene otro evento ese día
 int tieneChoqueDeFechas(sqlite3 *db, int id_voluntario, int id_evento_nuevo) {
     sqlite3_stmt *stmt;
@@ -399,6 +457,8 @@ int tieneChoqueDeFechas(sqlite3 *db, int id_voluntario, int id_evento_nuevo) {
 
     return (choque > 0); 
 }
+// listo
+
 // Devuelve 1 si el evento ha llegado a su límite
 int estaEventoLleno(sqlite3 *db, int id_e) {
     sqlite3_stmt *stmt;
@@ -427,6 +487,7 @@ int estaEventoLleno(sqlite3 *db, int id_e) {
 
     return lleno;
 }
+// listo
 
 // Evaluar la ayuda que necesita el beneficiario
 void evaluarBeneficiario(Beneficiario b) {
@@ -485,6 +546,7 @@ void evaluarBeneficiario(Beneficiario b) {
     }
     printf("\n===========================================\n");
 }
+// listo
 
 // Función para actualizar los datos de beneficiario
 int actualizarDatosBeneficiario(sqlite3 *db, int id_perfil, Beneficiario b) {
@@ -507,6 +569,8 @@ int actualizarDatosBeneficiario(sqlite3 *db, int id_perfil, Beneficiario b) {
     evaluarBeneficiario(b);
     return 1;
 }
+// listo
+
 
 
 
@@ -1060,8 +1124,117 @@ void apuntarseTaller(sqlite3 *db, int id_beneficiario) {
     }
 }
 
+void crearTaller(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    Taller t; 
+    int id_voluntario, opcion_tipo;
+    char f_ini_str[20], f_fin_str[20];
 
+    printf("\n--- CREAR NUEVO TALLER ---\n");
 
+    // 1. LISTAR VOLUNTARIOS (RELLENADO)
+    printf("\n--- VOLUNTARIOS DISPONIBLES ---\n");
+    const char *sql_v = "SELECT v.id_voluntario, u.nombre FROM Voluntarios v "
+                        "JOIN Usuarios u ON v.id_usuario = u.id_usuario;";
+    
+    int hay_voluntarios = 0;
+    if (sqlite3_prepare_v2(db, sql_v, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            hay_voluntarios = 1;
+            printf("ID: [%d] | Nombre: %s\n", 
+                   sqlite3_column_int(stmt, 0), 
+                   sqlite3_column_text(stmt, 1));
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    if (!hay_voluntarios) {
+        printf("[!] No hay voluntarios registrados. Registra uno antes de crear un taller.\n");
+        return;
+    }
+
+    printf("\nIntroduce el ID del voluntario responsable: ");
+    if (scanf("%d", &id_voluntario) != 1) {
+        printf("[!] Error: ID no válido.\n");
+        while (getchar() != '\n');
+        return;
+    }
+
+    // 2. CAPTURA DE TIPO (ENUM)
+    printf("\nSeleccione el tipo de taller:\n");
+    printf("0. Cocina\n1. Aprendizaje\n2. Deportes\n: ");
+    scanf("%d", &opcion_tipo);
+    t.tipo = (TipoTaller)opcion_tipo; // Asignación al enum
+
+    printf("Descripción: ");
+    scanf(" %[^\n]", t.descripcion);
+
+    // 3. VALIDACIÓN DE FECHAS (Estilo Evento)
+    do {
+        printf("Fecha inicio (DD/MM/AAAA HH:MM): ");
+        if (leer_y_validar_fecha("", &t.fecha_ini)) break;
+        printf(" [!] Error: Fecha inválida.\n");
+    } while (1);
+
+    do {
+        printf("Fecha fin (DD/MM/AAAA HH:MM): ");
+        if (leer_y_validar_fecha("", &t.fecha_fin)) break;
+        printf(" [!] Error: Fecha inválida.\n");
+    } while (1);
+
+    // 4. FORMATEO DE FECHAS
+    sprintf(f_ini_str, "%04d-%02d-%02d %02d:%02d", 
+            t.fecha_ini.anyo, t.fecha_ini.mes, t.fecha_ini.dia, 
+            t.fecha_ini.hora, t.fecha_ini.minutos);
+            
+    sprintf(f_fin_str, "%04d-%02d-%02d %02d:%02d", 
+            t.fecha_fin.anyo, t.fecha_fin.mes, t.fecha_fin.dia, 
+            t.fecha_fin.hora, t.fecha_fin.minutos);
+
+    // 5. INSERTAR EN TABLA TALLER
+    const char *sql_ins = "INSERT INTO Taller (tipo, fecha_ini, fecha_fin, descripcion, id_voluntario) VALUES (?, ?, ?, ?, ?);";
+
+    if (sqlite3_prepare_v2(db, sql_ins, -1, &stmt, 0) == SQLITE_OK) {
+        // OPCIÓN A: Si tu base de datos guarda el número del enum
+        sqlite3_bind_int(stmt, 1, (int)t.tipo); 
+        
+        // OPCIÓN B: Si tu base de datos guarda el TEXTO del taller
+        // char *nombres[] = {"Carpinteria", "Cocina", "Costura", "Informatica"};
+        // sqlite3_bind_text(stmt, 1, nombres[t.tipo], -1, SQLITE_STATIC);
+
+        sqlite3_bind_text(stmt, 2, f_ini_str, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 3, f_fin_str, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 4, t.descripcion, -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 5, id_voluntario);
+
+        if (sqlite3_step(stmt) == SQLITE_DONE) {
+            printf("\n[OK] Taller creado con éxito.\n");
+        } else {
+            printf("\n[!] Error SQL: %s\n", sqlite3_errmsg(db));
+        }
+        sqlite3_finalize(stmt);
+        // 1. Obtenemos el ID del taller que acabamos de crear
+        int id_taller_recien_creado = (int)sqlite3_last_insert_rowid(db);
+
+        // 2. Preparamos el insert para la tabla 'Impartir'
+        sqlite3_stmt *stmt_rel;
+        const char *sql_rel = "INSERT INTO Impartir (id_voluntario, id_taller) VALUES (?, ?);";
+
+        if (sqlite3_prepare_v2(db, sql_rel, -1, &stmt_rel, 0) == SQLITE_OK) {
+            sqlite3_bind_int(stmt_rel, 1, id_voluntario);
+            sqlite3_bind_int(stmt_rel, 2, id_taller_recien_creado);
+
+            if (sqlite3_step(stmt_rel) == SQLITE_DONE) {
+                //printf("[INFO] Relación guardada en tabla 'Impartir'.\n");
+            } else {
+                printf("[!] Error al relacionar en 'Impartir': %s\n", sqlite3_errmsg(db));
+            }
+            sqlite3_finalize(stmt_rel);
+        }
+            }
+}
+
+/*
 // Asignar profesor
 // Función que usa el Administrador para asignar un voluntario
 void asignarVoluntarioTaller(sqlite3 *db) {
@@ -1155,7 +1328,8 @@ void asignarVoluntarioTaller(sqlite3 *db) {
         }
         sqlite3_finalize(stmt);
     }
-}
+}*/
+
 // Borrar un evento
 void borrarEvento(sqlite3 *db) {
     int id_borrar;
@@ -1580,7 +1754,7 @@ void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario) {
 
     if (sqlite3_prepare_v2(db, sql_next, -1, &stmt, 0) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
-            printf("\n[DISPONIBLE] Puedes acudir al proximo reparto el dia: %s\n", sqlite3_column_text(stmt, 0));
+            printf("\nProximo reparto de ropa el dia: %s\n", sqlite3_column_text(stmt, 0));
         } else {
             printf("\nNo hay repartos de ropa programados actualmente.\n");
         }
@@ -1770,6 +1944,7 @@ float calcularAyudaDinero(Beneficiario b) {
     // Cubrimos el déficit mensual + un pequeño bono de emergencia
     return fabsf(renta) + 50.0f; // fabsf(valor absoluto)
 }
+// listo
 
 //Ayuda alimentación semanal
 void mostrarAyudaComida(Beneficiario b) {
@@ -1785,7 +1960,7 @@ void mostrarAyudaComida(Beneficiario b) {
     printf("\n > Leche:              %.0f litros", totalLeche);
     printf("\n > Conservas:          %d latas", totalConservas);
 }
-
+// listo
 
 //Ayuda ropa semestral
 void mostrarAyudaRopa(Beneficiario b) {
@@ -1808,6 +1983,7 @@ void mostrarAyudaRopa(Beneficiario b) {
                 camAdultos, panAdultos);
     }
 }
+// listo
 
 // Menu principal
 void menuPrincipal(sqlite3 *db, int tipo, int id_perfil)
@@ -1927,6 +2103,8 @@ int buscarIdEspecifico(sqlite3 *db, int id_usuario, int tipo) {
 }
 
 
+
+
 //A PARTIR DE AQUÍ SIN ARREGLAR
 
 void mostrarProximaRecogida(sqlite3 *db, int material) {
@@ -1963,7 +2141,7 @@ void asegurarEventoRopa(sqlite3 *db) {
     sqlite3_stmt *stmt;
     char *error = 0;
 
-    printf("[SISTEMA] Verificando calendario de recogida de ropa (6 meses)...\n");
+    //printf("[SISTEMA] Verificando calendario de recogida de ropa (6 meses)...\n");
 
     for (int i = 0; i < 6; i++) {
         char sql_check[256];
@@ -2212,7 +2390,7 @@ void menuAdministrador(sqlite3 *db) {
             case 3: listarUsuarios(db); break;
             case 4: darBajaUsuario(db); break;
             case 5: registrarRecogidaRopaAdmin(db); break;
-            case 6: asignarVoluntarioTaller(db); break;
+            case 6: crearTaller(db); break;
             case 0: printf("\nFinalizando sesión administrativa. ¡Buen día!\n"); break;
             default: printf("\n[!] Esa opción no está en el menú. Inténtalo de nuevo.\n"); break;
         }

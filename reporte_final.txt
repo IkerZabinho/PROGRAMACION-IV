@@ -1,0 +1,16 @@
+=== RESUMEN DE LA ONG ===
+
+[USUARIOS]
+nombre_usuario: IkerZabala | tipo: 1 | 
+nombre_usuario: admin | tipo: 3 | 
+nombre_usuario: saioalarranaga | tipo: 1 | 
+nombre_usuario: kaietunamuno | tipo: 2 | 
+nombre_usuario: luciabarrene | tipo: 2 | 
+nombre_usuario: arooo | tipo: 2 | 
+nombre_usuario: 1 | tipo: 1 | 
+
+[DONACIONES DINERO]
+
+[DONACIONES  ROPA]
+
+[DONACIONES  COMIDA]
