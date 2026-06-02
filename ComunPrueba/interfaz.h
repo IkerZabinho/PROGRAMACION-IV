@@ -1,7 +1,7 @@
 #ifndef INTERFAZ_H
 #define INTERFAZ_H
 
-#include <sqlite3.h>
+#include "sqlite3.h"
 #include "Clases.h"
 #include <string>       
 

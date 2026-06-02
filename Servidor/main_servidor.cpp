@@ -1,7 +1,7 @@
 // main_servidor.cpp
 #include <iostream>
 #include <winsock2.h>
-#include "../sqlite3.h"
+#include "../ComunPrueba/sqlite3.h"
 #include "../Comun/protocolo.h"
 #include "GestionLogs.h"
 #include "ConfigServidor.h"

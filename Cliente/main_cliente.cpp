@@ -4,13 +4,13 @@
 #include <windows.h>
 #include "../Comun/protocolo.h" // Para usar PaqueteRed y los enums
 #include "RedCliente.h"      // Descomentar cuando implementen los sockets del cliente
-
+#include "../ComunPrueba/interfaz.h" //Para poder llamar a los menús de la interfaz
 using namespace std;
 
 // Prototipos de las funciones adaptadas
 void procesarLoginCliente();
 void procesarRegistroCliente();
-
+void ejecutarFormularioRegistroCliente();
 int main() {
     // Configuración para que se vean bien las tildes y la Ñ en Windows (Tus líneas originales)
     SetConsoleOutputCP(65001);
@@ -48,7 +48,7 @@ int main() {
                 break;
             case 2:
                 // Antes llamabas a registrarUsuario(db).
-                procesarRegistroUsuario();
+                ejecutarFormularioRegistroCliente();
                 break;
             case 0:
                 // Como el reporte lo genera el servidor con la base de datos, 
@@ -94,7 +94,7 @@ void procesarLoginCliente() {
         cout << "ID Usuario: " << respuesta.idUsuario << "\n";
         
         // REQUERIMIENTO 2: Si es Beneficiario (Rol 4 por ejemplo), guardamos su caché local
-        if (respuesta.tipoUsuario == 4) { 
+        if (respuesta.tipoUsuario == 3) { 
             cout << "--- CACHÉ LOCAL (Datos Económicos Guardados) ---\n";
             cout << "Sueldo: " << respuesta.economia.sueldo << "€\n";
             cout << "Alquiler: " << respuesta.economia.alquiler << "€\n";
@@ -102,7 +102,12 @@ void procesarLoginCliente() {
         }
         
         // Aquí podrías saltar a un "menu_interno_ong()" según el tipoUsuario...
-        
+        if (respuesta.tipoUsuario == 4) { // ADMINISTRADOR
+            GestionONG::menuAdministrador(NULL); 
+        } 
+        else if (respuesta.tipoUsuario >= 1 && respuesta.tipoUsuario <= 3) { // VOLUNTARIO(1), DONANTE(2) o BENEFICIARIO(3)
+            GestionONG::menuPrincipal(NULL, respuesta.tipoUsuario, respuesta.idUsuario);
+        }
     } else {
         // Muestra el error que venga de la base de datos (Ej: "Contraseña incorrecta")
         cout << "\n[!] ERROR: " << respuesta.mensajeRespuesta << "\n";

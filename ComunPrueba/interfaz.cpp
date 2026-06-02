@@ -15,7 +15,7 @@ namespace GestionONG {
     // 1. GESTIÓN ECONÓMICA DE BENEFICIARIOS
     // ============================================================================
 
-    Beneficiario guardarConditionsBeneficiario() {
+    Beneficiario guardarCondicionesBeneficiario() {
         int correcto;
         int adultos = 0, ninos = 0;
         float sueldos = 0, ayudas = 0, alquiler = 0, suministros = 0, material_escolar = 0, estudios = 0, otros = 0;
@@ -121,7 +121,7 @@ namespace GestionONG {
         Usuario u(0, nombre, apellidos, nombre_usuario, contrasena, tipo);
 
         if (u.getTipo() == BENEFICIARIO) {
-            b = guardarConditionsBeneficiario();
+            b = guardarCondicionesBeneficiario();
             b.setNombre(nombre); 
             b.setApellidos(apellidos); 
             b.setNombreUsuario(nombre_usuario); 
@@ -1230,5 +1230,54 @@ namespace GestionONG {
     sqlite3_finalize(stmt);
     printf("----------------------------------------------------------------------------------\n");
 }
+void menuAdministrador(sqlite3 *db) {
+        cout << "\n[Cliente] El menú de administrador se gestionará por red.\n";
+    }
 
+    int buscarIdEspecifico(sqlite3 *db, int id_usuario, int tipoUsuario) {
+        return id_usuario; 
+    }
+
+    void listarUsuarios(sqlite3 *db) {
+        cout << "\n[Cliente] Solicitando lista de usuarios al servidor...\n";
+    }
+
+    int eliminarUsuarioDB(sqlite3 *db, int id) {
+        return 0;
+    }
+
+    void mostrarProximaRecogida(sqlite3 *db, int tipo) {
+        cout << "\n[Cliente] Consultando próximas recogidas en el servidor...\n";
+    }
+
+    int es_bisiesto(int anyo) {
+        return ((anyo % 4 == 0 && anyo % 100 != 0) || (anyo % 400 == 0));
+    }
+
+    int comparar_fechas(const Fecha& f1, const Fecha& f2) {
+        // Retorna un valor neutro para compilar
+        return 0; 
+    }
+
+    int insertarDonacionRopa(sqlite3* db, const Ropa& r, int id_usuario) {
+        // El cliente no hace esto en local, se hará en el servidor por red.
+        return 0;
+    }
+
+    int insertarDonacionDinero(sqlite3* db, const Dinero& d, int id_donante) {
+        // El cliente no hace esto en local, se hará en el servidor por red.
+        return 0;
+    }
+
+    int insertarDonacionComidaDB(sqlite3* db, const Donacion& d, const Comida& c) {
+        // El cliente no hace esto en local, se hará en el servidor por red.
+        return 0;
+    }
+
+    int insertarEvento(sqlite3* db, const Evento& e) {
+        // El cliente no hace esto en local, se hará en el servidor por red.
+        return 0;
+    }
+
+    
 } // Fin del namespace GestionONG
