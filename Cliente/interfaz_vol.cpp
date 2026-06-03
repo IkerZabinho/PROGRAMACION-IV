@@ -106,7 +106,7 @@ void apuntarseEvento(int socketServidor, int id_voluntario) {
     // Imprimimos el veredicto del servidor (Si hubo choque de fecha, si se llenó o si fue OK)
     printf("%s", respuestaFinal.mensajeRespuesta);
 
-    
+    cacheEventosValida = false;
 }
 
 // Rellenar esta sección dentro de interfaz_vol.cpp
