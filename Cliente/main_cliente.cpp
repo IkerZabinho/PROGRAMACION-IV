@@ -112,7 +112,7 @@ void procesarLoginCliente() {
             //menuAdministrador(NULL); //hay que traerlo desde el interfaz.cpp aquí o poner en otro cpp como el de voluntario y así
         } 
         else if (respuesta.tipoUsuario >= 1 && respuesta.tipoUsuario <= 3) { // VOLUNTARIO(1), DONANTE(2) o BENEFICIARIO(3)
-            menuPrincipal(NULL, respuesta.tipoUsuario, respuesta.idUsuario);
+            menuPrincipal(0, respuesta.tipoUsuario, respuesta.idUsuario);
         }
     } else {
         // Muestra el error que venga de la base de datos (Ej: "Contraseña incorrecta")
