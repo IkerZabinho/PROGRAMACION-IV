@@ -46,7 +46,7 @@ int main() {
     // 3. MANTENIMIENTO AUTOMÁTICO AL ARRANCAR
     // Usamos el nombre exacto que tienes declarado en tu interfaz.h
     GestionONG::crearEventoJuevesRopaAutomatico(db);
-
+//
     // 4. BUCLE PRINCIPAL DEL MENÚ
     int opcion;
     do {
