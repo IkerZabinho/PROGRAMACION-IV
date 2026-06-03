@@ -282,7 +282,7 @@ void menuPrincipal(int socketServidor, int tipo, int id_perfil) {
                 break;
            
             case 4:
-                //if (tipo == GestionONG::DONANTE) listarDonaciones(socketServidor, id_perfil);
+                if (tipo == GestionONG::DONANTE) consultarHistorialDonaciones(socketServidor, id_perfil);
                 break;
         }
     } while (opcion != 0);

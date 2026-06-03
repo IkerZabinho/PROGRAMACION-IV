@@ -190,7 +190,7 @@ void donarComida(int socketServidor, int id_donante) {
         memset(&paquete, 0, sizeof(PaqueteRed));
         
         // Asignamos una operación del protocolo (puedes usar una genérica de donación o definir una propia)
-        paquete.tipoOperacion = OP_DONACION_DINERO; 
+        paquete.tipoOperacion = OP_DONACION_COMIDA; 
         paquete.idUsuario = id_donante;
         
         // Mapeamos los datos de la donación en los campos reutilizables del PaqueteRed
@@ -212,4 +212,74 @@ void donarComida(int socketServidor, int id_donante) {
     } else {
         printf("Operacion cancelada.\n");
     }
+}
+
+
+
+void donarRopa(int socketServidor, int id_donante) {
+    float kilos;
+    int respuesta;
+
+    cout << "\n--- REALIZAR DONACIÓN DE ROPA ---\n";
+    cout << "Cantidad en kilogramos: ";
+    
+    if (!(cin >> kilos) || kilos <= 0) {
+        cout << "[!] Error: Debes introducir un peso válido mayor que 0.\n";
+        cin.clear();
+        cin.ignore(10000, '\n');
+        return;
+    }
+
+    cout << "¿Confirmas donar " << kilos << " kg de ropa?\n0. No\n1. Sí\nSelección: ";
+    cin >> respuesta;
+
+    if (respuesta == 1) {
+        // Preparación y empaquetado seguro para el Servidor
+        PaqueteRed paquete;
+        memset(&paquete, 0, sizeof(PaqueteRed));
+        
+        // Asignamos la operación del protocolo para ropa
+        paquete.tipoOperacion = OP_DONACION_ROPA; 
+        paquete.idUsuario = id_donante;
+        
+        // Mapeamos los kilogramos en el campo float reutilizable que definió tu compañera
+        paquete.cantidadDonada = kilos; 
+
+        printf("\n[Red] Enviando registro de ropa al servidor...\n");
+        
+        // Enviamos la petición y esperamos la respuesta del motor SQLite remoto del servidor
+        PaqueteRed respuestaServidor = enviarPeticionServidor(paquete);
+
+        // Imprimimos el resultado directo devuelto por el servidor ([ÉXITO] o [ERROR])
+        if (respuestaServidor.tipoOperacion == OP_RESPUESTA_OK) {
+            printf("%s", respuestaServidor.mensajeRespuesta);
+        } else {
+            printf("[ERROR] %s\n", respuestaServidor.mensajeRespuesta);
+        }
+    } else {
+        cout << "Operación cancelada.\n";
+    }
+}
+
+void consultarHistorialDonaciones(int socketServidor, int id_donante) {
+    printf("\n--- HISTORIAL DE MIS DONACIONES ---\n");
+
+    // 1. Preparamos el paquete de red para solicitar la consulta
+    PaqueteRed paquete;
+    memset(&paquete, 0, sizeof(PaqueteRed));
+    
+    // Usamos el código de operación definido en protocolo.h
+    paquete.tipoOperacion = OP_CONSULTAR_DONACIONES; 
+    paquete.idUsuario = id_donante;
+
+    printf("\n[Red] Solicitando historial de donaciones...\n");
+    
+    // 2. Enviamos al servidor y capturamos el paquete con la tabla de texto ya armada
+    PaqueteRed respuesta = enviarPeticionServidor(paquete);
+
+    // 3. Imprimimos el resultado directo (sea la tabla formateada o el mensaje de error/vacío)
+    printf("%s", respuesta.mensajeRespuesta);
+
+    printf("Presione Enter para volver...");
+    cin.get(); // Absorbe posibles saltos de línea residuales en el búfer
 }

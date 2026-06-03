@@ -14,7 +14,11 @@ enum TipoOperacion {
     OP_VER_EVENTOS_DISPONIBLES,
     OP_INSCRIBIR_EN_EVENTO,
     OP_RESPUESTA_OK,
-    OP_RESPUESTA_ERROR
+    OP_RESPUESTA_ERROR,
+    
+    OP_DONACION_COMIDA,
+    OP_DONACION_ROPA,         
+    OP_CONSULTAR_DONACIONES
 };
 
 // Estructuras de datos específicas (Reutilizadas de tus structs de la Fase 1)

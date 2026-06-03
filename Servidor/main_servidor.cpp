@@ -276,33 +276,175 @@ int main()
 
                 // ... Dentro del switch (paqueteRecibido.tipoOperacion) en main_servidor.cpp
 
-            case OP_DONACION_DINERO:
-            {
-                registrarLog("Procesando Donacion Economica. ID Donante: " + std::to_string(paqueteRecibido.idUsuario));
+// ====================================================================
+        // CASO 1: REGISTRAR DONACIÓN DE DINERO
+        // ====================================================================
+        case OP_DONACION_DINERO: {
+            registrarLog("Peticion recibida: Registrar donacion de dinero del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            
+            float monto = paqueteRecibido.cantidadDonada;
+            
+            // Según tu constructor: Dinero(id, idD, cant)
+            // Pasamos 0 en IDs automáticos porque la base de datos los autoincrementa
+            GestionONG::Dinero miDinero(0, 0, monto);
 
-                // Usamos el campo nativo de donación del paquete de red
-                float monto = paqueteRecibido.cantidadDonada;
+            // Tu función estática exacta: insertarDonacionDinero(db, const Dinero& d, int id_donante)
+            int rc = GestionONG::Donacion::insertarDonacionDinero(db, miDinero, paqueteRecibido.idUsuario);
 
-                // Constructor de tu clase en Clases.h: Dinero(id, idDonacion, cantidad)
-                GestionONG::Dinero miDinero(0, 0, monto);
-
-                // Invocamos el método estático de la clase Donacion
-                int resultado = GestionONG::Donacion::insertarDonacionDinero(db, miDinero, paqueteRecibido.idUsuario);
-
-                if (resultado == 0 || resultado == SQLITE_OK) // Dependiendo de qué retorne tu método
-                {
-                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                    strcpy(paqueteRespuesta.mensajeRespuesta, "[EXITO] Donacion monetaria procesada con exito.\n");
-                    registrarLog("DONACION OK: Registrados " + to_string(monto) + "€ para el usuario " + to_string(paqueteRecibido.idUsuario));
-                }
-                else
-                {
-                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-                    strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] Error interno al procesar la donacion en la BD.");
-                    registrarLog("ERROR: Fallo al insertar donacion de dinero en SQLite.");
-                }
-                break;
+            if (rc == SQLITE_DONE || rc == SQLITE_OK) {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                sprintf(paqueteRespuesta.mensajeRespuesta, "\n[OK] Servidor: Donacion de %.2f EUR registrada correctamente.\n", monto);
+                registrarLog("ÉXITO: Donacion de dinero registrada para el Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            } else {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] No se pudo registrar la donacion de dinero.");
+                registrarLog("ERROR: Fallo en BD para donacion de dinero del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             }
+            break;
+        }
+
+        // ====================================================================
+        // CASO 2: REGISTRAR DONACIÓN DE COMIDA
+        // ====================================================================
+        case OP_DONACION_COMIDA: {
+            registrarLog("Peticion recibida: Registrar donacion de comida del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            
+            int selectComida = paqueteRecibido.idEvento; // Recibe 0 o 1 del cliente
+            float kilos = paqueteRecibido.cantidadDonada;
+
+            // 1. Instanciamos el objeto base Donacion 
+            // Según tu constructor: Donacion(id, idU, TipoDonacion, string fecha)
+            // Asumimos el valor del enum correspondiente a Comida o realizamos un cast
+            GestionONG::Donacion baseDonacion(0, paqueteRecibido.idUsuario, static_cast<GestionONG::TipoDonacion>(2), "date('now')"); 
+
+            // 2. Instanciamos el objeto específico Comida
+            // Según tu constructor: Comida(id, TipoComida, kilos, idD)
+            GestionONG::Comida miComida(0, static_cast<GestionONG::TipoComida>(selectComida), kilos, 0);
+
+            // 3. Tu función estática exacta: insertarDonacionComidaDB(db, const Donacion& d, const Comida& c)
+            int rc = GestionONG::Donacion::insertarDonacionComidaDB(db, baseDonacion, miComida);
+
+            if (rc == SQLITE_DONE || rc == SQLITE_OK) {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                const char* txtTipo = (selectComida == 0) ? "Perecedera" : "No Perecedera";
+                sprintf(paqueteRespuesta.mensajeRespuesta, "\n[OK] Servidor: Recibidos %.2f kg de comida (%s).\n", kilos, txtTipo);
+                registrarLog("ÉXITO: Donacion de comida registrada para el Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            } else {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] No se pudo procesar la donacion de comida.");
+                registrarLog("ERROR: Fallo en BD para donacion de comida del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            }
+            break;
+        }
+
+        // ====================================================================
+        // CASO 3: REGISTRAR DONACIÓN DE ROPA
+        // ====================================================================
+        case OP_DONACION_ROPA: {
+            registrarLog("Peticion recibida: Registrar donacion de ropa del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            
+            float kilos = paqueteRecibido.cantidadDonada;
+            
+            // Según tu constructor: Ropa(id, idD, kilos)
+            GestionONG::Ropa miRopa(0, 0, kilos);
+
+            // Tu función estática exacta: insertarDonacionRopa(db, const Ropa& r, int id_donante)
+            int rc = GestionONG::Donacion::insertarDonacionRopa(db, miRopa, paqueteRecibido.idUsuario);
+
+            if (rc == SQLITE_DONE || rc == SQLITE_OK) {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                sprintf(paqueteRespuesta.mensajeRespuesta, "\n[OK] Servidor: Almacenados %.2f kg de ropa.\n", kilos);
+                registrarLog("ÉXITO: Donacion de ropa registrada para el Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            } else {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] Error al guardar la donacion de ropa.");
+                registrarLog("ERROR: Fallo en BD para donacion de ropa del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            }
+            break;
+        }
+            // ====================================================================
+            // CASO 4: CONSULTAR HISTORIAL DE DONACIONES
+            // ====================================================================
+// ====================================================================
+        // CASO 4: CONSULTAR HISTORIAL DE DONACIONES
+        // ====================================================================
+        case OP_CONSULTAR_DONACIONES: {
+            registrarLog("Peticion recibida: Historial de donaciones del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            
+            sqlite3_stmt *stmt;
+            // Consulta SQL que une la tabla de Donaciones con sus tres detalles (Ropa, Comida, Dinero)
+            // Nota: Ajusta los nombres de los campos (id_donante, tipo, etc.) según las columnas reales de tus tablas
+            const char *sql =
+                "SELECT d.tipoDonacion, r.kilos, c.tipo_comida, c.kilos, din.cantidad, d.fecha "
+                "FROM Donaciones d "
+                "LEFT JOIN Ropa r ON d.id_donacion = r.id_donacion "
+                "LEFT JOIN Comida c ON d.id_donacion = c.id_donacion "
+                "LEFT JOIN Dinero din ON d.id_donacion = din.id_donacion "
+                "WHERE d.id_usuario = ? ORDER BY d.id_donacion DESC;";
+
+            string tabla = "";
+            char fila[256];
+
+            // Diseñamos la cabecera de la tabla que verá el usuario en su consola
+            sprintf(fila, "\n%-12s | %-32s | %-20s\n", "TIPO", "DETALLES", "FECHA");
+            tabla += fila;
+            tabla += "--------------------------------------------------------------------\n";
+
+            if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+                // Enlazamos el ID del donante que nos mandó el cliente
+                sqlite3_bind_int(stmt, 1, paqueteRecibido.idUsuario);
+
+                int count = 0;
+                // Recorremos los registros devueltos por la base de datos
+                while (sqlite3_step(stmt) == SQLITE_ROW) {
+                    count++;
+                    int tipo = sqlite3_column_int(stmt, 0);
+                    const char *fecha = sqlite3_column_text(stmt, 5) ? (const char *)sqlite3_column_text(stmt, 5) : "Sin fecha";
+
+                    // Identificamos el tipo de donación mapeando los valores (ej: 1=Dinero, 2=Comida, 3=Ropa)
+                    switch (tipo) {
+                        case 1: // DINERO
+                            sprintf(fila, "%-12s | Importe: %.2f EUR           | %s\n", "DINERO", sqlite3_column_double(stmt, 4), fecha);
+                            break;
+                        case 2: // COMIDA
+                            {
+                                int t_comida = sqlite3_column_int(stmt, 2);
+                                // Mapeamos el subtipo de comida recibido (0: Perecedera, 1: No perecedera, etc.)
+                                const char* txtC = (t_comida == 0) ? "Perecedera" : "No Perecedera";
+                                sprintf(fila, "%-12s | %-13s - %.2f kg      | %s\n", "COMIDA", txtC, sqlite3_column_double(stmt, 3), fecha);
+                            }
+                            break;
+                        case 3: // ROPA
+                            sprintf(fila, "%-12s | Ropa variada - %.2f kg      | %s\n", "ROPA", sqlite3_column_double(stmt, 1), fecha);
+                            break;
+                        default:
+                            sprintf(fila, "%-12s | Sin detalles especificos     | %s\n", "OTROS", fecha);
+                            break;
+                    }
+                    tabla += fila;
+                }
+
+                if (count == 0) {
+                    tabla += "No se han encontrado registros en tu historial de donaciones.\n";
+                }
+                tabla += "--------------------------------------------------------------------\n";
+                sqlite3_finalize(stmt);
+                
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                registrarLog("ÉXITO: Historial enviado (" + to_string(count) + " filas) al Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            } else {
+                // Si la consulta SQL falla (por ejemplo, si cambia el nombre de una columna de tus tablas)
+                sprintf(fila, "[ERROR] Error interno en el motor SQLite: %s\n", sqlite3_errmsg(db));
+                tabla += fila;
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                registrarLog("ERROR: Fallo SQL en historial para el Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            }
+
+            // Copiamos la cadena de texto de la tabla al mensaje de respuesta asegurando que no desborde el buffer
+            strncpy(paqueteRespuesta.mensajeRespuesta, tabla.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+            paqueteRespuesta.mensajeRespuesta[sizeof(paqueteRespuesta.mensajeRespuesta) - 1] = '\0';
+            break;
+        }
             case OP_CONSULTAR_MIS_EVENTOS:
             {
                 registrarLog("Usuario ID " + to_string(paqueteRecibido.idUsuario) + " solicita ver sus eventos.");
