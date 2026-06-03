@@ -4,7 +4,11 @@
 #include <windows.h>
 #include "../Comun/protocolo.h" // Para usar PaqueteRed y los enums
 #include "RedCliente.h"      // Descomentar cuando implementen los sockets del cliente
-#include "../ComunPrueba/interfaz.h" //Para poder llamar a los menús de la interfaz
+//#include "../ComunPrueba/interfaz.h" //Para poder llamar a los menús de la interfaz
+#include "../ComunPrueba/Clases.h"
+#include "interfazVol.h"
+#include "interfazDon.h"
+
 using namespace std;
 
 // Prototipos de las funciones adaptadas
@@ -103,10 +107,10 @@ void procesarLoginCliente() {
         
         // Aquí podrías saltar a un "menu_interno_ong()" según el tipoUsuario...
         if (respuesta.tipoUsuario == 4) { // ADMINISTRADOR
-            GestionONG::menuAdministrador(NULL); 
+            //menuAdministrador(NULL); //hay que traerlo desde el interfaz.cpp aquí o poner en otro cpp como el de voluntario y así
         } 
         else if (respuesta.tipoUsuario >= 1 && respuesta.tipoUsuario <= 3) { // VOLUNTARIO(1), DONANTE(2) o BENEFICIARIO(3)
-            GestionONG::menuPrincipal(NULL, respuesta.tipoUsuario, respuesta.idUsuario);
+            menuPrincipal(NULL, respuesta.tipoUsuario, respuesta.idUsuario);
         }
     } else {
         // Muestra el error que venga de la base de datos (Ej: "Contraseña incorrecta")
@@ -218,3 +222,71 @@ void ejecutarFormularioRegistroCliente() {
         cout << "\n[!] ERROR EN REGISTRO: " << respuesta.mensajeRespuesta << "\n";
     }
 }
+
+// En el CLIENTE (por ejemplo, Cliente/interfaz_cliente.cpp o main_cliente.cpp)
+
+void menuPrincipal(int socketServidor, int tipo, int id_perfil) {
+    int opcion;
+    do {
+        printf("\n======= MENU PRINCIPAL =======");
+        if (tipo == GestionONG::VOLUNTARIO) {
+            menuVoluntario(socketServidor,id_perfil);
+        }
+        else if (tipo == GestionONG::DONANTE) {
+            menuDonante( socketServidor,  id_perfil);
+        }
+        else if (tipo == GestionONG::BENEFICIARIO) {
+            printf("\n1. Cambiar condiciones");
+            printf("\n2. Consultar horarios para recoger ayudas");
+            printf("\n3. Ver proximos talleres");
+        }
+       
+        printf("\n0. Cerrar sesion");
+        printf("\nSeleccione una opcion: ");
+        scanf("%d", &opcion);
+        fflush(stdin); // Limpiar buffer de entrada en C
+
+        switch(opcion) {
+            case 1:
+                // Pasamos 'socketServidor' en lugar de 'db'
+                if(tipo == GestionONG::VOLUNTARIO) apuntarseEvento(socketServidor, id_perfil);
+                else if (tipo == GestionONG::DONANTE) donarDinero(socketServidor, id_perfil);
+                else if (tipo == GestionONG::BENEFICIARIO) {
+                    // El formulario de rellenar datos se queda local en el cliente
+                    //GestionONG::Beneficiario b_actualizada = guardarCondicionesBeneficiario(); poner el metodo en la interfaz_ben
+                    
+                    // Esta función ahora enviará los datos de 'b_actualizada' por red usando el socket
+                   /*  if (actualizarDatosBeneficiario(socketServidor, id_perfil, b_actualizada)) {
+                        printf("\n---------------------------------------------------------");
+                        printf("\n[SISTEMA] Tus condiciones se han actualizado correctamente.\n");
+                    } */
+                }
+                break;
+
+            case 2:
+                // Tu nueva función ya adaptada a red que hicimos antes
+                if(tipo == GestionONG::VOLUNTARIO) consultarMisEventos(socketServidor, id_perfil); 
+                else if(tipo == GestionONG::DONANTE) donarComida(socketServidor, id_perfil);
+                else if(tipo == GestionONG::BENEFICIARIO) {
+                    printf("\nCONSULTAR HORARIOS DE AYUDAS\n");
+                    // Estas funciones también se cambian para pedir los datos al servidor por red
+                    //verProximoRepartoComida(socketServidor);
+                    //verProximoRepartoRopa(socketServidor, id_perfil);
+                }
+                break;
+
+            case 3:
+                if(tipo == GestionONG::VOLUNTARIO) consultarHistorialEventos(socketServidor, id_perfil);
+                else if(tipo == GestionONG::DONANTE) donarRopa(socketServidor, id_perfil);
+                //else if(tipo == GestionONG::BENEFICIARIO) verTalleresProximos(socketServidor);
+                break;
+           
+            case 4:
+                //if (tipo == GestionONG::DONANTE) listarDonaciones(socketServidor, id_perfil);
+                break;
+        }
+    } while (opcion != 0);
+}
+
+
+

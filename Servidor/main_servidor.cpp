@@ -105,19 +105,23 @@ int main()
             switch (paqueteRecibido.tipoOperacion)
             {
 
-                 case OP_LOGIN: {
-                     registrarLog("Procesando Login Real para: " + string(paqueteRecibido.perfil.usuario));
+            case OP_LOGIN:
+            {
+                registrarLog("Procesando Login Real para: " + string(paqueteRecibido.perfil.usuario));
 
-                     // Llamamos a la función real del módulo MotorBaseDatos
-                     bool exito = autenticarUsuarioSQL(db, paqueteRecibido, paqueteRespuesta);
+                // Llamamos a la función real del módulo MotorBaseDatos
+                bool exito = autenticarUsuarioSQL(db, paqueteRecibido, paqueteRespuesta);
 
-                     if (exito) {
-                         registrarLog("LOGIN EXITOSO: " + string(paqueteRecibido.perfil.usuario) + " (ID: " + to_string(paqueteRespuesta.idUsuario) + ")");
-                     } else {
-                         registrarLog("LOGIN FALLIDO: " + string(paqueteRecibido.perfil.usuario) + " -> " + string(paqueteRespuesta.mensajeRespuesta));
-                     }
-                     break;
-                 };
+                if (exito)
+                {
+                    registrarLog("LOGIN EXITOSO: " + string(paqueteRecibido.perfil.usuario) + " (ID: " + to_string(paqueteRespuesta.idUsuario) + ")");
+                }
+                else
+                {
+                    registrarLog("LOGIN FALLIDO: " + string(paqueteRecibido.perfil.usuario) + " -> " + string(paqueteRespuesta.mensajeRespuesta));
+                }
+                break;
+            };
             case OP_REGISTRO_BENEFICIARIO:
             {
                 registrarLog("Procesando registro de Beneficiario: " + std::string(paqueteRecibido.perfil.usuario));
@@ -270,30 +274,220 @@ int main()
                 break;
             }
 
+                // ... Dentro del switch (paqueteRecibido.tipoOperacion) en main_servidor.cpp
+
             case OP_DONACION_DINERO:
             {
-                registrarLog("Procesando Donación Económica. ID Donante: " + std::to_string(paqueteRecibido.idUsuario));
+                registrarLog("Procesando Donacion Economica. ID Donante: " + std::to_string(paqueteRecibido.idUsuario));
 
-                // Instanciamos el detalle de Dinero respetando tu constructor: Dinero(id, idD, cantidad)
-                // Usamos paqueteRecibido.economia.sueldo como el campo para pasar la cantidad donada
-                GestionONG::Dinero miDinero(0, 0, paqueteRecibido.economia.sueldo);
+                // Usamos el campo nativo de donación del paquete de red
+                float monto = paqueteRecibido.cantidadDonada;
 
-                // Llamamos al método estático exacto de tu clase Donacion
+                // Constructor de tu clase en Clases.h: Dinero(id, idDonacion, cantidad)
+                GestionONG::Dinero miDinero(0, 0, monto);
+
+                // Invocamos el método estático de la clase Donacion
                 int resultado = GestionONG::Donacion::insertarDonacionDinero(db, miDinero, paqueteRecibido.idUsuario);
 
-                if (resultado == 0)
+                if (resultado == 0 || resultado == SQLITE_OK) // Dependiendo de qué retorne tu método
                 {
                     paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                    strcpy(paqueteRespuesta.mensajeRespuesta, "¡Donación monetaria procesada e inyectada con éxito!");
-                    registrarLog("DONACIÓN OK: Guardada usando transacciones seguras.");
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[EXITO] Donacion monetaria procesada con exito.\n");
+                    registrarLog("DONACION OK: Registrados " + to_string(monto) + "€ para el usuario " + to_string(paqueteRecibido.idUsuario));
                 }
                 else
                 {
                     paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-                    strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] Error interno al procesar la donación.");
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] Error interno al procesar la donacion en la BD.");
+                    registrarLog("ERROR: Fallo al insertar donacion de dinero en SQLite.");
                 }
                 break;
             }
+            case OP_CONSULTAR_MIS_EVENTOS:
+            {
+                registrarLog("Usuario ID " + to_string(paqueteRecibido.idUsuario) + " solicita ver sus eventos.");
+
+                sqlite3_stmt *stmt;
+                // Tu consulta SQL exacta tal cual la tenías
+                const char *sql_list =
+                    "SELECT E.id_evento, E.descripcion, E.fecha_ini, E.tipo, E.material "
+                    "FROM Evento E "
+                    "JOIN Participaciones P ON E.id_evento = P.id_evento "
+                    "WHERE P.id_voluntario = ? AND datetime(E.fecha_ini) >= datetime('now', 'localtime') "
+                    "ORDER BY E.fecha_ini ASC;";
+
+                string buffer = "";
+                char lineaFila[256];
+
+                if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK)
+                {
+                    sqlite3_bind_int(stmt, 1, paqueteRecibido.idUsuario);
+
+                    while (sqlite3_step(stmt) == SQLITE_ROW)
+                    {
+                        int id = sqlite3_column_int(stmt, 0);
+                        const char *desc = (const char *)sqlite3_column_text(stmt, 1);
+                        const char *fecha = (const char *)sqlite3_column_text(stmt, 2);
+                        int tipo_int = sqlite3_column_int(stmt, 3);
+                        int mat_int = sqlite3_column_int(stmt, 4);
+
+                        // Tus traducciones idénticas de la Fase 1
+                        const char *txtTipo = (tipo_int == 0) ? "Recogida" : "Reparto";
+                        const char *txtMat = (mat_int == 0) ? "Ropa" : "Comida";
+
+                        // Guardamos la fila formateada en un buffer de texto
+                        sprintf(lineaFila, "%-5d | %-12s | %-10s | %-18s | %s\n", id, txtTipo, txtMat, fecha, desc ? desc : "");
+                        buffer += lineaFila;
+                    }
+                    sqlite3_finalize(stmt);
+
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                    strncpy(paqueteRespuesta.mensajeRespuesta, buffer.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+                }
+                else
+                {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    sprintf(paqueteRespuesta.mensajeRespuesta, "Error en el servidor: %s", sqlite3_errmsg(db));
+                }
+                break;
+            }
+
+            case OP_DESAPUNTAR_EVENTO:
+            {
+                registrarLog("Usuario ID " + to_string(paqueteRecibido.idUsuario) + " solicita desapuntarse del evento " + to_string(paqueteRecibido.idEvento) + ".");
+
+                char sql_del[200];
+                // Tu DELETE exacto adaptado
+                sprintf(sql_del, "DELETE FROM Participaciones WHERE id_voluntario = %d AND id_evento = %d;",
+                        paqueteRecibido.idUsuario, paqueteRecibido.idEvento);
+
+                char *error = 0;
+                if (sqlite3_exec(db, sql_del, 0, 0, &error) == SQLITE_OK)
+                {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                    if (sqlite3_changes(db) > 0)
+                    {
+                        strcpy(paqueteRespuesta.mensajeRespuesta, "\n[OK] Te has desapuntado con éxito.\n");
+                    }
+                    else
+                    {
+                        strcpy(paqueteRespuesta.mensajeRespuesta, "\n[!] No estabas inscrito en ese evento.\n");
+                    }
+                }
+                else
+                {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    sprintf(paqueteRespuesta.mensajeRespuesta, "\nError en Servidor: %s\n", error);
+                    sqlite3_free(error);
+                }
+                break;
+            }
+            case OP_VER_EVENTOS_DISPONIBLES:
+            {
+                registrarLog("Usuario ID " + to_string(paqueteRecibido.idUsuario) + " solicita ver eventos disponibles.");
+
+                sqlite3_stmt *stmt;
+                // Tu consulta SQL exacta
+                const char *sql_list =
+                    "SELECT id_evento, descripcion, fecha_ini, tipo, material FROM Evento "
+                    "WHERE date(fecha_ini) >= date('now') "
+                    "AND id_evento NOT IN (SELECT id_evento FROM Participaciones WHERE id_voluntario = ?);";
+
+                string bufferResultados = "";
+                char lineaFila[256];
+
+                if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK)
+                {
+                    sqlite3_bind_int(stmt, 1, paqueteRecibido.idUsuario);
+
+                    int encontrados = 0;
+                    while (sqlite3_step(stmt) == SQLITE_ROW)
+                    {
+                        encontrados = 1;
+                        int id = sqlite3_column_int(stmt, 0);
+                        const char *desc = (const char *)sqlite3_column_text(stmt, 1);
+                        const char *fecha = (const char *)sqlite3_column_text(stmt, 2);
+                        int tipo_int = sqlite3_column_int(stmt, 3);
+                        int mat_int = sqlite3_column_int(stmt, 4);
+
+                        const char *txtTipo = (tipo_int == 0) ? "Recogida" : "Reparto";
+                        const char *txtMat = (mat_int == 0) ? "Ropa" : "Comida";
+
+                        sprintf(lineaFila, "%-4d | %-10s | %-10s | %-18s | %s\n", id, txtTipo, txtMat, fecha, desc ? desc : "");
+                        bufferResultados += lineaFila;
+                    }
+
+                    if (!encontrados)
+                    {
+                        bufferResultados += "[INFO] No hay eventos nuevos disponibles para ti en este momento.\n";
+                    }
+                    sqlite3_finalize(stmt);
+
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                    strncpy(paqueteRespuesta.mensajeRespuesta, bufferResultados.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+                }
+                else
+                {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    sprintf(paqueteRespuesta.mensajeRespuesta, "Error al consultar eventos en servidor: %s", sqlite3_errmsg(db));
+                }
+                break;
+            }
+
+            case OP_INSCRIBIR_EN_EVENTO:
+            {
+                int id_vol = paqueteRecibido.idUsuario;
+                int id_ev = paqueteRecibido.idEvento;
+                registrarLog("Procesando inscripción de Usuario ID " + to_string(id_vol) + " en Evento ID " + to_string(id_ev));
+
+                // 1. Comprobar Choque de Fechas (Función de tu servidor)
+                if (tieneChoqueDeFechas(db, id_vol, id_ev))
+                {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "\n¡ERROR! Ya tienes otro compromiso registrado para ese mismo día.");
+                    registrarLog("Inscripción denegada: Choque de fechas.");
+                    break;
+                }
+
+                // 2. Comprobar Cupo (Función de tu servidor)
+                if (estaEventoLleno(db, id_ev))
+                {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "\n¡ERROR! El evento ya tiene suficientes voluntarios.");
+                    registrarLog("Inscripción denegada: Cupo lleno.");
+                    break;
+                }
+
+                // 3. Inserción final
+                sqlite3_stmt *stmt;
+                const char *sql_ins = "INSERT INTO Participaciones (id_voluntario, id_evento) VALUES (?, ?);";
+
+                if (sqlite3_prepare_v2(db, sql_ins, -1, &stmt, 0) == SQLITE_OK)
+                {
+                    sqlite3_bind_int(stmt, 1, id_vol);
+                    sqlite3_bind_int(stmt, 2, id_ev);
+
+                    if (sqlite3_step(stmt) == SQLITE_DONE)
+                    {
+                        paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                        strcpy(paqueteRespuesta.mensajeRespuesta, "\n[OK] ¡Inscripción realizada con éxito! Gracias por tu colaboración.");
+                        registrarLog("INSCRIPCIÓN EXITOSA: Voluntario " + to_string(id_vol) + " -> Evento " + to_string(id_ev));
+                    }
+                    else
+                    {
+                        paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                        sprintf(paqueteRespuesta.mensajeRespuesta, "\n[ERROR] No se pudo completar la inscripción: %s", sqlite3_errmsg(db));
+                    }
+                    sqlite3_finalize(stmt);
+                }
+                else
+                {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    sprintf(paqueteRespuesta.mensajeRespuesta, "\n[ERROR] Error de preparación en servidor: %s", sqlite3_errmsg(db));
+                }
+                break;
+            }
+
 
             default:
                 paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
@@ -322,4 +516,81 @@ int main()
     WSACleanup();
     sqlite3_close(db);
     return 0;
+}
+int tieneChoqueDeFechas(sqlite3 *db, int id_voluntario, int id_evento_nuevo)
+{
+    sqlite3_stmt *stmt;
+    char fecha_objetivo[20] = "";
+    int choque = 0;
+
+    // A. Obtener la fecha del evento al que se quiere apuntar
+    const char *sql_f = "SELECT date(fecha_ini) FROM Evento WHERE id_evento = ?;";
+    if (sqlite3_prepare_v2(db, sql_f, -1, &stmt, 0) == SQLITE_OK)
+    {
+        sqlite3_bind_int(stmt, 1, id_evento_nuevo);
+        if (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            strcpy(fecha_objetivo, (const char *)sqlite3_column_text(stmt, 0));
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    // B. Buscar si el voluntario ya tiene algo ese día (Evento o Taller)
+    // Usamos UNION para mirar en las dos tablas de relación a la vez
+    const char *sql_check =
+        "SELECT COUNT(*) FROM ("
+        "  SELECT date(e.fecha_ini) as fecha FROM Participaciones p "
+        "  JOIN Evento e ON p.id_evento = e.id_evento WHERE p.id_voluntario = ? "
+        "  UNION ALL "
+        "  SELECT date(t.fecha) as fecha FROM Impartir i "
+        "  JOIN Taller t ON i.id_taller = t.id_taller WHERE i.id_voluntario = ?"
+        ") WHERE fecha = ?;";
+
+    if (sqlite3_prepare_v2(db, sql_check, -1, &stmt, 0) == SQLITE_OK)
+    {
+        sqlite3_bind_int(stmt, 1, id_voluntario);
+        sqlite3_bind_int(stmt, 2, id_voluntario);
+        sqlite3_bind_text(stmt, 3, fecha_objetivo, -1, SQLITE_STATIC);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            choque = sqlite3_column_int(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    return (choque > 0);
+}
+int estaEventoLleno(sqlite3 *db, int id_e)
+{
+    sqlite3_stmt *stmt;
+    int lleno = 0;
+
+    // La consulta obtiene el cupo máximo y cuántas participaciones hay ya registradas
+    const char *sql = "SELECT E.lim_voluntarios, (SELECT COUNT(*) FROM Participaciones WHERE id_evento = ?) "
+                      "FROM Evento E WHERE E.id_evento = ?;";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK)
+    {
+        sqlite3_bind_int(stmt, 1, id_e);
+        sqlite3_bind_int(stmt, 2, id_e);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            int cupo_maximo = sqlite3_column_int(stmt, 0);
+            int ocupados = sqlite3_column_int(stmt, 1);
+
+            if (ocupados >= cupo_maximo)
+            {
+                lleno = 1; // El evento está lleno
+            }
+        }
+        sqlite3_finalize(stmt);
+    }
+    else
+    {
+        printf("[!] Error al comprobar el cupo del evento: %s\n", sqlite3_errmsg(db));
+    }
+
+    return lleno;
 }
