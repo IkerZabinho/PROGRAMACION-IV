@@ -10,6 +10,8 @@
 
 using namespace std;
 
+bool cacheEventosValida = false;
+
 void menuVoluntario(int socketServidor, int id_perfil) {
     int opcion;
     do {
@@ -103,6 +105,8 @@ void apuntarseEvento(int socketServidor, int id_voluntario) {
 
     // Imprimimos el veredicto del servidor (Si hubo choque de fecha, si se llenó o si fue OK)
     printf("%s", respuestaFinal.mensajeRespuesta);
+
+    
 }
 
 // Rellenar esta sección dentro de interfaz_vol.cpp
@@ -170,21 +174,28 @@ void consultarMisEventos(int socketServidor, int id_voluntario) {
 void consultarHistorialEventos(int socketServidor, int id_voluntario) {
     printf("\n--- HISTORIAL DE EVENTOS PASADOS ---\n");
 
-    // Preparamos el paquete de red para solicitar la consulta
+    static char cacheHistorialEventos[2048] = ""; 
+
+    // Si ya los descargamos antes y no nos hemos apuntado a nada nuevo, usamos la RAM
+    if (cacheEventosValida) {
+        printf("\n[CACHE CLIENTE] Mostrando eventos desde memoria local:\n");
+        printf("%s\n", cacheHistorialEventos);
+        return;
+    }
+
     PaqueteRed paquete;
     memset(&paquete, 0, sizeof(PaqueteRed));
-    
     paquete.tipoOperacion = OP_CONSULTAR_EVENTOS;
     paquete.idUsuario = id_voluntario;
 
-    // Enviamos al servidor y capturamos la tabla/mensaje estructurado
+    printf("\n[Red] Descargando historial de eventos desde el servidor...\n");
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
 
-    // Imprimimos el resultado (sea la tabla formateada o el mensaje informativo de [INFO])
-    printf("%s", respuesta.mensajeRespuesta);
-    printf("------------------------------------------------------------------------------------\n");
-
-    // Pausa interactiva usando la misma lógica limpia de C++ (cin.get())
-    printf("Presione Enter para volver...");
-    cin.get(); 
+    if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
+        strcpy(cacheHistorialEventos, respuesta.mensajeRespuesta);
+        cacheEventosValida = true; // La caché ahora es válida
+        printf("%s\n", cacheHistorialEventos);
+    } else {
+        printf("[ERROR] %s\n", respuesta.mensajeRespuesta);
+    }
 }
