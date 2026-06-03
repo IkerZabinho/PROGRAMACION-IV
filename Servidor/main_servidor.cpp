@@ -12,6 +12,10 @@
 
 using namespace std;
 
+
+int tieneChoqueDeFechas(sqlite3* db, int id_voluntario, int id_evento_nuevo);
+int estaEventoLleno(sqlite3* db, int id_e);
+
 int main()
 {
     // 1. Cargar configuración (Requerimiento 5)

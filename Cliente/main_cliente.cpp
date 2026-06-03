@@ -12,9 +12,11 @@
 using namespace std;
 
 // Prototipos de las funciones adaptadas
+
 void procesarLoginCliente();
 void procesarRegistroCliente();
 void ejecutarFormularioRegistroCliente();
+void menuPrincipal(int socketServidor, int tipo, int id_perfil); 
 int main() {
     // Configuración para que se vean bien las tildes y la Ñ en Windows (Tus líneas originales)
     SetConsoleOutputCP(65001);
