@@ -116,3 +116,79 @@
 [Wed Jun  3 21:07:12 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
 [Wed Jun  3 21:07:12 2026] ERROR: Fallo SQL en historial para el Usuario ID: 42
 [Wed Jun  3 21:07:12 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:17:12 2026] === INICIANDO SERVIDOR ONG ===
+[Wed Jun  3 21:17:12 2026] Cargando configuracion...
+[Wed Jun  3 21:17:12 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Wed Jun  3 21:17:12 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Wed Jun  3 21:18:07 2026] Cliente conectado al socket.
+[Wed Jun  3 21:18:07 2026] Procesando Login Real para: juneza
+[Wed Jun  3 21:18:07 2026] LOGIN EXITOSO: juneza (ID: 42)
+[Wed Jun  3 21:18:07 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:18:12 2026] Cliente conectado al socket.
+[Wed Jun  3 21:18:12 2026] Peticion recibida: Registrar donacion de dinero del Usuario ID: 42
+[Wed Jun  3 21:18:12 2026] ÉXITO: Donacion de dinero registrada para el Usuario ID: 42
+[Wed Jun  3 21:18:12 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:18:15 2026] Cliente conectado al socket.
+[Wed Jun  3 21:18:15 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Wed Jun  3 21:18:15 2026] ERROR: Fallo SQL en historial para el Usuario ID: 42
+[Wed Jun  3 21:18:15 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:19:14 2026] Cliente conectado al socket.
+[Wed Jun  3 21:19:14 2026] Peticion recibida: Registrar donacion de comida del Usuario ID: 42
+[Wed Jun  3 21:19:14 2026] ÉXITO: Donacion de comida registrada para el Usuario ID: 42
+[Wed Jun  3 21:19:15 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:19:17 2026] Cliente conectado al socket.
+[Wed Jun  3 21:19:17 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Wed Jun  3 21:19:17 2026] ERROR: Fallo SQL en historial para el Usuario ID: 42
+[Wed Jun  3 21:19:17 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:19:32 2026] Cliente conectado al socket.
+[Wed Jun  3 21:19:32 2026] Peticion recibida: Registrar donacion de ropa del Usuario ID: 42
+[Wed Jun  3 21:19:32 2026] ÉXITO: Donacion de ropa registrada para el Usuario ID: 42
+[Wed Jun  3 21:19:32 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:19:33 2026] Cliente conectado al socket.
+[Wed Jun  3 21:19:33 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Wed Jun  3 21:19:33 2026] ERROR: Fallo SQL en historial para el Usuario ID: 42
+[Wed Jun  3 21:19:33 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:19:58 2026] Cliente conectado al socket.
+[Wed Jun  3 21:19:58 2026] Procesando registro de Voluntario: oihanetxe
+[Wed Jun  3 21:19:58 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:20:02 2026] Cliente conectado al socket.
+[Wed Jun  3 21:20:02 2026] Procesando Login Real para: oihanetxe
+[Wed Jun  3 21:20:02 2026] LOGIN EXITOSO: oihanetxe (ID: 43)
+[Wed Jun  3 21:20:02 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:20:04 2026] Cliente conectado al socket.
+[Wed Jun  3 21:20:04 2026] Usuario ID 43 solicita ver eventos disponibles.
+[Wed Jun  3 21:20:04 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:20:16 2026] Cliente conectado al socket.
+[Wed Jun  3 21:20:16 2026] Procesando inscripción de Usuario ID 43 en Evento ID 16
+[Wed Jun  3 21:20:16 2026] INSCRIPCIÓN EXITOSA: Voluntario 43 -> Evento 16
+[Wed Jun  3 21:20:16 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:20:20 2026] Cliente conectado al socket.
+[Wed Jun  3 21:20:20 2026] Usuario ID 43 solicita ver sus eventos.
+[Wed Jun  3 21:20:20 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:20:26 2026] Cliente conectado al socket.
+[Wed Jun  3 21:20:26 2026] Usuario ID 43 solicita desapuntarse del evento 16.
+[Wed Jun  3 21:20:26 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:20:29 2026] Cliente conectado al socket.
+[Wed Jun  3 21:20:29 2026] Usuario ID 43 solicita ver sus eventos.
+[Wed Jun  3 21:20:29 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:20:34 2026] Cliente conectado al socket.
+[Wed Jun  3 21:20:34 2026] Usuario ID 43 solicita ver eventos disponibles.
+[Wed Jun  3 21:20:34 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:20:36 2026] Cliente conectado al socket.
+[Wed Jun  3 21:20:36 2026] Procesando inscripción de Usuario ID 43 en Evento ID 19
+[Wed Jun  3 21:20:36 2026] INSCRIPCIÓN EXITOSA: Voluntario 43 -> Evento 19
+[Wed Jun  3 21:20:36 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:20:37 2026] Cliente conectado al socket.
+[Wed Jun  3 21:20:37 2026] Usuario ID 43 solicita ver sus eventos.
+[Wed Jun  3 21:20:37 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:20:43 2026] Cliente conectado al socket.
+[Wed Jun  3 21:20:43 2026] Usuario consulta remotamente las recogidas de ropa activas.
+[Wed Jun  3 21:20:43 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:21:50 2026] Cliente conectado al socket.
+[Wed Jun  3 21:21:50 2026] Procesando registro de Beneficiario: iker
+[Wed Jun  3 21:21:50 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Wed Jun  3 21:21:50 2026] Cliente desconectado del socket.
+[Wed Jun  3 21:21:55 2026] Cliente conectado al socket.
+[Wed Jun  3 21:21:55 2026] Procesando Login Real para: iker
+[Wed Jun  3 21:21:55 2026] LOGIN EXITOSO: iker (ID: 44)
+[Wed Jun  3 21:21:55 2026] Cliente desconectado del socket.
