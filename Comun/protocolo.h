@@ -52,5 +52,5 @@ struct PaqueteRed {
     DatosPersonales perfil;     // Estructura anidada con datos de login/registro
     DatosEconomicos economia;   // REQUERIMIENTO 2: Datos para la Caché del Beneficiario
     
-    char mensajeRespuesta[256]; // Mensaje de éxito/error del servidor (ej: "[OK] Sesión iniciada")
+    char mensajeRespuesta[4096]; // Mensaje de éxito/error del servidor (ej: "[OK] Sesión iniciada")
 };

@@ -14,7 +14,7 @@ namespace GestionONG {
 
     // --- ENUMERACIONES ---
     enum TipoUsuario { VOLUNTARIO = 1, DONANTE, BENEFICIARIO, ADMINISTRADOR };
-    enum TipoDonacion { COMIDAD = 1, ROPAD, DINERO };
+    enum TipoDonacion { COMIDAD = 1, ROPAD, DINERO};
     enum TipoEvento { RECOGIDA = 1, REPARTO };
     enum Material { ROPA_MAT = 1, COMIDA_MAT }; 
     enum TipoComida { CARBOHIDRATOS = 1, LEGUMBRES, CONSERVAS, LACTEOS };
