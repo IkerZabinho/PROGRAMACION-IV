@@ -235,18 +235,56 @@ int main()
             }
 
             case OP_CONSULTAR_EVENTOS:
-            {
-               int filtro = paqueteRecibido.idEvento; // Ahora el filtro viene en idEvento
+{
+    int filtro = paqueteRecibido.idEvento;
 
-                if (filtro == -999) {
-                    verTalleresProximos(db, clientSocket);
-                } else if (filtro == -2) {
-                    verProximoRepartoRopa(db, paqueteRecibido.idUsuario, clientSocket);
-                } else if (filtro == -1) {
-                    verProximoRepartoComida(db, clientSocket);
-                }
-                break;
+    if (filtro == -999) {
+        verTalleresProximos(db, clientSocket);
+    } else if (filtro == -2) {
+        verProximoRepartoRopa(db, paqueteRecibido.idUsuario, clientSocket);
+    } else if (filtro == -1) {
+        verProximoRepartoComida(db, clientSocket);
+    } else if (filtro > 0) {
+        // Historial del voluntario — busca eventos PASADOS
+        sqlite3_stmt *stmt;
+        const char *sql =
+            "SELECT E.id_evento, E.descripcion, E.fecha_ini, E.tipo, E.material "
+            "FROM Evento E "
+            "JOIN Participaciones P ON E.id_evento = P.id_evento "
+            "WHERE P.id_voluntario = ? AND datetime(E.fecha_ini) < datetime('now') "
+            "ORDER BY E.fecha_ini DESC;";
+
+        string buffer = "";
+        char lineaFila[256];
+
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, paqueteRecibido.idUsuario);
+
+            int count = 0;
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                count++;
+                int id = sqlite3_column_int(stmt, 0);
+                const char *desc = (const char *)sqlite3_column_text(stmt, 1);
+                const char *fecha = (const char *)sqlite3_column_text(stmt, 2);
+                int tipo_int = sqlite3_column_int(stmt, 3);
+                int mat_int = sqlite3_column_int(stmt, 4);
+                const char *txtTipo = (tipo_int == 0) ? "Recogida" : "Reparto";
+                const char *txtMat = (mat_int == 0) ? "Ropa" : "Comida";
+                sprintf(lineaFila, "%-5d | %-12s | %-10s | %-18s | %s\n", id, txtTipo, txtMat, fecha, desc ? desc : "");
+                buffer += lineaFila;
             }
+            if (count == 0) buffer += "No tienes eventos pasados registrados.\n";
+            sqlite3_finalize(stmt);
+
+            PaqueteRed resp;
+            memset(&resp, 0, sizeof(PaqueteRed));
+            resp.tipoOperacion = OP_RESPUESTA_OK;
+            strncpy(resp.mensajeRespuesta, buffer.c_str(), sizeof(resp.mensajeRespuesta) - 1);
+            send(clientSocket, (char*)&resp, sizeof(PaqueteRed), 0);
+        }
+    }
+    break;
+}
 
                 // ... Dentro del switch (paqueteRecibido.tipoOperacion) en main_servidor.cpp
 

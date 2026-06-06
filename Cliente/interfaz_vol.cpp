@@ -64,6 +64,7 @@ void apuntarseEvento(int socketServidor, int id_voluntario) {
     
     paquete.tipoOperacion = OP_VER_EVENTOS_DISPONIBLES;
     paquete.idUsuario = id_voluntario;
+   // ID positivo = historial voluntario
 
     // Enviamos la petición y capturamos la respuesta formateada
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
@@ -187,6 +188,7 @@ void consultarHistorialEventos(int socketServidor, int id_voluntario) {
     memset(&paquete, 0, sizeof(PaqueteRed));
     paquete.tipoOperacion = OP_CONSULTAR_EVENTOS;
     paquete.idUsuario = id_voluntario;
+    paquete.idEvento = id_voluntario; // ID positivo = historial
 
     printf("\n[Red] Descargando historial de eventos desde el servidor...\n");
     PaqueteRed respuesta = enviarPeticionServidor(paquete);

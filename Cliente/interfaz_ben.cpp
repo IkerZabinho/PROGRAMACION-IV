@@ -134,7 +134,7 @@ void verProximoRepartoRopa(int socketServidor, int id_beneficiario) {
     memset(&paquete, 0, sizeof(PaqueteRed));
     paquete.tipoOperacion = OP_CONSULTAR_EVENTOS;
     paquete.idUsuario = id_beneficiario;
-    paquete.idUsuario = -2; // -2 = ROPA
+    paquete.idEvento = -2; // -2 = ROPA
     
 
     printf("\n--- PROXIMO REPARTO DE ROPA ---\n");
