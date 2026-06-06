@@ -138,7 +138,6 @@ void verProximoRepartoRopa(int socketServidor, int id_beneficiario) {
 
     printf("\n--- PROXIMO REPARTO DE ROPA ---\n");
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
-
     if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
         printf("%s", respuesta.mensajeRespuesta);
     } else {
