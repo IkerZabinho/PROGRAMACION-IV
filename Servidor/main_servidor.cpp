@@ -16,6 +16,9 @@ using namespace std;
 
 int tieneChoqueDeFechas(sqlite3* db, int id_voluntario, int id_evento_nuevo);
 int estaEventoLleno(sqlite3* db, int id_e);
+void verTalleresProximos(sqlite3* db, int socketCliente);
+void verProximoRepartoRopa(sqlite3* db, int id_beneficiario, int socketCliente);
+void verProximoRepartoComida(sqlite3* db, int socketCliente);
 
 int main()
 {
@@ -233,48 +236,14 @@ int main()
 
             case OP_CONSULTAR_EVENTOS:
             {
-                registrarLog("Usuario consulta remotamente las recogidas de ropa activas.");
+               int filtro = paqueteRecibido.idEvento; // Ahora el filtro viene en idEvento
 
-                sqlite3_stmt *stmt;
-                // tipo = 1 corresponde a RECOGIDA en tu enum TipoEvento
-                std::string sql = "SELECT descripcion, fecha_ini, fecha_fin, lim_voluntarios FROM Evento "
-                                  "WHERE tipoEvento = 1 AND date(fecha_ini) >= date('now') "
-                                  "ORDER BY fecha_ini ASC LIMIT 5;";
-
-                std::string bufferEventos = "\n--- PRÓXIMAS RECOGIDAS DE ROPA PROGRAMADAS ---\n";
-                char linea[120];
-                sprintf(linea, "%-25s | %-17s | %-12s\n", "DESCRIPCIÓN", "FECHA INICIO", "CUPO MAX");
-                bufferEventos += linea;
-                bufferEventos += "-------------------------------------------------------------\n";
-
-                if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0) == SQLITE_OK)
-                {
-                    int hay_datos = 0;
-                    while (sqlite3_step(stmt) == SQLITE_ROW)
-                    {
-                        hay_datos = 1;
-                        const char *desc = (const char *)sqlite3_column_text(stmt, 0);
-                        const char *ini = (const char *)sqlite3_column_text(stmt, 1);
-                        int limite = sqlite3_column_int(stmt, 3);
-
-                        sprintf(linea, "-> %-22s | %-12s | %d voluntarios\n",
-                                desc ? desc : "Recogida", ini ? ini : "---", limite);
-                        bufferEventos += linea;
-                    }
-                    sqlite3_finalize(stmt);
-
-                    if (!hay_datos)
-                    {
-                        bufferEventos += "No hay campañas de recogida planificadas próximamente.\n";
-                    }
-
-                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                    strncpy(paqueteRespuesta.mensajeRespuesta, bufferEventos.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
-                }
-                else
-                {
-                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-                    strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] Error en el motor de eventos de la BD.");
+                if (filtro == -999) {
+                    verTalleresProximos(db, clientSocket);
+                } else if (filtro == -2) {
+                    verProximoRepartoRopa(db, paqueteRecibido.idUsuario, clientSocket);
+                } else if (filtro == -1) {
+                    verProximoRepartoComida(db, clientSocket);
                 }
                 break;
             }
@@ -673,7 +642,9 @@ int main()
           }
 */
             // Enviamos la respuesta de vuelta por el socket
-            send(clientSocket, (char *)&paqueteRespuesta, sizeof(PaqueteRed), 0);
+           if (paqueteRecibido.tipoOperacion != OP_CONSULTAR_EVENTOS) {
+                send(clientSocket, (char *)&paqueteRespuesta, sizeof(PaqueteRed), 0);
+            }
         }
 
         // Cerramos la conexion con este cliente antes de pasar al siguiente

@@ -112,18 +112,18 @@ using namespace std;
 }
 
 void verProximoRepartoComida(int socketServidor) {
-    PaqueteRed paquete;
+     PaqueteRed paquete;
     memset(&paquete, 0, sizeof(PaqueteRed));
-    
-    // Dejamos su enum original
-    paquete.tipoOperacion = OP_VER_EVENTOS_DISPONIBLES; 
+    paquete.tipoOperacion = OP_CONSULTAR_EVENTOS;
+    paquete.idUsuario = 0;
+    paquete.idEvento = -1; // -1 = COMIDA
 
     printf("\n--- PROXIMO REPARTO DE COMIDA ---\n");
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
 
     if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
         printf("%s", respuesta.mensajeRespuesta);
-        printf("\nLos repartos de comida son CADA MARTES desde las 16:00 hasta las 20:00\n");
+        printf("Los repartos de comida son CADA MARTES desde las 16:00 hasta las 20:00\n");
     } else {
         printf("[Servidor]: %s\n", respuesta.mensajeRespuesta);
     }
@@ -132,12 +132,14 @@ void verProximoRepartoComida(int socketServidor) {
 void verProximoRepartoRopa(int socketServidor, int id_beneficiario) {
     PaqueteRed paquete;
     memset(&paquete, 0, sizeof(PaqueteRed));
+    paquete.tipoOperacion = OP_CONSULTAR_EVENTOS;
+    paquete.idUsuario = id_beneficiario;
+    paquete.idUsuario = -2; // -2 = ROPA
     
-    paquete.tipoOperacion = OP_CONSULTAR_EVENTOS; 
-    paquete.idUsuario = id_beneficiario; // <-- ID positivo para indicarle que es ROPA
 
     printf("\n--- PROXIMO REPARTO DE ROPA ---\n");
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
+
     if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
         printf("%s", respuesta.mensajeRespuesta);
     } else {
@@ -146,11 +148,11 @@ void verProximoRepartoRopa(int socketServidor, int id_beneficiario) {
 }
 
 void verTalleresProximos(int socketServidor) {
-    PaqueteRed paquete;
+     PaqueteRed paquete;
     memset(&paquete, 0, sizeof(PaqueteRed));
-    
-    paquete.tipoOperacion = OP_CONSULTAR_EVENTOS; 
-    paquete.idUsuario = -999; // 💡 ¡EL TRUCO! Si es -999, el servidor sabrá que son TALLERES
+    paquete.tipoOperacion = OP_CONSULTAR_EVENTOS;
+    paquete.idUsuario = 0;
+    paquete.idEvento = -999; // -999 = TALLERES
 
     printf("\n--- LISTA DE PROXIMOS TALLERES ---\n");
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
