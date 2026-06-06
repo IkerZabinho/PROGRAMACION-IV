@@ -8,6 +8,8 @@
 #include "../ComunPrueba/Clases.h"
 #include "interfazVol.h"
 #include "interfazDon.h"
+#include "interfazBen.h"
+
 
 using namespace std;
 
@@ -16,7 +18,13 @@ using namespace std;
 void procesarLoginCliente();
 void procesarRegistroCliente();
 void ejecutarFormularioRegistroCliente();
-void menuPrincipal(int socketServidor, int tipo, int id_perfil); 
+void menuPrincipal(int tipo, int id_perfil); 
+
+void limpiarBuffer() {
+    cin.clear();
+    while (cin.get() != '\n');
+}
+
 int main() {
     // Configuración para que se vean bien las tildes y la Ñ en Windows (Tus líneas originales)
     SetConsoleOutputCP(65001);
@@ -35,22 +43,16 @@ int main() {
 
         // Tu misma validación de entrada numérica pero en estilo C++
         if (!(cin >> opcion)) {
-            printf("\n[!] Ups, parece que no has introducido un número.");
-            printf("\nPor favor, elige una opción del 0 al 2.\n");
-            cin.clear(); // Limpia el error de cin
-            while (cin.get() != '\n'); // Limpia el buffer del teclado
-            opcion = -1; // Valor neutro para repetir el bucle
+            printf("\n[!] Ups, parece que no has introducido un número.\n");
+            limpiarBuffer();
+            opcion = -1; 
             continue;
         }
-        
-        // Limpiamos el 'Enter' sobrante
-        while (cin.get() != '\n');
+        limpiarBuffer();
 
         switch (opcion) {
             case 1:
-                // Antes llamabas a iniciarSesion(db). 
-                // Ahora llamas a la función que pide los datos y los manda al servidor.
-                procesarLoginCliente(); 
+                procesarLoginCliente(); // <-- Ya no le pasas nada de sockets
                 break;
             case 2:
                 // Antes llamabas a registrarUsuario(db).
@@ -62,7 +64,7 @@ int main() {
                 printf("\nGracias por usar el sistema. ¡Hasta pronto!\n");
                 break;
             default:
-                printf("\n[?] La opción '%d' no existe en el menú. Inténtalo de nuevo.\n", opcion);
+                printf("\n[?] La opción '%d' no existe.\n", opcion);
                 break;
         }
 
@@ -112,7 +114,7 @@ void procesarLoginCliente() {
             //menuAdministrador(NULL); //hay que traerlo desde el interfaz.cpp aquí o poner en otro cpp como el de voluntario y así
         } 
         else if (respuesta.tipoUsuario >= 1 && respuesta.tipoUsuario <= 3) { // VOLUNTARIO(1), DONANTE(2) o BENEFICIARIO(3)
-            menuPrincipal(0, respuesta.tipoUsuario, respuesta.idUsuario);
+            menuPrincipal( respuesta.tipoUsuario, respuesta.idUsuario);
         }
     } else {
         // Muestra el error que venga de la base de datos (Ej: "Contraseña incorrecta")
@@ -227,15 +229,15 @@ void ejecutarFormularioRegistroCliente() {
 
 // En el CLIENTE (por ejemplo, Cliente/interfaz_cliente.cpp o main_cliente.cpp)
 
-void menuPrincipal(int socketServidor, int tipo, int id_perfil) {
+void menuPrincipal(int tipo, int id_perfil) {
     int opcion;
     do {
         printf("\n======= MENU PRINCIPAL =======");
         if (tipo == GestionONG::VOLUNTARIO) {
-            menuVoluntario(socketServidor,id_perfil);
+            menuVoluntario(0,id_perfil);
         }
         else if (tipo == GestionONG::DONANTE) {
-            menuDonante( socketServidor,  id_perfil);
+            menuDonante(0,  id_perfil);
         }
         else if (tipo == GestionONG::BENEFICIARIO) {
             printf("\n1. Cambiar condiciones");
@@ -251,40 +253,41 @@ void menuPrincipal(int socketServidor, int tipo, int id_perfil) {
         switch(opcion) {
             case 1:
                 // Pasamos 'socketServidor' en lugar de 'db'
-                if(tipo == GestionONG::VOLUNTARIO) apuntarseEvento(socketServidor, id_perfil);
-                else if (tipo == GestionONG::DONANTE) donarDinero(socketServidor, id_perfil);
+                if(tipo == GestionONG::VOLUNTARIO) apuntarseEvento(0, id_perfil);
+                else if (tipo == GestionONG::DONANTE) donarDinero(0, id_perfil);
                 else if (tipo == GestionONG::BENEFICIARIO) {
                     // El formulario de rellenar datos se queda local en el cliente
-                    //GestionONG::Beneficiario b_actualizada = guardarCondicionesBeneficiario(); poner el metodo en la interfaz_ben
+                    GestionONG::Beneficiario b_actualizada = guardarCondicionesBeneficiario(); //poner el metodo en la interfaz_ben
                     
                     // Esta función ahora enviará los datos de 'b_actualizada' por red usando el socket
-                   /*  if (actualizarDatosBeneficiario(socketServidor, id_perfil, b_actualizada)) {
+                    bool beneficiarioActualizado=actualizarDatosBeneficiario(0, id_perfil, b_actualizada);
+                   if (beneficiarioActualizado) {
                         printf("\n---------------------------------------------------------");
                         printf("\n[SISTEMA] Tus condiciones se han actualizado correctamente.\n");
-                    } */
+                    } 
                 }
                 break;
 
             case 2:
                 // Tu nueva función ya adaptada a red que hicimos antes
-                if(tipo == GestionONG::VOLUNTARIO) consultarMisEventos(socketServidor, id_perfil); 
-                else if(tipo == GestionONG::DONANTE) donarComida(socketServidor, id_perfil);
+                if(tipo == GestionONG::VOLUNTARIO) consultarMisEventos(0, id_perfil); 
+                else if(tipo == GestionONG::DONANTE) donarComida(0, id_perfil);
                 else if(tipo == GestionONG::BENEFICIARIO) {
                     printf("\nCONSULTAR HORARIOS DE AYUDAS\n");
                     // Estas funciones también se cambian para pedir los datos al servidor por red
-                    //verProximoRepartoComida(socketServidor);
-                    //verProximoRepartoRopa(socketServidor, id_perfil);
+                    verProximoRepartoComida(0);
+                    verProximoRepartoRopa(0, id_perfil);
                 }
                 break;
 
             case 3:
-                if(tipo == GestionONG::VOLUNTARIO) consultarHistorialEventos(socketServidor, id_perfil);
-                else if(tipo == GestionONG::DONANTE) donarRopa(socketServidor, id_perfil);
-                //else if(tipo == GestionONG::BENEFICIARIO) verTalleresProximos(socketServidor);
+                if(tipo == GestionONG::VOLUNTARIO) consultarHistorialEventos(0, id_perfil);
+                else if(tipo == GestionONG::DONANTE) donarRopa(0, id_perfil);
+                else if(tipo == GestionONG::BENEFICIARIO) verTalleresProximos(0);
                 break;
            
             case 4:
-                if (tipo == GestionONG::DONANTE) consultarHistorialDonaciones(socketServidor, id_perfil);
+                if (tipo == GestionONG::DONANTE) consultarHistorialDonaciones(0, id_perfil);
                 break;
         }
     } while (opcion != 0);

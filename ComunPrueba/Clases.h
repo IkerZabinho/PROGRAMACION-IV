@@ -90,8 +90,7 @@ namespace GestionONG {
 
         int insertarDatosBeneficiario(sqlite3 *db);
         void evaluarBeneficiario() const;
-        int actualizarDatosBeneficiario(sqlite3 *db, int id_perfil);
-
+        bool actualizarDatosBeneficiario(int socketServidor, int id_perfil, const GestionONG::Beneficiario& b);
         // --- DECLARACIÓN DE GETTERS (Terminan en ;) ---
         float getIngresos() const;
         float getGastos() const;

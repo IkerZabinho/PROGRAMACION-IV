@@ -7,6 +7,7 @@
 #include "ConfigServidor.h"
 #include "MotorBaseDatos.h"
 #include "../ComunPrueba/Clases.h"
+#include "interfaz.h"
 
 #pragma comment(lib, "ws2_32.lib") // Enlaza la librería de sockets en Windows
 
@@ -763,3 +764,256 @@ int estaEventoLleno(sqlite3 *db, int id_e)
 
     return lleno;
 }
+
+
+    void verProximoRepartoComida(sqlite3 *db, int socketCliente) {
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT descripcion, fecha_ini, fecha_fin FROM Evento "
+                      "WHERE material = 1 AND tipo = 1 "
+                      "AND date(fecha_ini) >= date('now') "
+                      "ORDER BY fecha_ini ASC LIMIT 1;";
+
+    PaqueteRed respuesta;
+    memset(&respuesta, 0, sizeof(PaqueteRed));
+    respuesta.tipoOperacion = OP_RESPUESTA_OK;
+
+    // Fabricamos el string de respuesta
+    string buffer = "";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            char temp[256];
+            snprintf(temp, sizeof(temp), "Evento: %s\nFecha de inicio: %s\nFecha final: %s\n",
+                     sqlite3_column_text(stmt, 0),
+                     sqlite3_column_text(stmt, 1),
+                     sqlite3_column_text(stmt, 2));
+            buffer += temp;
+        } else {
+            buffer += "No hay repartos de comida programados proximamente.\n";
+        }
+    } else {
+        respuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+        snprintf(respuesta.mensajeRespuesta, sizeof(respuesta.mensajeRespuesta), "[ERROR] Error al consultar: %s", sqlite3_errmsg(db));
+        send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
+        sqlite3_finalize(stmt);
+        return;
+    }
+    sqlite3_finalize(stmt);
+
+    // Copiamos el texto acumulado al paquete de red y enviamos
+    strncpy(respuesta.mensajeRespuesta, buffer.c_str(), sizeof(respuesta.mensajeRespuesta) - 1);
+    send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
+}
+
+void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario, int socketCliente) {
+    sqlite3_stmt *stmt;
+    char fecha_corte[11] = "1900-01-01";
+    int tiene_registro = 0;
+    int id_usuario = -1;
+
+    PaqueteRed respuesta;
+    memset(&respuesta, 0, sizeof(PaqueteRed));
+    respuesta.tipoOperacion = OP_RESPUESTA_OK;
+    string buffer = "";
+
+    // 1. Obtener el id_usuario asociado al id_beneficiario
+    const char *sql_get_user = "SELECT id_usuario FROM Beneficiario WHERE id_beneficiario = ?;";
+    if (sqlite3_prepare_v2(db, sql_get_user, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_beneficiario);
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            id_usuario = sqlite3_column_int(stmt, 0);
+        }
+    } else {
+        cout << "[DEBUG ERROR] SQL Usuario: " << sqlite3_errmsg(db) << endl;
+    }
+    sqlite3_finalize(stmt);
+
+    if (id_usuario == -1) {
+        respuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+        strcpy(respuesta.mensajeRespuesta, "[ERROR] No se encontro el usuario asociado en el sistema.\n");
+        send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
+        return;
+    }
+
+    // 2. Comprobar la última vez que recogió ropa
+    const char *sql_ultima = "SELECT MAX(e.fecha_ini) FROM Evento e "
+                             "JOIN Participaciones p ON e.id_evento = p.id_evento "
+                             "WHERE p.id_usuario = ? AND e.material = 0 AND e.tipo = 0;";
+
+    if (sqlite3_prepare_v2(db, sql_ultima, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_usuario);
+        if (sqlite3_step(stmt) == SQLITE_ROW && sqlite3_column_text(stmt, 0) != NULL) {
+            const char *ultima_fecha = (const char *)sqlite3_column_text(stmt, 0);
+            tiene_registro = 1;
+
+            sqlite3_stmt *stmt_calc;
+            const char *sql_meses = "SELECT date(?, '+6 months');";
+            if (sqlite3_prepare_v2(db, sql_meses, -1, &stmt_calc, 0) == SQLITE_OK) {
+                sqlite3_bind_text(stmt_calc, 1, ultima_fecha, -1, SQLITE_STATIC);
+                if (sqlite3_step(stmt_calc) == SQLITE_ROW) {
+                    strcpy(fecha_corte, (const char *)sqlite3_column_text(stmt_calc, 0));
+                }
+                sqlite3_finalize(stmt_calc);
+            }
+        }
+    } else {
+        cout << "[DEBUG ERROR] SQL Ultima Participacion: " << sqlite3_errmsg(db) << endl;
+    }
+    sqlite3_finalize(stmt);
+
+    // 3. Construir la consulta del próximo evento evitando errores de concatenación
+    string sql_final = "SELECT descripcion, fecha_ini, fecha_fin FROM Evento "
+                       "WHERE material = 0 AND tipo = 0 "
+                       "AND date(fecha_ini) >= date('now') ";
+
+    if (tiene_registro) {
+        sql_final += "AND date(fecha_ini) >= date('" + string(fecha_corte) + "') ";
+    }
+    
+    sql_final += "ORDER BY fecha_ini ASC LIMIT 1;";
+
+    // 4. Preparar y ejecutar la consulta final
+    if (sqlite3_prepare_v2(db, sql_final.c_str(), -1, &stmt, 0) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            char temp[512];
+            snprintf(temp, sizeof(temp), "Evento: %s\nFecha inicio: %s\nFecha fin: %s\n",
+                     sqlite3_column_text(stmt, 0) ? (const char*)sqlite3_column_text(stmt, 0) : "Sin nombre",
+                     sqlite3_column_text(stmt, 1) ? (const char*)sqlite3_column_text(stmt, 1) : "---",
+                     sqlite3_column_text(stmt, 2) ? (const char*)sqlite3_column_text(stmt, 2) : "---");
+            buffer += temp;
+            if (tiene_registro) {
+                buffer += "Tu proximo reparto estara disponible a partir de: " + string(fecha_corte) + "\n";
+                buffer += "(Deben pasar 6 meses desde tu ultima recogida)\n";
+            }
+        } else {
+            if (tiene_registro) {
+                buffer += "Aun no puedes recoger ropa. Fecha disponible a partir de: " + string(fecha_corte) + "\n";
+            } else {
+                buffer += "No hay repartos de ropa programados en este momento.\n";
+            }
+        }
+    } else {
+        // Imprimimos el error real en la consola del servidor para poder verlo
+        cout << "[DEBUG ERROR] SQL Consulta Final Fallida: " << sqlite3_errmsg(db) << endl;
+        
+        respuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+        snprintf(respuesta.mensajeRespuesta, sizeof(respuesta.mensajeRespuesta), 
+                 "[ERROR] Error en el motor de eventos de la BD: %s", sqlite3_errmsg(db));
+        send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
+        sqlite3_finalize(stmt);
+        return;
+    }
+    sqlite3_finalize(stmt);
+
+    // Enviar respuesta exitosa estructurada al cliente
+    strncpy(respuesta.mensajeRespuesta, buffer.c_str(), sizeof(respuesta.mensajeRespuesta) - 1);
+    send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
+}
+
+void verTalleresProximos(sqlite3 *db, int socketCliente) {
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT tipo, descripcion, fecha_ini, fecha_fin FROM Taller "
+                      "WHERE date(fecha_ini) >= date('now') "
+                      "ORDER BY fecha_ini ASC;";
+
+    PaqueteRed respuesta;
+    memset(&respuesta, 0, sizeof(PaqueteRed));
+    respuesta.tipoOperacion = OP_RESPUESTA_OK;
+
+    string buffer = "";
+    char header[256];
+    snprintf(header, sizeof(header), "%-15s | %-25s | %-17s | %-17s\n", "TIPO", "DESCRIPCION", "INICIO", "FIN");
+    buffer += header;
+    buffer += "----------------------------------------------------------------------------------\n";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        int hay_talleres = 0;
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            hay_talleres = 1;
+            const char *tipo = (const char *)sqlite3_column_text(stmt, 0);
+            const char *desc = (const char *)sqlite3_column_text(stmt, 1);
+            const char *ini  = (const char *)sqlite3_column_text(stmt, 2);
+            const char *fin  = (const char *)sqlite3_column_text(stmt, 3);
+
+            char fila[256];
+            snprintf(fila, sizeof(fila), "%-15s | %-25s | %-17s | %-17s\n", 
+                     tipo ? tipo : "General", 
+                     desc ? desc : "Sin descripcion", 
+                     ini  ? ini  : "---", 
+                     fin  ? fin  : "---");
+            buffer += fila;
+        }
+        if (!hay_talleres) {
+            buffer += "No hay talleres programados para los proximos dias.\n";
+        }
+    } else {
+        respuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+        snprintf(respuesta.mensajeRespuesta, sizeof(respuesta.mensajeRespuesta), "[ERROR] Error en la tabla Taller: %s", sqlite3_errmsg(db));
+        send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
+        sqlite3_finalize(stmt);
+        return;
+    }
+    sqlite3_finalize(stmt);
+    buffer += "----------------------------------------------------------------------------------\n";
+
+    strncpy(respuesta.mensajeRespuesta, buffer.c_str(), sizeof(respuesta.mensajeRespuesta) - 1);
+    send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
+}
+    // ============================================================================
+    // FUNCIONES AUXILIARES MATEMÁTICAS Y DE BASE DE DATOS
+    // ============================================================================
+
+    float calcularAyudaDinero(GestionONG::Beneficiario b) {
+        float renta = b.getIngresos() - b.getGastos();
+        return abs(int(renta)) + 50.0f; 
+    }
+
+    void mostrarAyudaComida(GestionONG::Beneficiario b) {
+        float totalArrozPasta = (b.getNumAdultos() * 1.0f) + (b.getNumNinos() * 0.75f);
+        float totalLegumbres = (b.getNumAdultos() + b.getNumNinos()) * 0.5f;
+        float totalLeche = (b.getNumAdultos() * 2.0f) + (b.getNumNinos() * 4.0f);
+        int totalConservas = (b.getNumAdultos() * 3) + (b.getNumNinos() * 2);
+
+        printf("\n[ALIMENTACION SEMANAL]");  
+        printf("\n > Arroz/Pasta:        %.2f kg", totalArrozPasta);
+        printf("\n > Legumbres:          %.2f kg", totalLegumbres);
+        printf("\n > Leche:              %.0f litros", totalLeche);
+        printf("\n > Conservas:          %d latas\n", totalConservas);
+    }
+
+    void mostrarAyudaRopa(GestionONG::Beneficiario b) {
+        int camNinos = b.getNumNinos() * 3;
+        int panNinos = b.getNumNinos() * 2;
+        int sudNinos = b.getNumNinos() * 1;
+        int camAdultos = b.getNumAdultos() * 2;
+        int panAdultos = b.getNumAdultos() * 1;
+
+        printf("\n[VESTIMENTA SEMESTRAL]"); 
+        if (b.getNumNinos() > 0) {
+            printf("\n > NINOS/AS: %d camisetas, %d pantalones, %d sudaderas", camNinos, panNinos, sudNinos);
+        }
+        if (b.getNumAdultos() > 0) {
+            printf("\n > ADULTOS: %d camisetas, %d pantalones", camAdultos, panAdultos);
+        }
+        printf("\n");
+    }
+
+    int actualizarDatosBeneficiario(sqlite3 *db, int id_beneficiario,GestionONG:: Beneficiario b) {
+        sqlite3_stmt *stmt;
+        const char *sql = "UPDATE Beneficiario SET ingresos = ?, gastos = ?, num_adultos = ?, num_ninos = ? WHERE id_beneficiario = ?;";
+        int rc = 0;
+
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+            sqlite3_bind_double(stmt, 1, b.getIngresos());
+            sqlite3_bind_double(stmt, 2, b.getGastos());
+            sqlite3_bind_int(stmt, 3, b.getNumAdultos());
+            sqlite3_bind_int(stmt, 4, b.getNumNinos());
+            sqlite3_bind_int(stmt, 5, id_beneficiario);
+
+            if (sqlite3_step(stmt) == SQLITE_DONE) {
+                rc = 1;
+            }
+            sqlite3_finalize(stmt);
+        }
+        return rc;
+    }

@@ -386,8 +386,8 @@ void Beneficiario::evaluarBeneficiario() const {
         cout << "\nTras analizar tu renta disponible, el sistema indica que necesitas apoyo";
         cout << "\ntanto en alimentación semanal como en vestimenta semestral.";
         cout << "\n-------------------------------------------";
-        this->mostrarAyudaComida();
         this->mostrarAyudaRopa();
+        this->mostrarAyudaComida();
     }
     else {
         cout << "\nESTADO: Evaluación Finalizada -> Escenario C";
@@ -398,12 +398,12 @@ void Beneficiario::evaluarBeneficiario() const {
         float dinero = this->calcularAyudaDinero();
         printf("\n > AYUDA ECONÓMICA: %.2f euros/mes", dinero);
         
-        this->mostrarAyudaComida();
         this->mostrarAyudaRopa();
+        this->mostrarAyudaComida();
     }
     cout << "\n===========================================\n" << endl;
 }
-
+/*
 int Beneficiario::actualizarDatosBeneficiario(sqlite3 *db, int id_perfil) {
     char *error = 0;
     ostringstream sql;
@@ -420,4 +420,4 @@ int Beneficiario::actualizarDatosBeneficiario(sqlite3 *db, int id_perfil) {
     
     this->evaluarBeneficiario();
     return 1;
-}
+}*/

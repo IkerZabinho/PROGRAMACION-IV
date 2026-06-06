@@ -23,14 +23,14 @@ namespace GestionONG {
     int es_bisiesto(int anyo);
     int comparar_fechas(const Fecha& f1, const Fecha& f2);
     void crearEventoJuevesRopaAutomatico(sqlite3 *db);
-    void verProximoRepartoComida(sqlite3 *db);
-    void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario);
-    void verTalleresProximos(sqlite3 *db);
+    //void verProximoRepartoComida(int socketServidor);
+    //void verProximoRepartoRopa(int socketServidor, int id_beneficiario);
+    //void verTalleresProximos(int socketServidor);
     float calcularAyudaDinero(Beneficiario b);
     void mostrarAyudaComida(Beneficiario b);
     void mostrarAyudaRopa(Beneficiario b);
-    int actualizarDatosBeneficiario(sqlite3 *db, int id_beneficiario, Beneficiario b);
-    void verProximaRecogidaRopa(sqlite3 *db);
+    //int actualizarDatosBeneficiario(int socketServidor, int id_beneficiario, Beneficiario b);
+    //void verProximaRecogidaRopa(int socketServidor);
     void iniciarSesion(sqlite3 *db);
     void crearEventoMartesAutomatico(sqlite3 * db);
     void listarEventos(sqlite3 *db);
@@ -43,7 +43,7 @@ namespace GestionONG {
     // 1. GESTIÓN ECONÓMICA DE BENEFICIARIOS
     // ============================================================================
     // Captura los datos económicos de un beneficiario desde la consola
-    Beneficiario guardarCondicionesBeneficiario();
+    //Beneficiario guardarCondicionesBeneficiario();
 
     // ============================================================================
     // 2. SISTEMA DE AUTENTICACIÓN Y REGISTRO

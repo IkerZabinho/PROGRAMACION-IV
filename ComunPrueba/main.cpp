@@ -2,8 +2,8 @@
 #include <cstdio>       // Para FILE, fopen, fprintf, fclose si hicieran falta
 #include <windows.h>     // Mantenemos la librería de Windows para las tildes y la Ñ
 #include "sqlite3.h"
-#include "Comun/Clases.h"     // Acceso a tus clases (incluye Config con std::string)
-#include "Comun/interfaz.h"   // Prototipos de los menús e inicio de sesión
+#include "../ComunPrueba/Clases.h"     // Acceso a tus clases (incluye Config con std::string)
+#include "../ComunPrueba/interfaz.h"   // Prototipos de los menús e inicio de sesión
 
 using namespace std;
 using namespace GestionONG;
@@ -21,7 +21,7 @@ int main() {
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
 
-    // 1. CARGAR CONFIGURACIÓN USANDO TU CLASE CONFIG
+    // 1. CARGAR CONFIGURACIÓN USANDO TU CLASE CONFIGactualizarDatosBeneficiario
     Config miConfig;
     
     // Llamamos a tu función real pasándole la dirección de memoria de tu objeto (&miConfig)
