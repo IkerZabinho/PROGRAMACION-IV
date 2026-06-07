@@ -26,7 +26,7 @@ bool autenticarUsuarioSQL(sqlite3* db, PaqueteRed& paqueteIn, PaqueteRed& paquet
         string passDb = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
         int tipoDb = sqlite3_column_int(stmt, 2);
         
-        // Verificamos si la contraseña coincide (ajusta si usas hash o texto plano)
+        // Verificamos si la contraseña coincide
         if (passDb == string(paqueteIn.perfil.contrasena)) {
             paqueteOut.tipoOperacion = OP_RESPUESTA_OK;
             paqueteOut.idUsuario = idDb;
@@ -34,27 +34,25 @@ bool autenticarUsuarioSQL(sqlite3* db, PaqueteRed& paqueteIn, PaqueteRed& paquet
             strcpy(paqueteOut.mensajeRespuesta, "¡Autenticacion completada con exito!");
             
             // --- REQUERIMIENTO 2: CARGA INMEDIATA DE CACHÉ PARA BENEFICIARIOS ---
-            // Suponiendo que el tipo 3 o 4 representa al beneficiario (según tu Fase 1)
-            if (tipoDb == 3 || string(paqueteIn.perfil.usuario) == "malena") {
+            // --- REQUERIMIENTO 2: CARGA INMEDIATA DE CACHÉ PARA BENEFICIARIOS ---
+            if (tipoDb == 3) { // Beneficiario
+                // Pedimos las columnas esenciales que guarda tu base de datos
+                string sqlBeneficiario = "SELECT ingresos, gastos, num_adultos, num_ninos FROM Beneficiario WHERE id_beneficiario = ?;";
                 sqlite3_stmt* stmtBeneficiario;
-                string sqlBeneficiario = "SELECT adultos, ninos, sueldo, otras_ayudas, alquiler, suministros, estudios, otros_gastos "
-                                         "FROM Beneficiarios WHERE id_usuario = ?;";
                 
                 if (sqlite3_prepare_v2(db, sqlBeneficiario.c_str(), -1, &stmtBeneficiario, NULL) == SQLITE_OK) {
                     sqlite3_bind_int(stmtBeneficiario, 1, idDb);
-                    
                     if (sqlite3_step(stmtBeneficiario) == SQLITE_ROW) {
-                        // Mapeo directo de la BD al paquete de Red para la caché local del cliente
-                        paqueteOut.economia.adultos      = sqlite3_column_int(stmtBeneficiario, 0);
-                        paqueteOut.economia.ninos        = sqlite3_column_int(stmtBeneficiario, 1);
-                        paqueteOut.economia.sueldo       = (float)sqlite3_column_double(stmtBeneficiario, 2);
-                        paqueteOut.economia.otras_ayudas = (float)sqlite3_column_double(stmtBeneficiario, 3);
-                        paqueteOut.economia.alquiler     = (float)sqlite3_column_double(stmtBeneficiario, 4);
-                        paqueteOut.economia.suministros  = (float)sqlite3_column_double(stmtBeneficiario, 5);
-                        paqueteOut.economia.estudios     = (float)sqlite3_column_double(stmtBeneficiario, 6);
-                        paqueteOut.economia.otros_gastos = (float)sqlite3_column_double(stmtBeneficiario, 7);
+                        // MAPEO TOTALMENTE SINCRONIZADO:
+                        // 'ingresos' de la BD va a 'sueldo' y 'gastos' de la BD va a 'otros_gastos'
+                        paqueteOut.economia.sueldo       = (float)sqlite3_column_double(stmtBeneficiario, 0); 
+                        paqueteOut.economia.otros_gastos = (float)sqlite3_column_double(stmtBeneficiario, 1); 
+                        paqueteOut.economia.adultos      = sqlite3_column_int(stmtBeneficiario, 2);          
+                        paqueteOut.economia.ninos        = sqlite3_column_int(stmtBeneficiario, 3);          
                         
-                        registrarLog("CACHE DESCARGADA: Datos economicos enviados para el Beneficiario ID: " + to_string(idDb));
+                        registrarLog("CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: " + to_string(idDb));
+                    } else {
+                        registrarLog("ADVERTENCIA: El usuario existe en Usuarios pero no tiene fila en la tabla Beneficiario.");
                     }
                     sqlite3_finalize(stmtBeneficiario);
                 }
@@ -76,7 +74,78 @@ bool autenticarUsuarioSQL(sqlite3* db, PaqueteRed& paqueteIn, PaqueteRed& paquet
 }
 
 bool registrarUsuarioSQL(sqlite3* db, PaqueteRed& paqueteIn, void* datosPerfilEspecifico) {
-    // Aquí meteremos las transacciones BEGIN/COMMIT y los INSERTs de tu Fase 1
-    // usando el puntero void* que elogió tu profesor. Lo completaremos en el siguiente paso.
+    sqlite3_stmt* stmtUser = NULL;
+    sqlite3_stmt* stmtBen = NULL;
+    int rc;
+
+    // Forzamos el tipo de usuario correcto según la operación por si el cliente no lo rellenó bien
+    int rolUsuario = paqueteIn.tipoUsuario;
+    if (paqueteIn.tipoOperacion == OP_REGISTRO_VOLUNTARIO)   rolUsuario = 1;
+    if (paqueteIn.tipoOperacion == OP_REGISTRO_DONANTE)      rolUsuario = 2;
+    if (paqueteIn.tipoOperacion == OP_REGISTRO_BENEFICIARIO) rolUsuario = 3;
+
+    // 1. INICIAMOS TRANSACCIÓN SEGURA
+    rc = sqlite3_exec(db, "BEGIN TRANSACTION;", NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        registrarLog("ERROR: No se pudo iniciar la transaccion de registro.");
+        return false;
+    }
+
+    // 2. INSERTAR EN LA TABLA GENERAL DE USUARIOS
+    string sqlUser = "INSERT INTO Usuarios (nombre_usuario, contrasena, tipo) VALUES (?, ?, ?);";
+    rc = sqlite3_prepare_v2(db, sqlUser.c_str(), -1, &stmtUser, NULL);
+    if (rc != SQLITE_OK) {
+        registrarLog("ERROR SQL: Fallo al preparar INSERT en Usuarios.");
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return false;
+    }
+
+    // Enlazamos los datos comunes
+    sqlite3_bind_text(stmtUser, 1, paqueteIn.perfil.usuario, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmtUser, 2, paqueteIn.perfil.contrasena, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmtUser, 3, rolUsuario); 
+
+    rc = sqlite3_step(stmtUser);
+    if (rc != SQLITE_DONE) {
+        registrarLog("ERROR SQL: No se pudo insertar el usuario (posible usuario duplicado en la base de datos).");
+        sqlite3_finalize(stmtUser);
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return false;
+    }
+
+    // Recuperamos el ID autoincremental que SQLite acaba de asignar
+    sqlite3_int64 nuevoIdUsuario = sqlite3_last_insert_rowid(db);
+    sqlite3_finalize(stmtUser);
+
+    // 3. SI ES BENEFICIARIO (ROL 3), INSERTAMOS OBLIGATORIAMENTE EN LA TABLA BENEFICIARIO
+    if (rolUsuario == 3) {
+        string sqlBen = "INSERT INTO Beneficiario (id_beneficiario, ingresos, gastos, num_adultos, num_ninos) VALUES (?, ?, ?, ?, ?);";
+        rc = sqlite3_prepare_v2(db, sqlBen.c_str(), -1, &stmtBen, NULL);
+        if (rc != SQLITE_OK) {
+            registrarLog("ERROR SQL: Fallo al preparar INSERT en Beneficiario.");
+            sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+            return false;
+        }
+
+        // Mapeamos las columnas numéricas usando las variables reales del cliente
+        sqlite3_bind_int64(stmtBen, 1, nuevoIdUsuario);
+        sqlite3_bind_double(stmtBen, 2, (double)paqueteIn.economia.sueldo);
+        sqlite3_bind_double(stmtBen, 3, (double)paqueteIn.economia.otros_gastos); 
+        sqlite3_bind_int(stmtBen, 4, paqueteIn.economia.adultos);
+        sqlite3_bind_int(stmtBen, 5, paqueteIn.economia.ninos);
+
+        rc = sqlite3_step(stmtBen);
+        if (rc != SQLITE_DONE) {
+            registrarLog("ERROR SQL: Fallo al insertar datos economicos en Beneficiario.");
+            sqlite3_finalize(stmtBen);
+            sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+            return false;
+        }
+        sqlite3_finalize(stmtBen);
+    }
+
+    // 4. CONFIRMAMOS CAMBIOS
+    sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
+    registrarLog("REGISTRO COMPLETADO CON ÉXITO: Generado Usuario ID: " + to_string(nuevoIdUsuario));
     return true;
 }

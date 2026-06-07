@@ -20,13 +20,15 @@ void procesarRegistroCliente();
 void ejecutarFormularioRegistroCliente();
 void menuPrincipal(int tipo, int id_perfil); 
 
+PaqueteRed datosLoginGlobal;
+
 void limpiarBuffer() {
     cin.clear();
     while (cin.get() != '\n');
 }
 
 int main() {
-    // Configuración para que se vean bien las tildes y la Ñ en Windows (Tus líneas originales)
+    // Configuración para que se vean bien las tildes y la Ñ en Windows
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
 
@@ -41,7 +43,6 @@ int main() {
         printf("\n------------------------------");
         printf("\nSeleccione una opción: ");
 
-        // Tu misma validación de entrada numérica pero en estilo C++
         if (!(cin >> opcion)) {
             printf("\n[!] Ups, parece que no has introducido un número.\n");
             limpiarBuffer();
@@ -52,15 +53,12 @@ int main() {
 
         switch (opcion) {
             case 1:
-                procesarLoginCliente(); // <-- Ya no le pasas nada de sockets
+                procesarLoginCliente();
                 break;
             case 2:
-                // Antes llamabas a registrarUsuario(db).
                 ejecutarFormularioRegistroCliente();
                 break;
             case 0:
-                // Como el reporte lo genera el servidor con la base de datos, 
-                // el cliente simplemente se despide.
                 printf("\nGracias por usar el sistema. ¡Hasta pronto!\n");
                 break;
             default:
@@ -73,12 +71,11 @@ int main() {
     return 0;
 }
 
-// Esta función sustituye a tu antiguo "iniciarSesion(db)"
 void procesarLoginCliente() {
     PaqueteRed paquete;
-    memset(&paquete, 0, sizeof(PaqueteRed)); // Limpiamos la estructura por seguridad
+    memset(&paquete, 0, sizeof(PaqueteRed)); 
     
-    paquete.tipoOperacion = OP_LOGIN; // Indicamos que queremos loguearnos
+    paquete.tipoOperacion = OP_LOGIN; 
 
     string usuario, contrasena;
     cout << "\n--- INICIO DE SESIÓN ---\n";
@@ -87,81 +84,42 @@ void procesarLoginCliente() {
     cout << "Contraseña: ";
     getline(cin, contrasena);
 
-    // Metemos los datos dentro del paquete de red
     strncpy(paquete.perfil.usuario, usuario.c_str(), sizeof(paquete.perfil.usuario) - 1);
     strncpy(paquete.perfil.contrasena, contrasena.c_str(), sizeof(paquete.perfil.contrasena) - 1);
 
     cout << "\n[Conectando] Enviando credenciales al servidor...\n";
 
-    // LLAMADA REAL A LA RED:
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
 
-    // ANALIZAR LA RESPUESTA DEL SERVIDOR
     if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
         cout << "\n>>> " << respuesta.mensajeRespuesta << " <<<\n";
         cout << "ID Usuario: " << respuesta.idUsuario << "\n";
         
-        // REQUERIMIENTO 2: Si es Beneficiario (Rol 4 por ejemplo), guardamos su caché local
+        // GUARDAMOS LOS DATOS REALES EN LA VARIABLE GLOBAL
+        datosLoginGlobal = respuesta; 
+
         if (respuesta.tipoUsuario == 3) { 
             cout << "--- CACHÉ LOCAL (Datos Económicos Guardados) ---\n";
+            // 'sueldo' contiene los ingresos totales calculados por el servidor
             cout << "Sueldo: " << respuesta.economia.sueldo << "€\n";
-            cout << "Alquiler: " << respuesta.economia.alquiler << "€\n";
+            // 'otros_gastos' contiene los gastos totales agregados calculados por el servidor
+            cout << "Gastos: " << respuesta.economia.otros_gastos << "€\n"; 
             cout << "------------------------------------------------\n";
         }
         
-        // Aquí podrías saltar a un "menu_interno_ong()" según el tipoUsuario...
-        if (respuesta.tipoUsuario == 4) { // ADMINISTRADOR
-            //menuAdministrador(NULL); //hay que traerlo desde el interfaz.cpp aquí o poner en otro cpp como el de voluntario y así
+        if (respuesta.tipoUsuario == 4) { 
+            //menuAdministrador(NULL); 
         } 
-        else if (respuesta.tipoUsuario >= 1 && respuesta.tipoUsuario <= 3) { // VOLUNTARIO(1), DONANTE(2) o BENEFICIARIO(3)
-            menuPrincipal( respuesta.tipoUsuario, respuesta.idUsuario);
+        else if (respuesta.tipoUsuario >= 1 && respuesta.tipoUsuario <= 3) { 
+            menuPrincipal(respuesta.tipoUsuario, respuesta.idUsuario);
         }
     } else {
-        // Muestra el error que venga de la base de datos (Ej: "Contraseña incorrecta")
         cout << "\n[!] ERROR: " << respuesta.mensajeRespuesta << "\n";
     }
     cout << "\nPresione Enter para continuar...";
     cin.get();
 }
 
-void procesarRegistroUsuario() {
-    cout << "\n--- REGISTRO DE NUEVO USUARIO ---\n";
-    // Aquí pedirás si es Voluntario, Donante, etc., rellenarás el PaqueteRed
-    // y lo enviarás al servidor de la misma manera.
-    
-    cout << "[Próximamente] Formulario de registro por red...\n";
-    PaqueteRed paquete;
-    memset(&paquete, 0, sizeof(PaqueteRed));
-
-    std::cout << "\nSelecciona perfil: 1.Voluntario | 2.Donante | 3.Beneficiario: ";
-    int eleccion;
-    std::cin >> eleccion;
-    std::cin.ignore();
-
-    if (eleccion == 1) paquete.tipoOperacion = OP_REGISTRO_VOLUNTARIO;
-    else if (eleccion == 2) paquete.tipoOperacion = OP_REGISTRO_DONANTE;
-    else if (eleccion == 3) paquete.tipoOperacion = OP_REGISTRO_BENEFICIARIO;
-    else { std::cout << "Opción inválida.\n"; return; }
-
-    std::cout << "Nombre: "; std::cin.getline(paquete.perfil.nombre, 50);
-    std::cout << "Apellidos: "; std::cin.getline(paquete.perfil.apellidos, 100);
-    std::cout << "Usuario: "; std::cin.getline(paquete.perfil.usuario, 50);
-    std::cout << "Contraseña: "; std::cin.getline(paquete.perfil.contrasena, 50);
-
-    if (paquete.tipoOperacion == OP_REGISTRO_BENEFICIARIO) {
-        std::cout << "Adultos en casa: "; std::cin >> paquete.economia.adultos;
-        std::cout << "Niños en casa: "; std::cin >> paquete.economia.ninos;
-        std::cout << "Sueldo mensual (€): "; std::cin >> paquete.economia.sueldo;
-        std::cin.ignore();
-    }
-
-    std::cout << "\n[Red] Enviando registro al servidor...\n";
-    // Aquí usas la función con la que envías los sockets en tu cliente (ej: enviarPeticion o enviarPaquete)
-    PaqueteRed respuesta = enviarPeticionServidor(paquete); 
-
-    std::cout << "\n>>> RESPUESTA SERVIDOR: " << respuesta.mensajeRespuesta << "\n";
-
-}
 void ejecutarFormularioRegistroCliente() {
     PaqueteRed paquete;
     memset(&paquete, 0, sizeof(PaqueteRed));
@@ -178,30 +136,28 @@ void ejecutarFormularioRegistroCliente() {
     
     int eleccion;
     cin >> eleccion;
-    cin.ignore(); // Limpiar el buffer de entrada
+    cin.ignore(); 
 
     if (eleccion == 1) {
         paquete.tipoOperacion = OP_REGISTRO_VOLUNTARIO;
-        paquete.tipoUsuario = 1; // Rol Voluntario
+        paquete.tipoUsuario = 1; 
     } else if (eleccion == 2) {
         paquete.tipoOperacion = OP_REGISTRO_DONANTE;
-        paquete.tipoUsuario = 2; // Rol Donante
+        paquete.tipoUsuario = 2; 
     } else if (eleccion == 3) {
         paquete.tipoOperacion = OP_REGISTRO_BENEFICIARIO;
-        paquete.tipoUsuario = 3; // Rol Beneficiario
+        paquete.tipoUsuario = 3; 
     } else {
         cout << "[!] Opción inválida.\n";
         return;
     }
 
-    // 1. Datos comunes (Estructura DatosPersonales perfil)
     cout << "\n--- DATOS PERSONALES ---\n";
     cout << "Nombre: "; cin.getline(paquete.perfil.nombre, 50);
     cout << "Apellidos: "; cin.getline(paquete.perfil.apellidos, 100);
     cout << "Nombre de usuario (Login): "; cin.getline(paquete.perfil.usuario, 50);
     cout << "Contraseña: "; cin.getline(paquete.perfil.contrasena, 50);
 
-    // 2. Si eligió beneficiario, pedimos los detalles de vuestro Requerimiento 2
     if (paquete.tipoOperacion == OP_REGISTRO_BENEFICIARIO) {
         cout << "\n--- ESTUDIO ECONÓMICO (REQUERIMIENTO 2) ---\n";
         cout << "Número de adultos en el hogar: "; cin >> paquete.economia.adultos;
@@ -217,7 +173,6 @@ void ejecutarFormularioRegistroCliente() {
 
     cout << "\n[Red] Enviando paquete de registro seguro al servidor por TCP...\n";
     
-    // Llamas a tu función de envío por sockets
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
 
     if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
@@ -227,71 +182,76 @@ void ejecutarFormularioRegistroCliente() {
     }
 }
 
-// En el CLIENTE (por ejemplo, Cliente/interfaz_cliente.cpp o main_cliente.cpp)
-
 void menuPrincipal(int tipo, int id_perfil) {
-    int opcion;
-    do {
-        printf("\n======= MENU PRINCIPAL =======");
-        if (tipo == GestionONG::VOLUNTARIO) {
-            menuVoluntario(0,id_perfil);
-        }
-        else if (tipo == GestionONG::DONANTE) {
-            menuDonante(0,  id_perfil);
-        }
-        else if (tipo == GestionONG::BENEFICIARIO) {
-            printf("\n1. Cambiar condiciones");
-            printf("\n2. Consultar horarios para recoger ayudas");
-            printf("\n3. Ver proximos talleres");
-        }
-       
-        printf("\n0. Cerrar sesion");
-        printf("\nSeleccione una opcion: ");
-        scanf("%d", &opcion);
-        fflush(stdin); // Limpiar buffer de entrada en C
+    if (tipo == GestionONG::VOLUNTARIO) {
+        menuVoluntario(0, id_perfil); 
+        return;
+    }
+    else if (tipo == GestionONG::DONANTE) {
+        menuDonante(0, id_perfil);    
+        return;
+    }
+    
+    if(tipo == GestionONG::BENEFICIARIO) {
+        int opBen;
+        
+        GestionONG::Beneficiario b;
+        b.setIngresos(datosLoginGlobal.economia.sueldo);
+        b.setNumAdultos(datosLoginGlobal.economia.adultos);
+        b.setNumNinos(datosLoginGlobal.economia.ninos);
+        b.setGastos(datosLoginGlobal.economia.otros_gastos); // Cargamos el acumulado de gastos reales
 
-        switch(opcion) {
-            case 1:
-                // Pasamos 'socketServidor' en lugar de 'db'
-                if(tipo == GestionONG::VOLUNTARIO) apuntarseEvento(0, id_perfil);
-                else if (tipo == GestionONG::DONANTE) donarDinero(0, id_perfil);
-                else if (tipo == GestionONG::BENEFICIARIO) {
-                    // El formulario de rellenar datos se queda local en el cliente
-                    GestionONG::Beneficiario b_actualizada = guardarCondicionesBeneficiario(); //poner el metodo en la interfaz_ben
+        do {
+            printf("\n======= MENU PRINCIPAL BENEFICIARIO =======\n");
+            printf("1. Cambiar condiciones económicas\n");
+            printf("2. Consultar horarios para recoger ayudas\n");
+            printf("3. Ver próximos talleres\n");
+            printf("0. Cerrar sesión\n");
+            printf("===========================================\n");
+            printf("Seleccione una opción: ");
+            if (!(cin >> opBen)) {
+                limpiarBuffer();
+                continue;
+            }
+            limpiarBuffer();
+
+            switch (opBen) {
+                case 1:
+                    b = guardarCondicionesBeneficiario(); 
+                    break;
+
+                case 2:
+                    printf("\n--- CONSULTAR HORARIOS DE AYUDAS ---\n");
+                    {
+                        PaqueteRed paquete;
+                        memset(&paquete, 0, sizeof(PaqueteRed));
+                        paquete.tipoOperacion = OP_CONSULTAR_EVENTOS; 
+                        paquete.idUsuario = id_perfil;                
+                        paquete.tipoUsuario = 3; 
+
+                        printf("[Red] Enviando consulta de horarios de ayuda al servidor...\n");
+                        PaqueteRed respuestaEventos = enviarPeticionServidor(paquete);
+
+                        if (respuestaEventos.tipoOperacion == OP_RESPUESTA_OK) {
+                            printf("%s\n", respuestaEventos.mensajeRespuesta);
+                        } else {
+                            printf("[ERROR] %s\n", respuestaEventos.mensajeRespuesta);
+                        }
+                    }
+                    break;
+
+                case 3:
+                    verTalleresProximos(0);
+                    break;
+               
+                case 0:
+                    printf("\nCerrando sesión de beneficiario...\n");
+                    break;
                     
-                    // Esta función ahora enviará los datos de 'b_actualizada' por red usando el socket
-                    bool beneficiarioActualizado=actualizarDatosBeneficiario(0, id_perfil, b_actualizada);
-                   if (beneficiarioActualizado) {
-                        printf("\n---------------------------------------------------------");
-                        printf("\n[SISTEMA] Tus condiciones se han actualizado correctamente.\n");
-                    } 
-                }
-                break;
-
-            case 2:
-                // Tu nueva función ya adaptada a red que hicimos antes
-                if(tipo == GestionONG::VOLUNTARIO) consultarMisEventos(0, id_perfil); 
-                else if(tipo == GestionONG::DONANTE) donarComida(0, id_perfil);
-                else if(tipo == GestionONG::BENEFICIARIO) {
-                    printf("\nCONSULTAR HORARIOS DE AYUDAS\n");
-                    // Estas funciones también se cambian para pedir los datos al servidor por red
-                    verProximoRepartoComida(0);
-                    verProximoRepartoRopa(0, id_perfil);
-                }
-                break;
-
-            case 3:
-                if(tipo == GestionONG::VOLUNTARIO) consultarHistorialEventos(0, id_perfil);
-                else if(tipo == GestionONG::DONANTE) donarRopa(0, id_perfil);
-                else if(tipo == GestionONG::BENEFICIARIO) verTalleresProximos(0);
-                break;
-           
-            case 4:
-                if (tipo == GestionONG::DONANTE) consultarHistorialDonaciones(0, id_perfil);
-                break;
-        }
-    } while (opcion != 0);
+                default:
+                    printf("\n[?] Opción no válida.\n");
+                    break;
+            }
+        } while (opBen != 0);
+    }
 }
-
-
-

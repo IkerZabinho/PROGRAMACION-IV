@@ -2,170 +2,168 @@
 #include <string>
 #include <cstring>
 #include <windows.h>
+#include <cmath>
 #include "../Comun/protocolo.h"
 #include "RedCliente.h" // Para enviarPeticionServidor
 #include "../ComunPrueba/Clases.h"
 #include "interfazBen.h"
 
 using namespace std;
+using namespace GestionONG;
+
+// Función auxiliar local para evitar bloqueos del cin
+void limpiarBufferLocal() {
+    cin.clear();
+    while (cin.get() != '\n');
+}
 
 // ============================================================================
-    // 1. GESTIÓN ECONÓMICA DE BENEFICIARIOS
-    // ============================================================================
+// 1. GESTIÓN ECONÓMICA DE BENEFICIARIOS
+// ============================================================================
 
-    Beneficiario guardarCondicionesBeneficiario() {
-        int correcto;
-        int adultos = 0, ninos = 0;
-        float sueldos = 0, ayudas = 0, alquiler = 0, suministros = 0, material_escolar = 0, estudios = 0, otros = 0;
+Beneficiario guardarCondicionesBeneficiario() {
+    int correcto;
+    int adultos = 0, ninos = 0;
+    float sueldos = 0, ayudas = 0, alquiler = 0, suministros = 0, material_escolar = 0, estudios = 0, otros = 0;
 
-        cout << "\n--- DETALLES ECONÓMICOS DEL BENEFICIARIO ---\n";
-        cout << "* Responde a la pregunta y pulsa enter para continuar.\n";
+    cout << "\n--- DETALLES ECONÓMICOS DEL BENEFICIARIO ---\n";
+    cout << "* Responde a la pregunta y pulsa enter para continuar.\n";
 
-        // 1. INTEGRANTES
-        do {
-            cout << "\n> INTEGRANTES DE LA FAMILIA\n";
-            cout << "Número de adultos en casa: ";
-            cin >> adultos;
-            cout << "Número de niños/as en casa: ";
-            cin >> ninos;
-            
-            cout << "  > ¿Deseas cambiar algún dato de los integrantes? (1: Sí / 0: No): ";
-            cin >> correcto;
-            std::cin.ignore(10000, '\n');
+    // 1. INTEGRANTES
+    do {
+        cout << "\n> INTEGRANTES DE LA FAMILIA\n";
+        cout << "Número de adultos en casa: ";
+        if (!(cin >> adultos)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
+        cout << "Número de niños/as en casa: ";
+        if (!(cin >> ninos)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
+        
+        cout << "  > ¿Deseas cambiar algún dato de los integrantes? (1: Sí / 0: No): ";
+        cin >> correcto;
+        limpiarBufferLocal();
 
-            if (correcto == 1) cout << "[!] Reintentando integrantes...\n";
-        } while (correcto != 0);
+        if (correcto == 1) cout << "[!] Reintentando integrantes...\n";
+    } while (correcto != 0);
 
-        // 2. INGRESOS
-        do {
-            cout << "\n> INGRESOS\n";
-            cout << "Sueldo mensual total: ";
-            cin >> sueldos;
-            cout << "Otras ayudas/pensiones: ";
-            cin >> ayudas;
-            
-            cout << "  > ¿Deseas cambiar algún dato de los ingresos? (1: Sí / 0: No): ";
-            cin >> correcto;
-            std::cin.ignore(10000, '\n');
+    // 2. INGRESOS
+    do {
+        cout << "\n> INGRESOS\n";
+        cout << "Sueldo mensual total: ";
+        if (!(cin >> sueldos)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
+        cout << "Otras ayudas/pensiones: ";
+        if (!(cin >> ayudas)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
+        
+        cout << "  > ¿Deseas cambiar algún dato de los ingresos? (1: Sí / 0: No): ";
+        cin >> correcto;
+        limpiarBufferLocal();
 
-            if (correcto == 1) cout << "[!] Reintentando ingresos...\n";
-        } while (correcto != 0);
+        if (correcto == 1) cout << "[!] Reintentando ingresos...\n";
+    } while (correcto != 0);
 
-        // 3. GASTOS
-        do {
-            cout << "\n> GASTOS\n";
-            cout << "Alquiler o hipoteca: ";
-            cin >> alquiler;
-            cout << "Luz, agua y gas: ";
-            cin >> suministros;
-            cout << "Material escolar: ";
-            cin >> material_escolar;
-            cout << "Gastos en estudios: ";
-            cin >> estudios;
-            cout << "Otros gastos: ";
-            cin >> otros;
+    // 3. GASTOS
+    do {
+        cout << "\n> GASTOS\n";
+        cout << "Alquiler o hipoteca: ";
+        if (!(cin >> alquiler)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
+        cout << "Luz, agua y gas: ";
+        if (!(cin >> suministros)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
+        cout << "Material escolar: ";
+        if (!(cin >> material_escolar)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
+        cout << "Gastos en estudios: ";
+        if (!(cin >> estudios)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
+        cout << "Otros gastos: ";
+        if (!(cin >> otros)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
 
-            cout << "  > ¿Deseas cambiar algún dato de los gastos? (1: Sí / 0: No): ";
-            cin >> correcto;
-            std::cin.ignore(10000, '\n');
+        cout << "  > ¿Deseas cambiar algún dato de los gastos? (1: Sí / 0: No): ";
+        cin >> correcto;
+        limpiarBufferLocal();
 
-            if (correcto == 1) cout << "[!] Reintentando gastos...\n";
-        } while (correcto != 0);
+        if (correcto == 1) cout << "[!] Reintentando gastos...\n";
+    } while (correcto != 0);
 
-        float ingresos_totales = sueldos + ayudas;
-        float gastos_totales = alquiler + suministros + material_escolar + estudios + otros;
+    float ingresos_totales = sueldos + ayudas;
+    float gastos_totales = alquiler + suministros + material_escolar + estudios + otros;
 
-        Beneficiario b(0, "", "", "", "", 0, adultos, ninos, ingresos_totales, gastos_totales);
-        b.evaluarBeneficiario();
+    // Crear el objeto beneficiario con los datos recopilados (Uso explícito del enum para evitar ambigüedad)
+    Beneficiario b(0, "", "", "", "", GestionONG::BENEFICIARIO, adultos, ninos, ingresos_totales, gastos_totales);
+    b.evaluarBeneficiario();
 
-        return b;
-    }
-   int actualizarDatosBeneficiario(int socketServidor, int id_beneficiario, const GestionONG::Beneficiario& b) {
-    // 1. Crear el paquete de red que vamos a enviar
+    return b;
+}
+
+// Envía los nuevos datos al servidor para que actualice la BD remota
+int actualizarDatosBeneficiario(int socketServidor, int id_beneficiario, const GestionONG::Beneficiario& b) {
     PaqueteRed paquete;
-    memset(&paquete, 0, sizeof(PaqueteRed)); // Limpiar memoria por seguridad
+    memset(&paquete, 0, sizeof(PaqueteRed)); 
 
-    // 2. Configurar la operación e ID
-    paquete.tipoOperacion = OP_REGISTRO_BENEFICIARIO; // Asegúrate de usar el enum correcto de tu Protocolo.h
+    // Configuramos la operación indicando que modificaremos las condiciones de este ID existente
+    paquete.tipoOperacion = OP_REGISTRO_BENEFICIARIO; 
     paquete.idUsuario = id_beneficiario;
 
-    // 3. Mapear los datos del objeto 'b' a la estructura 'economia' del paquete
-    // (Ajusta los nombres si en tu protocolo se llaman float sueldo/gastos en vez de ingresos)
+    // Mapeamos las propiedades del objeto b al paquete de red
     paquete.economia.sueldo = b.getIngresos(); 
     paquete.economia.otros_gastos = b.getGastos();
     paquete.economia.adultos = b.getNumAdultos();
     paquete.economia.ninos = b.getNumNinos();
 
-    // 4. Enviar el paquete al servidor
-    int bytesEnviados = send(socketServidor, (char*)&paquete, sizeof(PaqueteRed), 0);
-    if (bytesEnviados == -1) { // Error al enviar (SOCKET_ERROR)
-        return 0;
+    // Usamos enviarPeticionServidor que gestiona el ciclo de vida del socket automáticamente
+    PaqueteRed respuesta = enviarPeticionServidor(paquete);
+    
+    if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
+        return 1; // Éxito
     }
 
-    // 5. Esperar la respuesta del servidor para saber si todo salió bien en la BD
-    int bytesRecibidos = recv(socketServidor, (char*)&paquete, sizeof(PaqueteRed), 0);
-    if (bytesRecibidos > 0 && paquete.tipoOperacion == OP_RESPUESTA_OK) {
-        return 1; // Éxito, el servidor guardó los datos correctamente
-    }
-
-    return 0; // Falló el registro o el servidor devolvió un error
+    return 0; // Error
 }
 
 void verProximoRepartoComida(int socketServidor) {
-     PaqueteRed paquete;
+    PaqueteRed paquete;
     memset(&paquete, 0, sizeof(PaqueteRed));
-    paquete.tipoOperacion = OP_CONSULTAR_EVENTOS;
-    paquete.idUsuario = 0;
-    paquete.idEvento = -1; // -1 = COMIDA
+    paquete.tipoOperacion = OP_CONSULTAR_EVENTOS; 
+    paquete.idEvento = 999; // Flag indicador acordado para Comida
 
-    printf("\n--- PROXIMO REPARTO DE COMIDA ---\n");
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
-
     if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
-        printf("%s", respuesta.mensajeRespuesta);
-        printf("Los repartos de comida son CADA MARTES desde las 16:00 hasta las 20:00\n");
+        printf("%s\n", respuesta.mensajeRespuesta);
     } else {
-        printf("[Servidor]: %s\n", respuesta.mensajeRespuesta);
+        printf("[!] No se pudo obtener el horario de reparto de comida.\n");
     }
 }
 
-void verProximoRepartoRopa(int socketServidor, int id_beneficiario) {
+void verProximoRepartoRopa(int socketServidor, int id_perfil) {
     PaqueteRed paquete;
     memset(&paquete, 0, sizeof(PaqueteRed));
     paquete.tipoOperacion = OP_CONSULTAR_EVENTOS;
-    paquete.idUsuario = id_beneficiario;
-    paquete.idEvento = -2; // -2 = ROPA
-    
+    paquete.idUsuario = id_perfil;
+    paquete.idEvento = 888; // Flag indicador acordado para Ropa
 
-    printf("\n--- PROXIMO REPARTO DE ROPA ---\n");
+    // Corregida la asignación accidental previa
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
-
     if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
-        printf("%s", respuesta.mensajeRespuesta);
+        printf("%s\n", respuesta.mensajeRespuesta);
     } else {
-        printf("[Servidor]: %s\n", respuesta.mensajeRespuesta);
+        printf("[!] No se pudo obtener el horario de reparto de ropa.\n");
     }
 }
 
 void verTalleresProximos(int socketServidor) {
-     PaqueteRed paquete;
+    printf("\n--- CONSULTANDO PRÓXIMOS TALLERES Y EVENTOS ---\n");
+    
+    PaqueteRed paquete;
     memset(&paquete, 0, sizeof(PaqueteRed));
-    paquete.tipoOperacion = OP_CONSULTAR_EVENTOS;
-    paquete.idUsuario = 0;
-    paquete.idEvento = -999; // -999 = TALLERES
+    paquete.tipoOperacion = OP_VER_EVENTOS_DISPONIBLES; 
 
-    printf("\n--- LISTA DE PROXIMOS TALLERES ---\n");
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
 
     if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
-        printf("%s", respuesta.mensajeRespuesta);
+        // Imprime la tabla de texto construida dinámicamente por la base de datos remota
+        printf("%s\n", respuesta.mensajeRespuesta);
     } else {
-        printf("[Servidor]: %s\n", respuesta.mensajeRespuesta);
+        printf("[!] Error al recuperar los talleres: %s\n", respuesta.mensajeRespuesta);
     }
 }
 
 // ============================================================================
-// FUNCIONES AUXILIARES MATEMÁTICAS (Se quedan en el cliente, no usan BD)
+// FUNCIONES AUXILIARES MATEMÁTICAS (Se quedan en el cliente, locales)
 // ============================================================================
 
 float calcularAyudaDinero(Beneficiario b) {
@@ -201,28 +199,4 @@ void mostrarAyudaRopa(Beneficiario b) {
         printf("\n > ADULTOS: %d camisetas, %d pantalones", camAdultos, panAdultos);
     }
     printf("\n");
-}
-
-// 2. CAMBIADA A SOCKET: Envía los nuevos datos al servidor para que actualice la BD
-int actualizarDatosBeneficiario(int socketServidor, int id_beneficiario, Beneficiario b) {
-    PaqueteRed paquete;
-    memset(&paquete, 0, sizeof(PaqueteRed));
-
-    paquete.tipoOperacion = OP_REGISTRO_BENEFICIARIO; // Revisa tu enum para actualizar perfil
-    paquete.idUsuario = id_beneficiario;
-
-    // Pasamos los datos del objeto a la estructura del protocolo de red
-    paquete.economia.sueldo = b.getIngresos();
-    paquete.economia.otros_gastos = b.getGastos();
-    paquete.economia.adultos = b.getNumAdultos();
-    paquete.economia.ninos = b.getNumNinos();
-
-    int bytesEnviados = send(socketServidor, (char*)&paquete, sizeof(PaqueteRed), 0);
-    if (bytesEnviados == -1) return 0;
-
-    int bytesRecibidos = recv(socketServidor, (char*)&paquete, sizeof(PaqueteRed), 0);
-    if (bytesRecibidos > 0 && paquete.tipoOperacion == OP_RESPUESTA_OK) {
-        return 1; // Éxito
-    }
-    return 0; // Falló
 }

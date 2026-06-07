@@ -16,9 +16,9 @@ using namespace std;
 
 int tieneChoqueDeFechas(sqlite3* db, int id_voluntario, int id_evento_nuevo);
 int estaEventoLleno(sqlite3* db, int id_e);
-void verTalleresProximos(sqlite3* db, int socketCliente);
-void verProximoRepartoRopa(sqlite3* db, int id_beneficiario, int socketCliente);
-void verProximoRepartoComida(sqlite3* db, int socketCliente);
+void verTalleresProximos(sqlite3* db, PaqueteRed& paqueteOut);
+void verProximoRepartoRopa(sqlite3* db, PaqueteRed& paqueteIn, PaqueteRed& paqueteOut);
+void verProximoRepartoComida(sqlite3* db, PaqueteRed& paqueteOut);
 
 int main()
 {
@@ -127,7 +127,7 @@ int main()
                 else
                 {
                     registrarLog("LOGIN FALLIDO: " + string(paqueteRecibido.perfil.usuario) + " -> " + string(paqueteRespuesta.mensajeRespuesta));
-                }
+                }   
                 break;
             };
             case OP_REGISTRO_BENEFICIARIO:
@@ -234,57 +234,86 @@ int main()
                 break;
             }
 
-            case OP_CONSULTAR_EVENTOS:
-{
-    int filtro = paqueteRecibido.idEvento;
-
-    if (filtro == -999) {
-        verTalleresProximos(db, clientSocket);
-    } else if (filtro == -2) {
-        verProximoRepartoRopa(db, paqueteRecibido.idUsuario, clientSocket);
-    } else if (filtro == -1) {
-        verProximoRepartoComida(db, clientSocket);
-    } else if (filtro > 0) {
-        // Historial del voluntario — busca eventos PASADOS
-        sqlite3_stmt *stmt;
-        const char *sql =
-            "SELECT E.id_evento, E.descripcion, E.fecha_ini, E.tipo, E.material "
-            "FROM Evento E "
-            "JOIN Participaciones P ON E.id_evento = P.id_evento "
-            "WHERE P.id_voluntario = ? AND datetime(E.fecha_ini) < datetime('now') "
-            "ORDER BY E.fecha_ini DESC;";
-
-        string buffer = "";
-        char lineaFila[256];
-
-        if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
-            sqlite3_bind_int(stmt, 1, paqueteRecibido.idUsuario);
-
-            int count = 0;
-            while (sqlite3_step(stmt) == SQLITE_ROW) {
-                count++;
-                int id = sqlite3_column_int(stmt, 0);
-                const char *desc = (const char *)sqlite3_column_text(stmt, 1);
-                const char *fecha = (const char *)sqlite3_column_text(stmt, 2);
-                int tipo_int = sqlite3_column_int(stmt, 3);
-                int mat_int = sqlite3_column_int(stmt, 4);
-                const char *txtTipo = (tipo_int == 0) ? "Recogida" : "Reparto";
-                const char *txtMat = (mat_int == 0) ? "Ropa" : "Comida";
-                sprintf(lineaFila, "%-5d | %-12s | %-10s | %-18s | %s\n", id, txtTipo, txtMat, fecha, desc ? desc : "");
-                buffer += lineaFila;
-            }
-            if (count == 0) buffer += "No tienes eventos pasados registrados.\n";
-            sqlite3_finalize(stmt);
-
-            PaqueteRed resp;
-            memset(&resp, 0, sizeof(PaqueteRed));
-            resp.tipoOperacion = OP_RESPUESTA_OK;
-            strncpy(resp.mensajeRespuesta, buffer.c_str(), sizeof(resp.mensajeRespuesta) - 1);
-            send(clientSocket, (char*)&resp, sizeof(PaqueteRed), 0);
+           //  BLOQUE SWITCH CORREGIDO EN EL SERVIDOR (main_servidor.cpp)
+case OP_CONSULTAR_EVENTOS:
+    {
+        // 🌟 SI QUIEN SOLICITA ES UN BENEFICIARIO (Rol 3)
+        if (paqueteRecibido.tipoUsuario == 3) 
+        {
+            // ✔️ CORREGIDO: Cambiado paqueteIn por paqueteRecibido
+            registrarLog("Beneficiario ID " + to_string(paqueteRecibido.idUsuario) + " consulta horarios de ayuda.");
+            
+            // 1. Obtenemos el texto de la comida
+            PaqueteRed ayudaComida;
+            memset(&ayudaComida, 0, sizeof(PaqueteRed));
+            verProximoRepartoComida(db, ayudaComida);
+            
+            // 2. Obtenemos el texto de la ropa
+            PaqueteRed ayudaRopa;
+            memset(&ayudaRopa, 0, sizeof(PaqueteRed));
+            // ✔️ CORREGIDO: Cambiado paqueteIn por paqueteRecibido
+            verProximoRepartoRopa(db, paqueteRecibido, ayudaRopa);
+            
+            // 3. Fusionamos los mensajes en el paquete oficial de respuesta (paqueteRespuesta)
+            paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+            string total = ayudaComida.mensajeRespuesta;
+            total += ayudaRopa.mensajeRespuesta;
+            
+            strncpy(paqueteRespuesta.mensajeRespuesta, total.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+            
+            // Enviamos usando clientSocket
+            send(clientSocket, (char*)&paqueteRespuesta, sizeof(PaqueteRed), 0);
         }
+        else 
+        {
+            // 🌟 LOGICA ORIGINAL PARA EL VOLUNTARIO (Historial de eventos)
+            registrarLog("Voluntario ID " + to_string(paqueteRecibido.idUsuario) + " solicita historial de eventos.");
+            
+            sqlite3_stmt *stmt;
+            const char *sql_hist =
+                "SELECT E.id_evento, E.descripcion, E.fecha_ini, E.tipo FROM Evento E "
+                "JOIN Participaciones P ON E.id_evento = P.id_evento "
+                "WHERE P.id_voluntario = ? AND date(E.fecha_ini) < date('now');";
+
+            string bufferResultados = "";
+            char lineaFila[256];
+
+            if (sqlite3_prepare_v2(db, sql_hist, -1, &stmt, 0) == SQLITE_OK)
+            {
+                sqlite3_bind_int(stmt, 1, paqueteRecibido.idUsuario);
+                int encontrados = 0;
+                while (sqlite3_step(stmt) == SQLITE_ROW)
+                {
+                    encontrados = 1;
+                    int id = sqlite3_column_int(stmt, 0);
+                    const char *desc = (const char *)sqlite3_column_text(stmt, 1);
+                    const char *fecha = (const char *)sqlite3_column_text(stmt, 2);
+                    int tipo_int = sqlite3_column_int(stmt, 3);
+                    const char *txtTipo = (tipo_int == 1) ? "Recogida" : "Reparto";
+
+                    sprintf(lineaFila, "%-4d | %-10s | %-12s | %s\n", id, txtTipo, fecha, desc ? desc : "");
+                    bufferResultados += lineaFila;
+                }
+
+                if (!encontrados) {
+                    bufferResultados += "[INFO] No tienes eventos pasados registrados.\n";
+                }
+                sqlite3_finalize(stmt);
+
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                strncpy(paqueteRespuesta.mensajeRespuesta, bufferResultados.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+            }
+            else
+            {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                sprintf(paqueteRespuesta.mensajeRespuesta, "Error base datos historial: %s", sqlite3_errmsg(db));
+            }
+
+            // Enviamos de vuelta al voluntario usando clientSocket
+            send(clientSocket, (char*)&paqueteRespuesta, sizeof(PaqueteRed), 0);
+        }
+        break;
     }
-    break;
-}
 
                 // ... Dentro del switch (paqueteRecibido.tipoOperacion) en main_servidor.cpp
 
@@ -338,8 +367,8 @@ int main()
 
             if (rc == SQLITE_DONE || rc == SQLITE_OK) {
                 paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                const char* txtTipo = (selectComida == 0) ? "Perecedera" : "No Perecedera";
-                sprintf(paqueteRespuesta.mensajeRespuesta, "\n[OK] Servidor: Recibidos %.2f kg de comida (%s).\n", kilos, txtTipo);
+                const char* txtTipo = (selectComida == 0) ? "" : "";
+                sprintf(paqueteRespuesta.mensajeRespuesta, "\n[OK] Servidor: Recibidos %.2f kg de comida.\n", kilos);
                 registrarLog("ÉXITO: Donacion de comida registrada para el Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             } else {
                 paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
@@ -559,57 +588,70 @@ int main()
                 }
                 break;
             }
-            case OP_VER_EVENTOS_DISPONIBLES:
+            // Dejas el case OP_VER_EVENTOS_DISPONIBLES intacto arriba... y añades:
+
+case OP_VER_EVENTOS_DISPONIBLES:
+    {
+        // Comprobamos si el usuario que hace la petición es un Beneficiario (Rol 3 en tu enum TipoUsuario)
+        if (paqueteRecibido.tipoUsuario == 3) 
+        {
+            registrarLog("Beneficiario ID " + to_string(paqueteRecibido.idUsuario) + " solicita ver talleres disponibles.");
+            
+            // 🌟 AQUÍ LLAMAS A LA FUNCIÓN PASÁNDOLE EL PAQUETE DE RESPUETA
+            verTalleresProximos(db, paqueteRespuesta);
+        } 
+        else 
+        {
+            // Aquí se queda intacto tu código original para los Voluntarios (Módulo de voluntariado)
+            registrarLog("Usuario ID " + to_string(paqueteRecibido.idUsuario) + " solicita ver eventos disponibles.");
+
+            sqlite3_stmt *stmt;
+            const char *sql_list =
+                "SELECT id_evento, descripcion, fecha_ini, tipo, material FROM Evento "
+                "WHERE date(fecha_ini) >= date('now') "
+                "AND id_evento NOT IN (SELECT id_evento FROM Participaciones WHERE id_voluntario = ?);";
+
+            string bufferResultados = "";
+            char lineaFila[256];
+
+            if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK)
             {
-                registrarLog("Usuario ID " + to_string(paqueteRecibido.idUsuario) + " solicita ver eventos disponibles.");
+                sqlite3_bind_int(stmt, 1, paqueteRecibido.idUsuario);
 
-                sqlite3_stmt *stmt;
-                // Tu consulta SQL exacta
-                const char *sql_list =
-                    "SELECT id_evento, descripcion, fecha_ini, tipo, material FROM Evento "
-                    "WHERE date(fecha_ini) >= date('now') "
-                    "AND id_evento NOT IN (SELECT id_evento FROM Participaciones WHERE id_voluntario = ?);";
-
-                string bufferResultados = "";
-                char lineaFila[256];
-
-                if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK)
+                int encontrados = 0;
+                while (sqlite3_step(stmt) == SQLITE_ROW)
                 {
-                    sqlite3_bind_int(stmt, 1, paqueteRecibido.idUsuario);
+                    encontrados = 1;
+                    int id = sqlite3_column_int(stmt, 0);
+                    const char *desc = (const char *)sqlite3_column_text(stmt, 1);
+                    const char *fecha = (const char *)sqlite3_column_text(stmt, 2);
+                    int tipo_int = sqlite3_column_int(stmt, 3);
+                    int mat_int = sqlite3_column_int(stmt, 4);
 
-                    int encontrados = 0;
-                    while (sqlite3_step(stmt) == SQLITE_ROW)
-                    {
-                        encontrados = 1;
-                        int id = sqlite3_column_int(stmt, 0);
-                        const char *desc = (const char *)sqlite3_column_text(stmt, 1);
-                        const char *fecha = (const char *)sqlite3_column_text(stmt, 2);
-                        int tipo_int = sqlite3_column_int(stmt, 3);
-                        int mat_int = sqlite3_column_int(stmt, 4);
+                    const char *txtTipo = (tipo_int == 0) ? "Recogida" : "Reparto";
+                    const char *txtMat = (mat_int == 0) ? "Ropa" : "Comida";
 
-                        const char *txtTipo = (tipo_int == 0) ? "Recogida" : "Reparto";
-                        const char *txtMat = (mat_int == 0) ? "Ropa" : "Comida";
-
-                        sprintf(lineaFila, "%-4d | %-10s | %-10s | %-18s | %s\n", id, txtTipo, txtMat, fecha, desc ? desc : "");
-                        bufferResultados += lineaFila;
-                    }
-
-                    if (!encontrados)
-                    {
-                        bufferResultados += "[INFO] No hay eventos nuevos disponibles para ti en este momento.\n";
-                    }
-                    sqlite3_finalize(stmt);
-
-                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                    strncpy(paqueteRespuesta.mensajeRespuesta, bufferResultados.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+                    sprintf(lineaFila, "%-4d | %-10s | %-10s | %-18s | %s\n", id, txtTipo, txtMat, fecha, desc ? desc : "");
+                    bufferResultados += lineaFila;
                 }
-                else
+
+                if (!encontrados)
                 {
-                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-                    sprintf(paqueteRespuesta.mensajeRespuesta, "Error al consultar eventos en servidor: %s", sqlite3_errmsg(db));
+                    bufferResultados += "[INFO] No hay eventos nuevos disponibles para ti en este momento.\n";
                 }
-                break;
+                sqlite3_finalize(stmt);
+
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                strncpy(paqueteRespuesta.mensajeRespuesta, bufferResultados.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
             }
+            else
+            {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                sprintf(paqueteRespuesta.mensajeRespuesta, "Error al consultar eventos en servidor: %s", sqlite3_errmsg(db));
+            }
+        }
+        break;
+    }
 
             case OP_INSCRIBIR_EN_EVENTO:
             {
@@ -775,198 +817,109 @@ int estaEventoLleno(sqlite3 *db, int id_e)
 }
 
 
-    void verProximoRepartoComida(sqlite3 *db, int socketCliente) {
-    sqlite3_stmt *stmt;
-    const char *sql = "SELECT descripcion, fecha_ini, fecha_fin FROM Evento "
-                      "WHERE material = 1 AND tipo = 1 "
-                      "AND date(fecha_ini) >= date('now') "
-                      "ORDER BY fecha_ini ASC LIMIT 1;";
-
-    PaqueteRed respuesta;
-    memset(&respuesta, 0, sizeof(PaqueteRed));
-    respuesta.tipoOperacion = OP_RESPUESTA_OK;
-
-    // Fabricamos el string de respuesta
-    string buffer = "";
-
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            char temp[256];
-            snprintf(temp, sizeof(temp), "Evento: %s\nFecha de inicio: %s\nFecha final: %s\n",
-                     sqlite3_column_text(stmt, 0),
-                     sqlite3_column_text(stmt, 1),
-                     sqlite3_column_text(stmt, 2));
-            buffer += temp;
-        } else {
-            buffer += "No hay repartos de comida programados proximamente.\n";
-        }
-    } else {
-        respuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-        snprintf(respuesta.mensajeRespuesta, sizeof(respuesta.mensajeRespuesta), "[ERROR] Error al consultar: %s", sqlite3_errmsg(db));
-        send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
-        sqlite3_finalize(stmt);
-        return;
-    }
-    sqlite3_finalize(stmt);
-
-    // Copiamos el texto acumulado al paquete de red y enviamos
-    strncpy(respuesta.mensajeRespuesta, buffer.c_str(), sizeof(respuesta.mensajeRespuesta) - 1);
-    send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
-}
-
-void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario, int socketCliente) {
-    sqlite3_stmt *stmt;
-    char fecha_corte[11] = "1900-01-01";
-    int tiene_registro = 0;
-    int id_usuario = -1;
-
-    PaqueteRed respuesta;
-    memset(&respuesta, 0, sizeof(PaqueteRed));
-    respuesta.tipoOperacion = OP_RESPUESTA_OK;
-    string buffer = "";
-
-    // 1. Obtener el id_usuario asociado al id_beneficiario
-    const char *sql_get_user = "SELECT id_usuario FROM Beneficiario WHERE id_beneficiario = ?;";
-    if (sqlite3_prepare_v2(db, sql_get_user, -1, &stmt, 0) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, id_beneficiario);
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            id_usuario = sqlite3_column_int(stmt, 0);
-        }
-    } else {
-        cout << "[DEBUG ERROR] SQL Usuario: " << sqlite3_errmsg(db) << endl;
-    }
-    sqlite3_finalize(stmt);
-
-    if (id_usuario == -1) {
-        respuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-        strcpy(respuesta.mensajeRespuesta, "[ERROR] No se encontro el usuario asociado en el sistema.\n");
-        send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
-        return;
-    }
-
-    // 2. Comprobar la última vez que recogió ropa
-    const char *sql_ultima = "SELECT MAX(e.fecha_ini) FROM Evento e "
-                             "JOIN Participaciones p ON e.id_evento = p.id_evento "
-                             "WHERE p.id_usuario = ? AND e.material = 0 AND e.tipo = 0;";
-
-    if (sqlite3_prepare_v2(db, sql_ultima, -1, &stmt, 0) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, id_usuario);
-        if (sqlite3_step(stmt) == SQLITE_ROW && sqlite3_column_text(stmt, 0) != NULL) {
-            const char *ultima_fecha = (const char *)sqlite3_column_text(stmt, 0);
-            tiene_registro = 1;
-
-            sqlite3_stmt *stmt_calc;
-            const char *sql_meses = "SELECT date(?, '+6 months');";
-            if (sqlite3_prepare_v2(db, sql_meses, -1, &stmt_calc, 0) == SQLITE_OK) {
-                sqlite3_bind_text(stmt_calc, 1, ultima_fecha, -1, SQLITE_STATIC);
-                if (sqlite3_step(stmt_calc) == SQLITE_ROW) {
-                    strcpy(fecha_corte, (const char *)sqlite3_column_text(stmt_calc, 0));
-                }
-                sqlite3_finalize(stmt_calc);
-            }
-        }
-    } else {
-        cout << "[DEBUG ERROR] SQL Ultima Participacion: " << sqlite3_errmsg(db) << endl;
-    }
-    sqlite3_finalize(stmt);
-
-    // 3. Construir la consulta del próximo evento evitando errores de concatenación
-    string sql_final = "SELECT descripcion, fecha_ini, fecha_fin FROM Evento "
-                       "WHERE material = 0 AND tipo = 0 "
-                       "AND date(fecha_ini) >= date('now') ";
-
-    if (tiene_registro) {
-        sql_final += "AND date(fecha_ini) >= date('" + string(fecha_corte) + "') ";
-    }
+    void verProximoRepartoComida(sqlite3* db, PaqueteRed& paqueteOut) {
+    paqueteOut.tipoOperacion = OP_RESPUESTA_OK;
     
-    sql_final += "ORDER BY fecha_ini ASC LIMIT 1;";
+    string mensaje = "\n=========================================================\n";
+    mensaje += "            HORARIOS DE REPARTO DE COMIDA (SEMANAL)       \n";
+    mensaje += "=========================================================\n";
+    mensaje += " > Cada Martes y Jueves de 09:00 a 13:30.\n";
+    mensaje += " > Lugar: Almacen Central de la ONG (Calle Solidaridad n4).\n";
+    mensaje += " * Recuerda traer tu tarjeta de beneficiario original.\n";
+    mensaje += "=========================================================\n";
 
-    // 4. Preparar y ejecutar la consulta final
-    if (sqlite3_prepare_v2(db, sql_final.c_str(), -1, &stmt, 0) == SQLITE_OK) {
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            char temp[512];
-            snprintf(temp, sizeof(temp), "Evento: %s\nFecha inicio: %s\nFecha fin: %s\n",
-                     sqlite3_column_text(stmt, 0) ? (const char*)sqlite3_column_text(stmt, 0) : "Sin nombre",
-                     sqlite3_column_text(stmt, 1) ? (const char*)sqlite3_column_text(stmt, 1) : "---",
-                     sqlite3_column_text(stmt, 2) ? (const char*)sqlite3_column_text(stmt, 2) : "---");
-            buffer += temp;
-            if (tiene_registro) {
-                buffer += "Tu proximo reparto estara disponible a partir de: " + string(fecha_corte) + "\n";
-                buffer += "(Deben pasar 6 meses desde tu ultima recogida)\n";
-            }
-        } else {
-            if (tiene_registro) {
-                buffer += "Aun no puedes recoger ropa. Fecha disponible a partir de: " + string(fecha_corte) + "\n";
-            } else {
-                buffer += "No hay repartos de ropa programados en este momento.\n";
-            }
-        }
-    } else {
-        // Imprimimos el error real en la consola del servidor para poder verlo
-        cout << "[DEBUG ERROR] SQL Consulta Final Fallida: " << sqlite3_errmsg(db) << endl;
-        
-        respuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-        snprintf(respuesta.mensajeRespuesta, sizeof(respuesta.mensajeRespuesta), 
-                 "[ERROR] Error en el motor de eventos de la BD: %s", sqlite3_errmsg(db));
-        send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
-        sqlite3_finalize(stmt);
-        return;
-    }
-    sqlite3_finalize(stmt);
-
-    // Enviar respuesta exitosa estructurada al cliente
-    strncpy(respuesta.mensajeRespuesta, buffer.c_str(), sizeof(respuesta.mensajeRespuesta) - 1);
-    send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
+    snprintf(paqueteOut.mensajeRespuesta, sizeof(paqueteOut.mensajeRespuesta), "%s", mensaje.c_str());
 }
 
-void verTalleresProximos(sqlite3 *db, int socketCliente) {
+void verProximoRepartoRopa(sqlite3* db, PaqueteRed& paqueteIn, PaqueteRed& paqueteOut) {
     sqlite3_stmt *stmt;
-    const char *sql = "SELECT tipo, descripcion, fecha_ini, fecha_fin FROM Taller "
-                      "WHERE date(fecha_ini) >= date('now') "
-                      "ORDER BY fecha_ini ASC;";
-
-    PaqueteRed respuesta;
-    memset(&respuesta, 0, sizeof(PaqueteRed));
-    respuesta.tipoOperacion = OP_RESPUESTA_OK;
-
-    string buffer = "";
-    char header[256];
-    snprintf(header, sizeof(header), "%-15s | %-25s | %-17s | %-17s\n", "TIPO", "DESCRIPCION", "INICIO", "FIN");
-    buffer += header;
-    buffer += "----------------------------------------------------------------------------------\n";
+    // Buscamos cuántos adultos y niños tiene el beneficiario en la BD
+    const char *sql = "SELECT num_adultos, num_ninos FROM Beneficiario WHERE id_beneficiario = ?;";
+    
+    paqueteOut.tipoOperacion = OP_RESPUESTA_OK;
+    int adultos = 0, ninos = 0;
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
-        int hay_talleres = 0;
-        while (sqlite3_step(stmt) == SQLITE_ROW) {
-            hay_talleres = 1;
-            const char *tipo = (const char *)sqlite3_column_text(stmt, 0);
-            const char *desc = (const char *)sqlite3_column_text(stmt, 1);
-            const char *ini  = (const char *)sqlite3_column_text(stmt, 2);
-            const char *fin  = (const char *)sqlite3_column_text(stmt, 3);
-
-            char fila[256];
-            snprintf(fila, sizeof(fila), "%-15s | %-25s | %-17s | %-17s\n", 
-                     tipo ? tipo : "General", 
-                     desc ? desc : "Sin descripcion", 
-                     ini  ? ini  : "---", 
-                     fin  ? fin  : "---");
-            buffer += fila;
+        sqlite3_bind_int(stmt, 1, paqueteIn.idUsuario);
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            adultos = sqlite3_column_int(stmt, 0);
+            ninos = sqlite3_column_int(stmt, 1);
         }
-        if (!hay_talleres) {
-            buffer += "No hay talleres programados para los proximos dias.\n";
+        sqlite3_finalize(stmt);
+    } else {
+        // Si no se encuentra o hay un error, usamos los datos que venían en la sesión por si acaso
+        adultos = paqueteIn.economia.adultos;
+        ninos = paqueteIn.economia.ninos;
+    }
+
+    // Baremo de ropa personalizado
+    int camNinos = ninos * 3;
+    int panNinos = ninos * 2;
+    int sudNinos = ninos * 1;
+    int camAdultos = adultos * 2;
+    int panAdultos = adultos * 1;
+
+    string mensaje = "\n=========================================================\n";
+    mensaje += "            HORARIOS Y PREVISION DE ENTREGA DE ROPA       \n";
+    mensaje += "=========================================================\n";
+    mensaje += " > Primer Lunes de cada mes de 16:00 a 19:00.\n";
+    mensaje += "---------------------------------------------------------\n";
+    
+    char fila[256];
+    if (ninos > 0) {
+        snprintf(fila, sizeof(fila), "  -> NINOS/AS (%d): %d camisetas, %d pantalones, %d sudaderas.\n", ninos, camNinos, panNinos, sudNinos);
+        mensaje += fila;
+    }
+    if (adultos > 0) {
+        snprintf(fila, sizeof(fila), "  -> ADULTOS  (%d): %d camisetas, %d pantalones.\n", adultos, camAdultos, panAdultos);
+        mensaje += fila;
+    }
+    mensaje += "=========================================================\n";
+
+    snprintf(paqueteOut.mensajeRespuesta, sizeof(paqueteOut.mensajeRespuesta), "%s", mensaje.c_str());
+}
+
+void verTalleresProximos(sqlite3* db, PaqueteRed& paqueteOut) {
+    sqlite3_stmt* stmt;
+    // Query para obtener los talleres programados
+    const char* sql = "SELECT id_taller, nombre_taller, fecha, cupo_maximo FROM Taller;";
+    
+    // Inicializamos el paquete de salida por defecto con un mensaje de error
+    paqueteOut.tipoOperacion = OP_RESPUESTA_ERROR;
+    strcpy(paqueteOut.mensajeRespuesta, "[!] No hay talleres disponibles o ocurrió un error en el servidor.");
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        string tabla = "\n=========================================================\n";
+        tabla += "                TALLERES Y EVENTOS DISPONIBLES            \n";
+        tabla += "=========================================================\n";
+        tabla += " ID   | Nombre del Taller              | Fecha      | Cupo \n";
+        tabla += "---------------------------------------------------------\n";
+
+        char fila[256];
+        bool f_encontradas = false;
+
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            f_encontradas = true;
+            int id = sqlite3_column_int(stmt, 0);
+            const char* nombre = (const char*)sqlite3_column_text(stmt, 1);
+            const char* fecha = (const char*)sqlite3_column_text(stmt, 2);
+            int cupo = sqlite3_column_int(stmt, 3);
+
+            // Formateamos la fila alineada en columnas limpias
+            snprintf(fila, sizeof(fila), " %-4d | %-30s | %-10s | %-4d \n", id, nombre, fecha, cupo);
+            tabla += fila;
+        }
+        tabla += "=========================================================\n";
+        sqlite3_finalize(stmt);
+
+        if (f_encontradas) {
+            paqueteOut.tipoOperacion = OP_RESPUESTA_OK;
+            // Copiamos la tabla generada en el buffer del paquete de red de forma segura
+            snprintf(paqueteOut.mensajeRespuesta, sizeof(paqueteOut.mensajeRespuesta), "%s", tabla.c_str());
         }
     } else {
-        respuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-        snprintf(respuesta.mensajeRespuesta, sizeof(respuesta.mensajeRespuesta), "[ERROR] Error en la tabla Taller: %s", sqlite3_errmsg(db));
-        send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
-        sqlite3_finalize(stmt);
-        return;
+        registrarLog("ERROR SQL: Fallo al preparar la consulta de verTalleresProximos.");
     }
-    sqlite3_finalize(stmt);
-    buffer += "----------------------------------------------------------------------------------\n";
-
-    strncpy(respuesta.mensajeRespuesta, buffer.c_str(), sizeof(respuesta.mensajeRespuesta) - 1);
-    send(socketCliente, (char*)&respuesta, sizeof(PaqueteRed), 0);
 }
     // ============================================================================
     // FUNCIONES AUXILIARES MATEMÁTICAS Y DE BASE DE DATOS

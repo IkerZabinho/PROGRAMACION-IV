@@ -317,3 +317,279 @@
 [Sat Jun 06 11:37:27 2026] Cliente conectado al socket.
 [Sat Jun 06 11:37:27 2026] Usuario consulta remotamente las recogidas de ropa activas.
 [Sat Jun 06 11:37:27 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:28:44 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 08:28:44 2026] Cargando configuracion...
+[Sun Jun  7 08:28:44 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 08:28:44 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 08:29:16 2026] Cliente conectado al socket.
+[Sun Jun  7 08:29:16 2026] Procesando Login Real para: juneza
+[Sun Jun  7 08:29:16 2026] LOGIN EXITOSO: juneza (ID: 42)
+[Sun Jun  7 08:29:16 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:29:43 2026] Cliente conectado al socket.
+[Sun Jun  7 08:29:43 2026] Peticion recibida: Registrar donacion de dinero del Usuario ID: 42
+[Sun Jun  7 08:29:43 2026] ÉXITO: Donacion de dinero registrada para el Usuario ID: 42
+[Sun Jun  7 08:29:43 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:29:48 2026] Cliente conectado al socket.
+[Sun Jun  7 08:29:48 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Sun Jun  7 08:29:48 2026] ÉXITO: Historial enviado (4 filas) al Usuario ID: 42
+[Sun Jun  7 08:29:48 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:30:05 2026] Cliente conectado al socket.
+[Sun Jun  7 08:30:05 2026] Peticion recibida: Registrar donacion de comida del Usuario ID: 42
+[Sun Jun  7 08:30:05 2026] ÉXITO: Donacion de comida registrada para el Usuario ID: 42
+[Sun Jun  7 08:30:05 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:30:20 2026] Cliente conectado al socket.
+[Sun Jun  7 08:30:20 2026] Peticion recibida: Registrar donacion de ropa del Usuario ID: 42
+[Sun Jun  7 08:30:20 2026] ÉXITO: Donacion de ropa registrada para el Usuario ID: 42
+[Sun Jun  7 08:30:20 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:30:23 2026] Cliente conectado al socket.
+[Sun Jun  7 08:30:23 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Sun Jun  7 08:30:23 2026] ÉXITO: Historial enviado (6 filas) al Usuario ID: 42
+[Sun Jun  7 08:30:23 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:33:00 2026] Cliente conectado al socket.
+[Sun Jun  7 08:33:00 2026] Procesando Login Real para: oihanetxe
+[Sun Jun  7 08:33:00 2026] LOGIN EXITOSO: oihanetxe (ID: 43)
+[Sun Jun  7 08:33:00 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:33:09 2026] Cliente conectado al socket.
+[Sun Jun  7 08:33:09 2026] Procesando Login Real para: a
+[Sun Jun  7 08:33:09 2026] LOGIN EXITOSO: a (ID: 41)
+[Sun Jun  7 08:33:09 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:33:40 2026] Cliente conectado al socket.
+[Sun Jun  7 08:33:40 2026] Procesando registro de Beneficiario: ikerz
+[Sun Jun  7 08:33:40 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Sun Jun  7 08:33:40 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:33:44 2026] Cliente conectado al socket.
+[Sun Jun  7 08:33:44 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 08:33:44 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 08:33:44 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:34:29 2026] Cliente conectado al socket.
+[Sun Jun  7 08:34:29 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:34:29 2026] Cliente conectado al socket.
+[Sun Jun  7 08:34:29 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:34:32 2026] Cliente conectado al socket.
+[Sun Jun  7 08:34:32 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:36:17 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 08:36:17 2026] Cargando configuracion...
+[Sun Jun  7 08:36:17 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 08:36:17 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 08:36:52 2026] Cliente conectado al socket.
+[Sun Jun  7 08:36:52 2026] Procesando Login Real para: ikez
+[Sun Jun  7 08:36:52 2026] LOGIN FALLIDO: ikez -> [ERROR] El usuario no existe.
+[Sun Jun  7 08:36:52 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:36:58 2026] Cliente conectado al socket.
+[Sun Jun  7 08:36:58 2026] Procesando Login Real para: juneza
+[Sun Jun  7 08:36:58 2026] LOGIN EXITOSO: juneza (ID: 42)
+[Sun Jun  7 08:36:58 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:37:05 2026] Cliente conectado al socket.
+[Sun Jun  7 08:37:05 2026] Peticion recibida: Registrar donacion de dinero del Usuario ID: 42
+[Sun Jun  7 08:37:05 2026] ÉXITO: Donacion de dinero registrada para el Usuario ID: 42
+[Sun Jun  7 08:37:05 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:37:16 2026] Cliente conectado al socket.
+[Sun Jun  7 08:37:16 2026] Peticion recibida: Registrar donacion de comida del Usuario ID: 42
+[Sun Jun  7 08:37:16 2026] ÉXITO: Donacion de comida registrada para el Usuario ID: 42
+[Sun Jun  7 08:37:16 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:38:09 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 08:38:09 2026] Cargando configuracion...
+[Sun Jun  7 08:38:09 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 08:38:09 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 08:38:36 2026] Cliente conectado al socket.
+[Sun Jun  7 08:38:36 2026] Procesando Login Real para: juneza
+[Sun Jun  7 08:38:36 2026] LOGIN EXITOSO: juneza (ID: 42)
+[Sun Jun  7 08:38:36 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:38:43 2026] Cliente conectado al socket.
+[Sun Jun  7 08:38:43 2026] Peticion recibida: Registrar donacion de comida del Usuario ID: 42
+[Sun Jun  7 08:38:43 2026] ÉXITO: Donacion de comida registrada para el Usuario ID: 42
+[Sun Jun  7 08:38:43 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:38:49 2026] Cliente conectado al socket.
+[Sun Jun  7 08:38:49 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Sun Jun  7 08:38:49 2026] ÉXITO: Historial enviado (9 filas) al Usuario ID: 42
+[Sun Jun  7 08:38:49 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:39:02 2026] Cliente conectado al socket.
+[Sun Jun  7 08:39:02 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 08:39:02 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 08:39:02 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:39:07 2026] Cliente conectado al socket.
+[Sun Jun  7 08:39:07 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:39:07 2026] Cliente conectado al socket.
+[Sun Jun  7 08:39:07 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:39:12 2026] Cliente conectado al socket.
+[Sun Jun  7 08:39:12 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:39:24 2026] Cliente conectado al socket.
+[Sun Jun  7 08:39:24 2026] Cliente desconectado del socket.
+[Sun Jun  7 08:39:24 2026] Cliente conectado al socket.
+[Sun Jun  7 08:39:24 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:02:42 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 09:02:42 2026] Cargando configuracion...
+[Sun Jun  7 09:02:42 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 09:02:42 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 09:03:09 2026] Cliente conectado al socket.
+[Sun Jun  7 09:03:09 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 09:03:09 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 09:03:09 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:03:11 2026] Cliente conectado al socket.
+[Sun Jun  7 09:03:11 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:03:11 2026] Cliente conectado al socket.
+[Sun Jun  7 09:03:11 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:03:15 2026] Cliente conectado al socket.
+[Sun Jun  7 09:03:15 2026] Usuario ID 0 solicita ver eventos disponibles.
+[Sun Jun  7 09:03:15 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:03:21 2026] Cliente conectado al socket.
+[Sun Jun  7 09:03:21 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:03:21 2026] Cliente conectado al socket.
+[Sun Jun  7 09:03:21 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:09:06 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 09:09:06 2026] Cargando configuracion...
+[Sun Jun  7 09:09:06 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 09:09:06 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 09:09:27 2026] Cliente conectado al socket.
+[Sun Jun  7 09:09:27 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 09:09:27 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 09:09:27 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:09:40 2026] Cliente conectado al socket.
+[Sun Jun  7 09:09:40 2026] Usuario ID 0 solicita ver eventos disponibles.
+[Sun Jun  7 09:09:40 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:09:44 2026] Cliente conectado al socket.
+[Sun Jun  7 09:09:44 2026] Beneficiario ID 45 consulta horarios de ayuda.
+[Sun Jun  7 09:09:44 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:10:12 2026] Cliente conectado al socket.
+[Sun Jun  7 09:10:12 2026] Procesando registro de Beneficiario: 
+[Sun Jun  7 09:10:12 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Sun Jun  7 09:10:12 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:10:20 2026] Cliente conectado al socket.
+[Sun Jun  7 09:10:20 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 09:10:20 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 09:10:20 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:16:23 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 09:16:23 2026] Cargando configuracion...
+[Sun Jun  7 09:16:23 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 09:16:23 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 09:16:54 2026] Cliente conectado al socket.
+[Sun Jun  7 09:16:54 2026] Procesando Login Real para: ikerza
+[Sun Jun  7 09:16:54 2026] LOGIN FALLIDO: ikerza -> [ERROR] El usuario no existe.
+[Sun Jun  7 09:16:54 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:17:08 2026] Cliente conectado al socket.
+[Sun Jun  7 09:17:08 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 09:17:08 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 09:17:08 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:17:10 2026] Cliente conectado al socket.
+[Sun Jun  7 09:17:10 2026] Beneficiario ID 45 consulta horarios de ayuda.
+[Sun Jun  7 09:17:10 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:17:14 2026] Cliente conectado al socket.
+[Sun Jun  7 09:17:14 2026] Usuario ID 0 solicita ver eventos disponibles.
+[Sun Jun  7 09:17:14 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:17:15 2026] Cliente conectado al socket.
+[Sun Jun  7 09:17:15 2026] Beneficiario ID 45 consulta horarios de ayuda.
+[Sun Jun  7 09:17:15 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:23:33 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 09:23:33 2026] Cargando configuracion...
+[Sun Jun  7 09:23:33 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 09:23:33 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 09:24:00 2026] Cliente conectado al socket.
+[Sun Jun  7 09:24:00 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 09:24:00 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 09:24:00 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:24:03 2026] Cliente conectado al socket.
+[Sun Jun  7 09:24:03 2026] Voluntario ID 45 solicita historial de eventos.
+[Sun Jun  7 09:24:03 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:43:33 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 09:43:33 2026] Cargando configuracion...
+[Sun Jun  7 09:43:33 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 09:43:33 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 09:43:53 2026] Cliente conectado al socket.
+[Sun Jun  7 09:43:53 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 09:43:53 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 09:43:53 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:43:59 2026] Cliente conectado al socket.
+[Sun Jun  7 09:43:59 2026] Beneficiario ID 45 consulta horarios de ayuda.
+[Sun Jun  7 09:43:59 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:44:21 2026] Cliente conectado al socket.
+[Sun Jun  7 09:44:21 2026] Usuario ID 0 solicita ver eventos disponibles.
+[Sun Jun  7 09:44:21 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:46:54 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 09:46:54 2026] Cargando configuracion...
+[Sun Jun  7 09:46:54 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 09:46:54 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 09:47:20 2026] Cliente conectado al socket.
+[Sun Jun  7 09:47:20 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 09:47:20 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 09:47:20 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:47:25 2026] Cliente conectado al socket.
+[Sun Jun  7 09:47:25 2026] Beneficiario ID 45 consulta horarios de ayuda.
+[Sun Jun  7 09:47:25 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:51:47 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 09:51:47 2026] Cargando configuracion...
+[Sun Jun  7 09:51:47 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 09:51:47 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 09:52:17 2026] Cliente conectado al socket.
+[Sun Jun  7 09:52:17 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 09:52:17 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 09:52:17 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:52:24 2026] Cliente conectado al socket.
+[Sun Jun  7 09:52:24 2026] Beneficiario ID 45 consulta horarios de ayuda.
+[Sun Jun  7 09:52:24 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:52:31 2026] Cliente conectado al socket.
+[Sun Jun  7 09:52:31 2026] Usuario ID 0 solicita ver eventos disponibles.
+[Sun Jun  7 09:52:31 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:54:45 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 09:54:45 2026] Cargando configuracion...
+[Sun Jun  7 09:54:45 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 09:54:45 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 09:55:14 2026] Cliente conectado al socket.
+[Sun Jun  7 09:55:14 2026] Procesando Login Real para: ikez
+[Sun Jun  7 09:55:14 2026] LOGIN FALLIDO: ikez -> [ERROR] El usuario no existe.
+[Sun Jun  7 09:55:14 2026] Cliente desconectado del socket.
+[Sun Jun  7 09:55:22 2026] Cliente conectado al socket.
+[Sun Jun  7 09:55:22 2026] Procesando Login Real para: ikerz
+[Sun Jun  7 09:55:22 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Sun Jun  7 09:55:22 2026] Cliente desconectado del socket.
+[Sun Jun  7 10:00:15 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 10:00:15 2026] Cargando configuracion...
+[Sun Jun  7 10:00:15 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 10:00:15 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 10:00:41 2026] Cliente conectado al socket.
+[Sun Jun  7 10:00:41 2026] Procesando Login Real para: o
+[Sun Jun  7 10:00:41 2026] LOGIN FALLIDO: o -> [ERROR] El usuario no existe.
+[Sun Jun  7 10:00:41 2026] Cliente desconectado del socket.
+[Sun Jun  7 10:01:15 2026] Cliente conectado al socket.
+[Sun Jun  7 10:01:15 2026] Procesando registro de Beneficiario: zaba
+[Sun Jun  7 10:01:15 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Sun Jun  7 10:01:15 2026] Cliente desconectado del socket.
+[Sun Jun  7 10:01:20 2026] Cliente conectado al socket.
+[Sun Jun  7 10:01:20 2026] Procesando Login Real para: zaba
+[Sun Jun  7 10:01:20 2026] LOGIN EXITOSO: zaba (ID: 47)
+[Sun Jun  7 10:01:20 2026] Cliente desconectado del socket.
+[Sun Jun  7 10:03:01 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 10:03:01 2026] Cargando configuracion...
+[Sun Jun  7 10:03:01 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 10:03:01 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 10:03:51 2026] Cliente conectado al socket.
+[Sun Jun  7 10:03:51 2026] Procesando registro de Beneficiario: zabi
+[Sun Jun  7 10:03:51 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Sun Jun  7 10:03:51 2026] Cliente desconectado del socket.
+[Sun Jun  7 10:03:55 2026] Cliente conectado al socket.
+[Sun Jun  7 10:03:55 2026] Procesando Login Real para: zabi
+[Sun Jun  7 10:03:55 2026] LOGIN EXITOSO: zabi (ID: 48)
+[Sun Jun  7 10:03:55 2026] Cliente desconectado del socket.
+[Sun Jun  7 10:09:06 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 10:09:06 2026] Cargando configuracion...
+[Sun Jun  7 10:09:06 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 10:09:06 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 10:09:56 2026] Cliente conectado al socket.
+[Sun Jun  7 10:09:56 2026] Procesando registro de Beneficiario: anerli
+[Sun Jun  7 10:09:57 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Sun Jun  7 10:09:57 2026] Cliente desconectado del socket.
+[Sun Jun  7 10:10:01 2026] Cliente conectado al socket.
+[Sun Jun  7 10:10:01 2026] Procesando Login Real para: anerli
+[Sun Jun  7 10:10:01 2026] LOGIN EXITOSO: anerli (ID: 49)
+[Sun Jun  7 10:10:01 2026] Cliente desconectado del socket.
+[Sun Jun  7 10:16:11 2026] === INICIANDO SERVIDOR ONG ===
+[Sun Jun  7 10:16:11 2026] Cargando configuracion...
+[Sun Jun  7 10:16:11 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Sun Jun  7 10:16:11 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Sun Jun  7 10:17:26 2026] Cliente conectado al socket.
+[Sun Jun  7 10:17:26 2026] Procesando registro de Beneficiario: junza
+[Sun Jun  7 10:17:26 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Sun Jun  7 10:17:26 2026] Cliente desconectado del socket.
+[Sun Jun  7 10:17:34 2026] Cliente conectado al socket.
+[Sun Jun  7 10:17:34 2026] Procesando Login Real para: junza
+[Sun Jun  7 10:17:34 2026] LOGIN EXITOSO: junza (ID: 50)
+[Sun Jun  7 10:17:34 2026] Cliente desconectado del socket.
