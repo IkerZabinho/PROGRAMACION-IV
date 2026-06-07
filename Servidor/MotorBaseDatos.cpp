@@ -37,7 +37,7 @@ bool autenticarUsuarioSQL(sqlite3* db, PaqueteRed& paqueteIn, PaqueteRed& paquet
             // --- REQUERIMIENTO 2: CARGA INMEDIATA DE CACHÉ PARA BENEFICIARIOS ---
             if (tipoDb == 3) { // Beneficiario
                 // Pedimos las columnas esenciales que guarda tu base de datos
-                string sqlBeneficiario = "SELECT ingresos, gastos, num_adultos, num_ninos FROM Beneficiario WHERE id_beneficiario = ?;";
+                string sqlBeneficiario = "SELECT ingresos, gastos, num_adultos, num_nino FROM Beneficiario WHERE id_usuario = ?;";
                 sqlite3_stmt* stmtBeneficiario;
                 
                 if (sqlite3_prepare_v2(db, sqlBeneficiario.c_str(), -1, &stmtBeneficiario, NULL) == SQLITE_OK) {
@@ -119,7 +119,7 @@ bool registrarUsuarioSQL(sqlite3* db, PaqueteRed& paqueteIn, void* datosPerfilEs
 
     // 3. SI ES BENEFICIARIO (ROL 3), INSERTAMOS OBLIGATORIAMENTE EN LA TABLA BENEFICIARIO
     if (rolUsuario == 3) {
-        string sqlBen = "INSERT INTO Beneficiario (id_beneficiario, ingresos, gastos, num_adultos, num_ninos) VALUES (?, ?, ?, ?, ?);";
+        string sqlBen = "INSERT INTO Beneficiario (id_beneficiario, ingresos, gastos, num_adultos, num_nino) VALUES (?, ?, ?, ?, ?);";
         rc = sqlite3_prepare_v2(db, sqlBen.c_str(), -1, &stmtBen, NULL);
         if (rc != SQLITE_OK) {
             registrarLog("ERROR SQL: Fallo al preparar INSERT en Beneficiario.");

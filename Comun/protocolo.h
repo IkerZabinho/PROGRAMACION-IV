@@ -18,7 +18,8 @@ enum TipoOperacion {
     
     OP_DONACION_COMIDA,
     OP_DONACION_ROPA,         
-    OP_CONSULTAR_DONACIONES
+    OP_CONSULTAR_DONACIONES,
+    OP_ACTUALIZAR_PERFIL
 };
 
 // Estructuras de datos específicas (Reutilizadas de tus structs de la Fase 1)

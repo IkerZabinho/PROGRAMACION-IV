@@ -26,9 +26,7 @@ namespace GestionONG {
     //void verProximoRepartoComida(int socketServidor);
     //void verProximoRepartoRopa(int socketServidor, int id_beneficiario);
     //void verTalleresProximos(int socketServidor);
-    float calcularAyudaDinero(Beneficiario b);
-    void mostrarAyudaComida(Beneficiario b);
-    void mostrarAyudaRopa(Beneficiario b);
+
     //int actualizarDatosBeneficiario(int socketServidor, int id_beneficiario, Beneficiario b);
     //void verProximaRecogidaRopa(int socketServidor);
     void iniciarSesion(sqlite3 *db);

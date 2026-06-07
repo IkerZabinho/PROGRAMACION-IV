@@ -177,6 +177,13 @@ void ejecutarFormularioRegistroCliente() {
 
     if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
         cout << "\n>>> ¡ÉXITO! " << respuesta.mensajeRespuesta << " <<<\n";
+        GestionONG::Beneficiario bNuevo;
+        bNuevo.setNumAdultos(paquete.economia.adultos);
+        bNuevo.setNumNinos(paquete.economia.ninos);
+        bNuevo.setIngresos(paquete.economia.sueldo);
+        bNuevo.setGastos(paquete.economia.otros_gastos);
+
+        evaluarBeneficiario(bNuevo);
     } else {
         cout << "\n[!] ERROR EN REGISTRO: " << respuesta.mensajeRespuesta << "\n";
     }
@@ -192,66 +199,8 @@ void menuPrincipal(int tipo, int id_perfil) {
         return;
     }
     
-    if(tipo == GestionONG::BENEFICIARIO) {
-        int opBen;
-        
-        GestionONG::Beneficiario b;
-        b.setIngresos(datosLoginGlobal.economia.sueldo);
-        b.setNumAdultos(datosLoginGlobal.economia.adultos);
-        b.setNumNinos(datosLoginGlobal.economia.ninos);
-        b.setGastos(datosLoginGlobal.economia.otros_gastos); // Cargamos el acumulado de gastos reales
-
-        do {
-            printf("\n======= MENU PRINCIPAL BENEFICIARIO =======\n");
-            printf("1. Cambiar condiciones económicas\n");
-            printf("2. Consultar horarios para recoger ayudas\n");
-            printf("3. Ver próximos talleres\n");
-            printf("0. Cerrar sesión\n");
-            printf("===========================================\n");
-            printf("Seleccione una opción: ");
-            if (!(cin >> opBen)) {
-                limpiarBuffer();
-                continue;
-            }
-            limpiarBuffer();
-
-            switch (opBen) {
-                case 1:
-                    b = guardarCondicionesBeneficiario(); 
-                    break;
-
-                case 2:
-                    printf("\n--- CONSULTAR HORARIOS DE AYUDAS ---\n");
-                    {
-                        PaqueteRed paquete;
-                        memset(&paquete, 0, sizeof(PaqueteRed));
-                        paquete.tipoOperacion = OP_CONSULTAR_EVENTOS; 
-                        paquete.idUsuario = id_perfil;                
-                        paquete.tipoUsuario = 3; 
-
-                        printf("[Red] Enviando consulta de horarios de ayuda al servidor...\n");
-                        PaqueteRed respuestaEventos = enviarPeticionServidor(paquete);
-
-                        if (respuestaEventos.tipoOperacion == OP_RESPUESTA_OK) {
-                            printf("%s\n", respuestaEventos.mensajeRespuesta);
-                        } else {
-                            printf("[ERROR] %s\n", respuestaEventos.mensajeRespuesta);
-                        }
-                    }
-                    break;
-
-                case 3:
-                    verTalleresProximos(0);
-                    break;
-               
-                case 0:
-                    printf("\nCerrando sesión de beneficiario...\n");
-                    break;
-                    
-                default:
-                    printf("\n[?] Opción no válida.\n");
-                    break;
-            }
-        } while (opBen != 0);
+    if (tipo == GestionONG::BENEFICIARIO) {
+        menuBeneficiario(0, id_perfil, datosLoginGlobal);
+        return;
     }
 }

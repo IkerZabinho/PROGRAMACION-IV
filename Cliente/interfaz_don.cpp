@@ -151,29 +151,15 @@ void donarComida(int socketServidor, int id_donante) {
 
     // 2. Validación de Kilogramos (Mantenemos tu lógica robusta 3f3 adaptada a cin)
     printf("Cantidad en kilogramos: ");
-    if (!(cin >> kilosIntroducidos)) {
-        printf("[!] Error: debes introducir un numero valido.\n");
+    if (!(cin >> kilosIntroducidos) || kilosIntroducidos <= 0) {
+        printf("[!] Error: Debes introducir un peso válido mayor que 0.\n");
         cin.clear();
-        while (cin.get() != '\n'); 
+        while (cin.get() != '\n'); // Limpiar el buffer de entrada si meten letras
         return;
     }
-    
-    // Verificación de caracteres sobrantes (letras mezcladas con números como "12.5abc")
-    int ch = cin.peek();
-    if (ch != '\n' && ch != EOF) {
-        printf("[!] Error: Formato incorrecto. No incluyas letras en la cantidad.\n");
-        cin.clear();
-        while (cin.get() != '\n'); 
-        return;
-    }
-    while (cin.get() != '\n'); // Consumir el salto de línea definitivo
+    while (cin.get() != '\n'); // Consumir cualquier carácter sobrante (como el .6 de 4..6 o letras) de forma silenciosa
 
-    if (kilosIntroducidos <= 0) { 
-        printf("[!] Los kilogramos deben ser mayores que 0.\n"); 
-        return; 
-    }
-
-    // 3. Confirmación interactiva
+    // 3. Confirmación interactiva (Corregido: ahora se ejecuta una sola vez y lee bien la respuesta)
     printf("¿Confirmas donar %.2f kg de %s?\n0. No\n1. Si\nSeleccion: ",
            kilosIntroducidos, nombresCategorias[seleccion]);
     
@@ -182,28 +168,25 @@ void donarComida(int socketServidor, int id_donante) {
         while (cin.get() != '\n');
         return;
     }
-    while (cin.get() != '\n');
+    while (cin.get() != '\n'); // Limpiar el buffer tras el número de confirmación
 
     if (respuesta == 1) {
         // 4. Preparación y empaquetado seguro para el Servidor
         PaqueteRed paquete;
         memset(&paquete, 0, sizeof(PaqueteRed));
         
-        // Asignamos una operación del protocolo (puedes usar una genérica de donación o definir una propia)
+        // Mantenemos tus asignaciones intactas tal y como las tenías escritas
         paquete.tipoOperacion = OP_DONACION_COMIDA; 
         paquete.idUsuario = id_donante;
-        
-        // Mapeamos los datos de la donación en los campos reutilizables del PaqueteRed
         paquete.cantidadDonada = kilosIntroducidos;   // Pasamos los kilos en el float
         paquete.idEvento = seleccion;                 // Reutilizamos este entero para pasar el subtipo/categoría (TipoComida)
-        //paquete.tipoDonacion = COMIDAD;                // Indicamos en el paquete que es del tipo COMIDAD (Enum de Clases.h)
 
         printf("\n[Red] Enviando registro de alimentos al servidor...\n");
         
         // Enviamos la petición y esperamos la respuesta del motor SQLite remoto del servidor
         PaqueteRed respuestaServidor = enviarPeticionServidor(paquete);
 
-        // Imprimimos el resultado directo devuelto por el servidor (Éxito o error junto con el feedback de próxima recogida)
+        // Imprimimos el resultado directo devuelto por el servidor
         if (respuestaServidor.tipoOperacion == OP_RESPUESTA_OK) {
             printf("%s", respuestaServidor.mensajeRespuesta);
         } else {
@@ -213,7 +196,6 @@ void donarComida(int socketServidor, int id_donante) {
         printf("Operacion cancelada.\n");
     }
 }
-
 
 
 void donarRopa(int socketServidor, int id_donante) {
@@ -229,7 +211,7 @@ void donarRopa(int socketServidor, int id_donante) {
         cin.ignore(10000, '\n');
         return;
     }
-
+    while (cin.get() != '\n'); // Consumir cualquier carácter sobrante (.6 o basura) tras leer el float
     cout << "¿Confirmas donar " << kilos << " kg de ropa?\n0. No\n1. Sí\nSelección: ";
     cin >> respuesta;
 
@@ -280,6 +262,6 @@ void consultarHistorialDonaciones(int socketServidor, int id_donante) {
     // 3. Imprimimos el resultado directo (sea la tabla formateada o el mensaje de error/vacío)
     printf("%s", respuesta.mensajeRespuesta);
 
-    printf("Presione Enter para volver...");
+    printf("\nPresione Enter para volver...");
     cin.get(); // Absorbe posibles saltos de línea residuales en el búfer
 }

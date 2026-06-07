@@ -11,108 +11,176 @@
 using namespace std;
 using namespace GestionONG;
 
+
+// ============================================================================
+// MENU PRINCIPAL DEL BENEFICIARIO (Estructura emparejada con Voluntario)
+// ============================================================================
+
+
+void menuBeneficiario(int socketServidor, int id_perfil, const PaqueteRed& datosSesion) {
+    int opBen;
+    
+    // Creamos el objeto local cargando los datos desde la sesión que nos pasa el main
+    GestionONG::Beneficiario b;
+    b.setIngresos(datosSesion.economia.sueldo);
+    b.setNumAdultos(datosSesion.economia.adultos);
+    b.setNumNinos(datosSesion.economia.ninos);
+    b.setGastos(datosSesion.economia.otros_gastos); 
+
+    do {
+        printf("\n======= MENU PRINCIPAL BENEFICIARIO =======");
+        printf("\n1. Cambiar condiciones económicas");
+        printf("\n2. Consultar horarios para recoger ayudas");
+        printf("\n3. Ver próximos talleres");
+        printf("\n0. Volver al menú anterior / Cerrar sesión");
+        printf("\n===========================================");
+        printf("\nSeleccione una opción: ");
+        
+        if (!(cin >> opBen)) {
+            printf("\n[!] Entrada inválida. Introduce un número.\n");
+            limpiarBufferLocal();
+            opBen = -1;
+            continue;
+        }
+        limpiarBufferLocal();
+
+        switch (opBen) {
+            case 1:
+                // 1. Modificamos los datos localmente con el formulario
+                b = guardarCondicionesBeneficiario(b); 
+                
+                // 2. Enviamos estos nuevos datos al servidor para actualizar la BD remota
+                printf("\n[Red] Actualizando condiciones en el servidor...\n");
+                if (actualizarDatosBeneficiario(socketServidor, id_perfil, b)) {
+                    extern PaqueteRed datosLoginGlobal; 
+                    datosLoginGlobal.economia.sueldo = b.getIngresos();
+                    datosLoginGlobal.economia.otros_gastos = b.getGastos();
+                    datosLoginGlobal.economia.adultos = b.getNumAdultos();
+                    datosLoginGlobal.economia.ninos = b.getNumNinos();
+
+                    b.setIngresos(b.getIngresos());
+                    b.setGastos(b.getGastos());
+                    b.setNumAdultos(b.getNumAdultos());
+                    b.setNumNinos(b.getNumNinos());
+                    printf(">>> [OK] Datos económicos actualizados con éxito en el servidor. <<<\n");
+                } else {
+                    printf("[!] ERROR: No se pudieron guardar los cambios en el servidor.\n");
+                }
+                break;
+
+            case 2:
+                printf("\n--- CONSULTAR HORARIOS DE AYUDAS ---\n");
+                {
+                    PaqueteRed paquete;
+                    memset(&paquete, 0, sizeof(PaqueteRed));
+                    paquete.tipoOperacion = OP_CONSULTAR_EVENTOS; 
+                    paquete.idUsuario = id_perfil;                
+                    paquete.tipoUsuario = 3; // Rol de Beneficiario
+
+                    printf("[Red] Enviando consulta de horarios de ayuda al servidor...\n");
+                    PaqueteRed respuestaEventos = enviarPeticionServidor(paquete);
+
+                    if (respuestaEventos.tipoOperacion == OP_RESPUESTA_OK) {
+                        printf("%s\n", respuestaEventos.mensajeRespuesta);
+                    } else {
+                        printf("[ERROR] %s\n", respuestaEventos.mensajeRespuesta);
+                    }
+                }
+                break;
+
+            case 3:
+                // Llamamos a la función de este mismo archivo pasándole el socket
+                verTalleresProximos(socketServidor);
+                break;
+           
+            case 0:
+                printf("\nSaliendo del módulo de beneficiario...\n");
+                break;
+                
+            default:
+                printf("\n[?] Opción no válida.\n");
+                break;
+        }
+    } while (opBen != 0);
+}
+
+
 // Función auxiliar local para evitar bloqueos del cin
 void limpiarBufferLocal() {
     cin.clear();
     while (cin.get() != '\n');
 }
 
+
+
 // ============================================================================
 // 1. GESTIÓN ECONÓMICA DE BENEFICIARIOS
 // ============================================================================
 
-Beneficiario guardarCondicionesBeneficiario() {
+// Cambia la cabecera en interfaz_ben.cpp e interfazBen.h para que reciba el objeto actual
+Beneficiario guardarCondicionesBeneficiario(const GestionONG::Beneficiario& bActual) {
     int correcto;
-    int adultos = 0, ninos = 0;
-    float sueldos = 0, ayudas = 0, alquiler = 0, suministros = 0, material_escolar = 0, estudios = 0, otros = 0;
+    // Inicializamos con lo que el usuario ya tiene guardado en el sistema
+    int adultos = bActual.getNumAdultos();
+    int ninos = bActual.getNumNinos();
+    float sueldos = bActual.getIngresos(); 
+    float gastos = bActual.getGastos();
 
+    int cambiar;
     cout << "\n--- DETALLES ECONÓMICOS DEL BENEFICIARIO ---\n";
-    cout << "* Responde a la pregunta y pulsa enter para continuar.\n";
 
-    // 1. INTEGRANTES
-    do {
-        cout << "\n> INTEGRANTES DE LA FAMILIA\n";
-        cout << "Número de adultos en casa: ";
-        if (!(cin >> adultos)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
-        cout << "Número de niños/as en casa: ";
-        if (!(cin >> ninos)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
-        
-        cout << "  > ¿Deseas cambiar algún dato de los integrantes? (1: Sí / 0: No): ";
-        cin >> correcto;
-        limpiarBufferLocal();
+    cout << "\n> INTEGRANTES DE LA FAMILIA\n";
+    cout << "  Número de adultos actual: " << adultos << "\n";
+    cout << "  Número de niños actual: " << ninos << "\n";
+    cout << "  > ¿Deseas cambiar algún dato de los integrantes? (1: Sí / 0: No): ";
+    cin >> cambiar;
+    if (cambiar == 1) {
+        cout << "  Nuevo número de adultos en casa: "; cin >> adultos;
+        cout << "  Nuevo número de niños en casa: "; cin >> ninos;
+    }
 
-        if (correcto == 1) cout << "[!] Reintentando integrantes...\n";
-    } while (correcto != 0);
+    cout << "\n> INGRESOS Y GASTOS\n";
+    cout << "  Ingresos actuales: " << sueldos << "€\n";
+    cout << "  Gastos actuales: " << gastos << "€\n";
+    cout << "  > ¿Deseas cambiar los balances financieros? (1: Sí / 0: No): ";
+    cin >> cambiar;
+    if (cambiar == 1) {
+        cout << "  Introduce nuevos ingresos mensuales totales (€): "; cin >> sueldos;
+        cout << "  Introduce nuevos gastos mensuales totales (€): "; cin >> gastos;
+    }
 
-    // 2. INGRESOS
-    do {
-        cout << "\n> INGRESOS\n";
-        cout << "Sueldo mensual total: ";
-        if (!(cin >> sueldos)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
-        cout << "Otras ayudas/pensiones: ";
-        if (!(cin >> ayudas)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
-        
-        cout << "  > ¿Deseas cambiar algún dato de los ingresos? (1: Sí / 0: No): ";
-        cin >> correcto;
-        limpiarBufferLocal();
+    GestionONG::Beneficiario b;
+    b.setNumAdultos(adultos);
+    b.setNumNinos(ninos);
+    b.setIngresos(sueldos);
+    b.setGastos(gastos);
 
-        if (correcto == 1) cout << "[!] Reintentando ingresos...\n";
-    } while (correcto != 0);
-
-    // 3. GASTOS
-    do {
-        cout << "\n> GASTOS\n";
-        cout << "Alquiler o hipoteca: ";
-        if (!(cin >> alquiler)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
-        cout << "Luz, agua y gas: ";
-        if (!(cin >> suministros)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
-        cout << "Material escolar: ";
-        if (!(cin >> material_escolar)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
-        cout << "Gastos en estudios: ";
-        if (!(cin >> estudios)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
-        cout << "Otros gastos: ";
-        if (!(cin >> otros)) { cout << "[!] Entrada inválida.\n"; limpiarBufferLocal(); continue; }
-
-        cout << "  > ¿Deseas cambiar algún dato de los gastos? (1: Sí / 0: No): ";
-        cin >> correcto;
-        limpiarBufferLocal();
-
-        if (correcto == 1) cout << "[!] Reintentando gastos...\n";
-    } while (correcto != 0);
-
-    float ingresos_totales = sueldos + ayudas;
-    float gastos_totales = alquiler + suministros + material_escolar + estudios + otros;
-
-    // Crear el objeto beneficiario con los datos recopilados (Uso explícito del enum para evitar ambigüedad)
-    Beneficiario b(0, "", "", "", "", GestionONG::BENEFICIARIO, adultos, ninos, ingresos_totales, gastos_totales);
-    b.evaluarBeneficiario();
+    evaluarBeneficiario(b);
 
     return b;
 }
 
 // Envía los nuevos datos al servidor para que actualice la BD remota
-int actualizarDatosBeneficiario(int socketServidor, int id_beneficiario, const GestionONG::Beneficiario& b) {
+int actualizarDatosBeneficiario(int socketServidor, int id_perfil, const GestionONG::Beneficiario& b) {
     PaqueteRed paquete;
-    memset(&paquete, 0, sizeof(PaqueteRed)); 
+    memset(&paquete, 0, sizeof(PaqueteRed));
+    
+    paquete.tipoOperacion = OP_ACTUALIZAR_PERFIL; 
+    paquete.idUsuario = id_perfil;
+    paquete.tipoUsuario = 3; 
 
-    // Configuramos la operación indicando que modificaremos las condiciones de este ID existente
-    paquete.tipoOperacion = OP_REGISTRO_BENEFICIARIO; 
-    paquete.idUsuario = id_beneficiario;
-
-    // Mapeamos las propiedades del objeto b al paquete de red
-    paquete.economia.sueldo = b.getIngresos(); 
-    paquete.economia.otros_gastos = b.getGastos();
+    paquete.economia.sueldo = b.getIngresos();
     paquete.economia.adultos = b.getNumAdultos();
     paquete.economia.ninos = b.getNumNinos();
+    paquete.economia.otros_gastos = b.getGastos();
 
-    // Usamos enviarPeticionServidor que gestiona el ciclo de vida del socket automáticamente
-    PaqueteRed respuesta = enviarPeticionServidor(paquete);
+    // Aquí lo llamamos 'respuesta' porque es lo que nos devuelve el servidor
+    PaqueteRed respuesta = enviarPeticionServidor(paquete); 
     
     if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
-        return 1; // Éxito
+        return 1; 
     }
-
-    return 0; // Error
+    return 0; 
 }
 
 void verProximoRepartoComida(int socketServidor) {
@@ -199,4 +267,53 @@ void mostrarAyudaRopa(Beneficiario b) {
         printf("\n > ADULTOS: %d camisetas, %d pantalones", camAdultos, panAdultos);
     }
     printf("\n");
+}
+
+void evaluarBeneficiario(const GestionONG::Beneficiario &b) {
+    float renta = b.getIngresos() - b.getGastos();
+   
+    // Cálculos de umbrales mensuales inteligentes basados en los integrantes
+    float gastoComidaMensual = (b.getNumAdultos() * 150.0f) + (b.getNumNinos() * 140.0f);
+    float gastoRopaMensual = (b.getNumAdultos() * 5.50f) + (b.getNumNinos() * 9.0f);
+    float umbralTotal = gastoComidaMensual + gastoRopaMensual;
+
+    printf("\n===========================================");
+    printf("\n       RESULTADO DEL ANÁLISIS SOCIAL");
+    printf("\n===========================================");
+
+    // Lógica avanzada de Escenarios
+    if (renta > umbralTotal) {
+        printf("\nESTADO: Evaluación Finalizada -> Autosuficiente");
+        printf("\nTras analizar tu renta disponible, el sistema indica que puedes cubrir");
+        printf("\nlas necesidades básicas de alimentación y vestimenta por tu cuenta.");
+        printf("\nPriorizamos nuestros recursos para casos en situación de mayor urgencia.");
+        printf("\n-------------------------------------------");
+        printf("\nSi tu situación económica cambia, puedes solicitar una nueva evaluación.");
+    }
+    else if (renta >= gastoComidaMensual && renta <= umbralTotal) {
+        printf("\nESTADO: Evaluación Finalizada -> Escenario A");
+        printf("\nTras analizar tu renta disponible, consideramos que cubres la alimentación");
+        printf("\nbásica, por lo tanto, recibirás apoyo específico en vestimenta.");
+        printf("\n-------------------------------------------");
+        mostrarAyudaRopa(b);
+    }
+    else if (renta > 0 && renta < gastoComidaMensual) {
+        printf("\nESTADO: Evaluación Finalizada -> Escenario B");
+        printf("\nTras analizar tu renta disponible, el sistema indica que necesitas apoyo");
+        printf("\ntanto en alimentación semanal como en vestimenta semestral.");
+        printf("\n-------------------------------------------");
+        mostrarAyudaComida(b);
+        mostrarAyudaRopa(b);
+    }
+    else {
+        printf("\nESTADO: Evaluación Finalizada -> Escenario C");
+        printf("\nTras analizar tu renta disponible, el sistema detecta una situación de");
+        printf("\nemergencia. Recibirás ayuda económica, alimentación y vestimenta.");
+        printf("\n-------------------------------------------");
+        float dinero = calcularAyudaDinero(b);
+        printf("\n > AYUDA ECONÓMICA: %.2f euros/mes", dinero);
+        mostrarAyudaComida(b);
+        mostrarAyudaRopa(b);
+    }
+    printf("\n===========================================\n");
 }

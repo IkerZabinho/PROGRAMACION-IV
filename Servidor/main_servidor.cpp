@@ -19,6 +19,7 @@ int estaEventoLleno(sqlite3* db, int id_e);
 void verTalleresProximos(sqlite3* db, PaqueteRed& paqueteOut);
 void verProximoRepartoRopa(sqlite3* db, PaqueteRed& paqueteIn, PaqueteRed& paqueteOut);
 void verProximoRepartoComida(sqlite3* db, PaqueteRed& paqueteOut);
+int actualizarDatosBeneficiario(sqlite3 *db, int id_beneficiario, GestionONG::Beneficiario b);
 
 int main()
 {
@@ -123,13 +124,14 @@ int main()
                 if (exito)
                 {
                     registrarLog("LOGIN EXITOSO: " + string(paqueteRecibido.perfil.usuario) + " (ID: " + to_string(paqueteRespuesta.idUsuario) + ")");
-                }
+                                    }
                 else
                 {
                     registrarLog("LOGIN FALLIDO: " + string(paqueteRecibido.perfil.usuario) + " -> " + string(paqueteRespuesta.mensajeRespuesta));
                 }   
                 break;
-            };
+            }
+            
             case OP_REGISTRO_BENEFICIARIO:
             {
                 registrarLog("Procesando registro de Beneficiario: " + std::string(paqueteRecibido.perfil.usuario));
@@ -146,7 +148,7 @@ int main()
                 // 2. Calculamos los ingresos agregados a partir de tu estructura de red 'economia'
                 float ingresosTotales = paqueteRecibido.economia.sueldo + paqueteRecibido.economia.otras_ayudas;
                 float gastosTotales = paqueteRecibido.economia.alquiler + paqueteRecibido.economia.suministros +
-                                      paqueteRecibido.economia.estudios + paqueteRecibido.economia.otros_gastos;
+                                    paqueteRecibido.economia.estudios + paqueteRecibido.economia.otros_gastos;
 
                 // 3. Creamos el objeto de la clase hija 'Beneficiario' en la memoria del Servidor
                 GestionONG::Beneficiario datosHijo(
@@ -707,6 +709,33 @@ case OP_VER_EVENTOS_DISPONIBLES:
                 break;
             }
 
+            
+case OP_ACTUALIZAR_PERFIL: // Debe llamarse igual que en el cliente
+                    registrarLog("[BD] Petición de actualización económica para beneficiario ID: " + to_string(paqueteRecibido.idUsuario));
+                    {
+                        // Reconstruimos el objeto Beneficiario extrayendo los datos del paquete de red
+                        GestionONG::Beneficiario bLocal;
+                        bLocal.setIngresos(paqueteRecibido.economia.sueldo);
+                        bLocal.setNumAdultos(paqueteRecibido.economia.adultos);
+                        bLocal.setNumNinos(paqueteRecibido.economia.ninos);
+                        bLocal.setGastos(paqueteRecibido.economia.otros_gastos);
+
+                        // Invocamos la función de SQLite local del servidor
+                        int exito = actualizarDatosBeneficiario(db, paqueteRecibido.idUsuario, bLocal);
+
+                        // Respondemos al cliente el resultado
+                        memset(&paqueteRespuesta, 0, sizeof(PaqueteRed));
+                        if (exito) {
+                            paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                            strcpy(paqueteRespuesta.mensajeRespuesta, "Datos actualizados correctamente en el servidor.");
+                            registrarLog("[OK] Datos guardados con éxito en la Base de Datos.");
+                        } else {
+                            paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                            strcpy(paqueteRespuesta.mensajeRespuesta, "Error al escribir en la Base de Datos del servidor.");
+                            registrarLog("[ERROR] Falló la escritura SQLite del beneficiario.");
+                        }
+                    }
+                    break;
 
             default:
                 paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
@@ -834,7 +863,7 @@ int estaEventoLleno(sqlite3 *db, int id_e)
 void verProximoRepartoRopa(sqlite3* db, PaqueteRed& paqueteIn, PaqueteRed& paqueteOut) {
     sqlite3_stmt *stmt;
     // Buscamos cuántos adultos y niños tiene el beneficiario en la BD
-    const char *sql = "SELECT num_adultos, num_ninos FROM Beneficiario WHERE id_beneficiario = ?;";
+    const char *sql = "SELECT num_adultos, num_nino FROM Beneficiario WHERE id_beneficiario = ?;";
     
     paqueteOut.tipoOperacion = OP_RESPUESTA_OK;
     int adultos = 0, ninos = 0;
@@ -962,7 +991,7 @@ void verTalleresProximos(sqlite3* db, PaqueteRed& paqueteOut) {
 
     int actualizarDatosBeneficiario(sqlite3 *db, int id_beneficiario,GestionONG:: Beneficiario b) {
         sqlite3_stmt *stmt;
-        const char *sql = "UPDATE Beneficiario SET ingresos = ?, gastos = ?, num_adultos = ?, num_ninos = ? WHERE id_beneficiario = ?;";
+        const char *sql = "UPDATE Beneficiario SET ingresos = ?, gastos = ?, num_adultos = ?, num_nino = ? WHERE id_usuario = ?;";
         int rc = 0;
 
         if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
