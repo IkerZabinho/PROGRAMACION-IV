@@ -679,3 +679,24 @@
 [Mon Jun 08 12:25:58 2026] Procesando Login Real para: admin
 [Mon Jun 08 12:25:58 2026] LOGIN EXITOSO: admin (ID: 2)
 [Mon Jun 08 12:25:58 2026] Cliente desconectado del socket.
+[Mon Jun 08 16:25:47 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 08 16:25:47 2026] Cargando configuracion...
+[Mon Jun 08 16:25:47 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 08 16:25:47 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 08 16:25:54 2026] Cliente conectado al socket.
+[Mon Jun 08 16:25:54 2026] Procesando Login Real para: admin
+[Mon Jun 08 16:25:54 2026] LOGIN EXITOSO: admin (ID: 2)
+[Mon Jun 08 16:25:54 2026] Cliente desconectado del socket.
+[Mon Jun 08 16:27:17 2026] Cliente conectado al socket.
+[Mon Jun 08 16:27:17 2026] LOG ADMIN: Solicitud OP_CREAR_EVENTO.
+[Mon Jun 08 16:27:17 2026] Cliente desconectado del socket.
+[Mon Jun 08 16:32:23 2026] Cliente conectado al socket.
+[Mon Jun 08 16:32:23 2026] Procesando Login Real para: admin
+[Mon Jun 08 16:32:23 2026] LOGIN EXITOSO: admin (ID: 2)
+[Mon Jun 08 16:32:23 2026] Cliente desconectado del socket.
+[Mon Jun 08 16:32:52 2026] Cliente conectado al socket.
+[Mon Jun 08 16:32:52 2026] LOG ADMIN: Solicitud OP_CREAR_EVENTO.
+[Mon Jun 08 16:32:52 2026] Cliente desconectado del socket.
+[Mon Jun 08 16:34:12 2026] Cliente conectado al socket.
+[Mon Jun 08 16:34:12 2026] LOG ADMIN: Solicitud OP_CREAR_EVENTO.
+[Mon Jun 08 16:34:12 2026] Cliente desconectado del socket.

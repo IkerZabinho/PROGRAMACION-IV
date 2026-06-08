@@ -850,27 +850,34 @@ namespace GestionONG {
     // AUXILIAR: LEER Y VALIDAR FECHA
     // ============================================================================
 int Fecha::leer_y_validar_fecha(const string& mensaje, Fecha *f) {
-        int correcto = 0;
-        do {
-            cout << mensaje;
-            cout << "\nIntroduce el año (aaaa): ";
-            cin >> f->anyo;
-            cout << "Introduce el mes (1-12): ";
-            cin >> f->mes;
-            cout << "Introduce el día (1-31): ";
-            cin >> f->dia;
-            cout << "Introduce la hora (0-23): ";
-            cin >> f->hora;
-            f->minutos = 0;
+    int correcto = 0;
+    do {
+        cout << mensaje;
+        cout << "\nIntroduce el año (aaaa): ";
+        cin >> f->anyo;
+        cout << "Introduce el mes (1-12): ";
+        cin >> f->mes;
+        cout << "Introduce el día (1-31): ";
+        cin >> f->dia;
+        cout << "Introduce la hora (0-23): ";
+        cin >> f->hora;
+        f->minutos = 0;
+        
+        cin.ignore(10000, '\n'); 
 
-            if (f->mes >= 1 && f->mes <= 12 && f->dia >= 1 && f->dia <= 31 && f->hora >= 0 && f->hora <= 23) {
-                correcto = 1;
-            } else {
-                cout << "[!] Fecha o hora no válida. Inténtalo de nuevo.\n";
-            }
-        } while (!correcto);
-        return 1;
-    }
+        if (f->anyo >= 2026 && f->anyo <= 2100 &&
+            f->mes >= 1 && f->mes <= 12 && 
+            f->dia >= 1 && f->dia <= 31 && 
+            f->hora >= 0 && f->hora <= 23) {
+            
+            correcto = 1;
+        } else {
+            cout << "[!] Fecha o hora no válida (comprueba que el año esté entre 2026 y 2100). Inténtalo de nuevo.\n";
+        }
+    } while (!correcto);
+
+    return 1; 
+}
 
     // 3B. FUNCIÓN SUELTA (Para las llamadas viejas de interfaz.cpp que daban error)
     int leer_y_validar_fecha(const string& mensaje, Fecha *f) {

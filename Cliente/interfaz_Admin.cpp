@@ -74,14 +74,28 @@ void crearEventoCliente() {
 
     GestionONG::Fecha f_inicio, f_final;
     while (true) {
-        if (f_inicio.leer_y_validar_fecha("Introduce fecha inicio (DD-MM-AAAA HH:MM): ", &f_inicio)) break;
-        cout << "[!] Fecha de inicio inválida.\n";
+        if (f_inicio.leer_y_validar_fecha("Introduce fecha inicio (DD-MM-AAAA HH:MM): ", &f_inicio)) {
+            break; // Fecha válida, salimos del bucle
+        } else {
+            cout << "[!] Error: Formato de fecha de inicio inválido o valores incorrectos.\n";
+            // Nota: Si leer_y_validar_fecha no limpia internamente cin en caso de fallo, 
+            // descomenta las siguientes dos líneas:
+            // cin.clear();
+            // cin.ignore(10000, '\n');
+        }
     }
 
+    // --- VALIDACIÓN FECHA FINAL ---
     while (true) {
         if (f_final.leer_y_validar_fecha("Introduce fecha final (DD-MM-AAAA HH:MM): ", &f_final)) {
-            if (f_final.comparar_fechas(f_final, f_inicio) > 0) break;
-            cout << "[!] Error: La fecha final debe ser posterior a la de inicio.\n";
+            // Comprobamos que la fecha final sea posterior a la de inicio
+            if (f_final.comparar_fechas(f_final, f_inicio) > 0) {
+                break; // Fecha válida y posterior, salimos del bucle
+            } else {
+                cout << "[!] Error: La fecha final debe ser cronológicamente posterior a la de inicio.\n";
+            }
+        } else {
+            cout << "[!] Error: Formato de fecha final inválido o valores incorrectos.\n";
         }
     }
 
