@@ -1257,3 +1257,16 @@
 [Mon Jun 08 21:06:40 2026] Cliente conectado al socket.
 [Mon Jun 08 21:06:40 2026] Procesando registro de Voluntario: pers
 [Mon Jun 08 21:06:40 2026] Cliente desconectado del socket.
+[Mon Jun 08 21:27:25 2026] Cliente conectado al socket.
+[Mon Jun 08 21:27:25 2026] Procesando Login Real para: zabi
+[Mon Jun 08 21:27:25 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 48
+[Mon Jun 08 21:27:25 2026] LOGIN EXITOSO: zabi (ID: 48)
+[Mon Jun 08 21:27:25 2026] Cliente desconectado del socket.
+[Mon Jun 08 21:27:51 2026] Cliente conectado al socket.
+[Mon Jun 08 21:27:51 2026] [BD] Petición de actualización económica para beneficiario ID: 48
+[Mon Jun 08 21:27:51 2026] [OK] Datos guardados con éxito en la Base de Datos.
+[Mon Jun 08 21:27:51 2026] Cliente desconectado del socket.
+[Mon Jun 08 21:28:13 2026] Cliente conectado al socket.
+[Mon Jun 08 21:28:13 2026] Procesando Login Real para: zaloa18
+[Mon Jun 08 21:28:13 2026] LOGIN EXITOSO: zaloa18 (ID: 40)
+[Mon Jun 08 21:28:13 2026] Cliente desconectado del socket.

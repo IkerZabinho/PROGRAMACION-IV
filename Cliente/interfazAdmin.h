@@ -1,15 +1,21 @@
+// interfazAdmin.h
 #ifndef INTERFAZADMIN_H
 #define INTERFAZADMIN_H
 
-// --- MENÚ PRINCIPAL DEL ADMINISTRADOR ---
-// Solo necesita el ID del perfil logueado (igual que los demás roles)
-void menuAdministrador(int id_perfil);
+#include "InterfazUsuario.h"
 
-// --- OPERACIONES DE ADMINISTRACIÓN ---
+class InterfazAdmin : public InterfazUsuario {
+public:
+    InterfazAdmin() = default;
+
+    void ejecutarMenu(int socketServidor, int id_perfil) override;
+};
+
 void crearEventoCliente();
 void borrarEventoCliente();
 void listarUsuariosCliente();
 void darBajaUsuarioCliente();
 void registrarRecogidaRopaAdminCliente(); 
 void crearTallerCliente();
-#endif // INTERFAZADMIN_H
+
+#endif 

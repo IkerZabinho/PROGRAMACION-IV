@@ -1,10 +1,10 @@
-// interfaz_vol.cpp
+
 #include <iostream>
 #include <string>
 #include <cstring>
 #include <windows.h>
 #include "../Comun/protocolo.h" 
-#include "RedCliente.h"      // Para enviarPeticionServidor u operaciones send/recv
+#include "RedCliente.h"      
 #include "../ComunPrueba/Clases.h"
 #include "interfazVol.h"
 
@@ -12,7 +12,7 @@ using namespace std;
 
 bool cacheEventosValida = false;
 
-void menuVoluntario(int socketServidor, int id_perfil) {
+void InterfazVoluntario::ejecutarMenu(int socketServidor, int id_perfil) {
     int opcion;
     do {
         printf("\n======= MODULO DE VOLUNTARIADO =======");
@@ -30,29 +30,21 @@ void menuVoluntario(int socketServidor, int id_perfil) {
             opcion = -1;
             continue;
         }
-        while (cin.get() != '\n'); // Limpiar buffer
-
+        while (cin.get() != '\n'); 
         switch(opcion) {
             case 1:
                 apuntarseEvento(socketServidor, id_perfil);
                 break;
             case 2:
-                consultarMisEventos(socketServidor, id_perfil); 
+                consultarMisEventos(socketServidor, id_perfil);
                 break;
             case 3:
                 consultarHistorialEventos(socketServidor, id_perfil);
-                break;
-            case 0:
-                printf("\nSaliendo del modulo de voluntariado...\n");
-                break;
-            default:
-                printf("\n[?] Opcion no valida.\n");
                 break;
         }
     } while (opcion != 0);
 }
 
-// Rellenar esta sección dentro de interfaz_vol.cpp
 
 void apuntarseEvento(int socketServidor, int id_voluntario) {
     printf("\n--- APUNTARSE A UN EVENTO ---\n");

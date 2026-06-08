@@ -1,16 +1,15 @@
-// interfaz_don.cpp
+
 #include <iostream>
 #include <string>
 #include <cstring>
 #include <windows.h>
 #include "../Comun/protocolo.h"
-#include "RedCliente.h" // Para enviarPeticionServidor
+#include "RedCliente.h" 
 #include "../ComunPrueba/Clases.h"
 #include "interfazDon.h"
 
 using namespace std;
-
-void menuDonante(int socketServidor, int id_perfil)
+void InterfazDonante::ejecutarMenu(int socketServidor, int id_perfil)
 {
     int opcion;
     do
@@ -26,14 +25,14 @@ void menuDonante(int socketServidor, int id_perfil)
 
         if (!(cin >> opcion))
         {
-            printf("\n[!] Entrada invalida. Introduce un numero.\n");
+            printf("\n[!] Entrada invalida. Introduce un numero.\\n");
             cin.clear();
             while (cin.get() != '\n')
                 ;
             opcion = -1;
             continue;
         }
-       while (cin.get() != '\n'); // Limpiar buffer
+        while (cin.get() != '\n'); // Limpiar buffer
 
         switch(opcion) {
             case 1:
@@ -46,13 +45,7 @@ void menuDonante(int socketServidor, int id_perfil)
                 donarRopa(socketServidor, id_perfil);
                 break;
             case 4:
-                consultarHistorialDonaciones(socketServidor, id_perfil); 
-                break;
-            case 0:
-                printf("\nSaliendo del modulo de donaciones...\n");
-                break;
-            default:
-                printf("\n[?] Opcion no valida.\n");
+                consultarHistorialDonaciones(socketServidor, id_perfil);
                 break;
         }
     } while (opcion != 0);

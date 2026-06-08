@@ -395,42 +395,28 @@ void ejecutarFormularioRegistroCliente() {
 }
 
 
-
 void menuPrincipal(int tipo, int id_perfil) {
+    InterfazUsuario* interfazActual = nullptr;
 
     if (tipo == GestionONG::VOLUNTARIO) {
-
-        menuVoluntario(0, id_perfil);
-
-        return;
-
+        interfazActual = new InterfazVoluntario();
     }
-
     else if (tipo == GestionONG::DONANTE) {
-
-        menuDonante(0, id_perfil);    
-
-        return;
-
+        interfazActual = new InterfazDonante();
     }
-
-   
-
     else if (tipo == GestionONG::BENEFICIARIO) {
-
-        menuBeneficiario(0, id_perfil, datosLoginGlobal);
-
-        return;
-
+        interfazActual = new InterfazBeneficiario(datosLoginGlobal);
     }
-
-
-
     else if (tipo == GestionONG::ADMINISTRADOR) {
-
-        menuAdministrador(id_perfil); // <--- Cambiar por esto (solo id_perfil)
-
+        interfazActual = new InterfazAdmin();
     }
 
-} 
+    if (interfazActual != nullptr) {
+        interfazActual->ejecutarMenu(0, id_perfil); 
+        
+        delete interfazActual; 
+    } else {
+        cout << "[!] Error: El tipo de perfil no cuenta con una interfaz válida.\n";
+    }
+}
 

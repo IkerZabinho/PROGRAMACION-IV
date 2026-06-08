@@ -25,35 +25,16 @@ using namespace GestionONG;
 
 
 
-
-// ============================================================================
-
-// MENU PRINCIPAL DEL BENEFICIARIO (Estructura emparejada con Voluntario)
-
-// ============================================================================
-
-void menuBeneficiario(int socketServidor, int id_perfil, const PaqueteRed& datosSesion) {
-
+void InterfazBeneficiario::ejecutarMenu(int socketServidor, int id_perfil) {
     int opBen;
-
    
-
-    // Creamos el objeto local cargando los datos desde la sesión que nos pasa el main
-
     GestionONG::Beneficiario b;
-
-    b.setIngresos(datosSesion.economia.sueldo);
-
-    b.setNumAdultos(datosSesion.economia.adultos);
-
-    b.setNumNinos(datosSesion.economia.ninos);
-
-    b.setGastos(datosSesion.economia.otros_gastos);
-
-
+    b.setIngresos(this->datosSesion.economia.sueldo);
+    b.setNumAdultos(this->datosSesion.economia.adultos);
+    b.setNumNinos(this->datosSesion.economia.ninos);
+    b.setGastos(this->datosSesion.economia.otros_gastos);
 
     do {
-
         printf("\n======= MENU PRINCIPAL BENEFICIARIO =======");
 
         printf("\n1. Cambiar condiciones económicas");

@@ -2,12 +2,21 @@
 
 #ifndef INTERFAZBEN_H
 #define INTERFAZBEN_H
-#include "interfaz.h"
+
+#include "interfazUsuario.h"
 #include "../Comun/protocolo.h" // Asegura que conoce la estructura PaqueteRed
 
 using namespace GestionONG;
 
-void menuBeneficiario(int socketServidor, int id_perfil, const PaqueteRed& datosSesion);
+class InterfazBeneficiario : public InterfazUsuario {
+private:
+    PaqueteRed datosSesion;
+
+public:
+    InterfazBeneficiario(const PaqueteRed& datos) : datosSesion(datos) {}
+    void ejecutarMenu(int socketServidor, int id_perfil) override;
+};
+
 Beneficiario guardarCondicionesBeneficiario(const GestionONG::Beneficiario& bActual);
 int actualizarDatosBeneficiario(int socketServidor, int id_perfil, const GestionONG::Beneficiario& b);
 void verProximoRepartoComida(int socketServidor);

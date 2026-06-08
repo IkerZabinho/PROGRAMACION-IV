@@ -1,3 +1,4 @@
+// interfaz_Admin.cpp
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -8,8 +9,7 @@
 
 using namespace std;
 
-// --- MENU ADMINISTRADOR EN EL CLIENTE ---
-void menuAdministrador(int id_perfil) {
+void InterfazAdmin::ejecutarMenu(int socketServidor, int id_perfil) {
     int opcion;
     do {
         cout << "\n==================================";
@@ -38,12 +38,11 @@ void menuAdministrador(int id_perfil) {
             case 2: borrarEventoCliente(); break;
             case 3: listarUsuariosCliente(); break;
             case 4: darBajaUsuarioCliente(); break;
-            case 5: registrarRecogidaRopaAdminCliente(); break; 
-            case 0: cout << "\nCerrando sesión administrativa.\n"; break;
-            default: cout << "\nOpción no válida.\n"; break;
+            case 5: registrarRecogidaRopaAdminCliente(); break;
         }
     } while (opcion != 0);
 }
+
 
 
 // ============================================================================
