@@ -891,7 +891,7 @@ int Fecha::leer_y_validar_fecha(const string& mensaje, Fecha *f) {
             
             correcto = 1;
         } else {
-            cout << "[!] Fecha o hora no válida (comprueba que el año esté entre 2026 y 2100). Inténtalo de nuevo.\n";
+            cout << "[!] Fecha o hora no válida (comprueba que el año esté entre 2026 y 2100 y que el mes y la hora cumplan los requisitos)" << "\nInténtalo de nuevo.\n";
         }
     } while (!correcto);
 

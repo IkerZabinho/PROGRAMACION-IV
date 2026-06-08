@@ -41,7 +41,7 @@ void InterfazBeneficiario::ejecutarMenu(int socketServidor, int id_perfil) {
 
         printf("\n2. Consultar horarios para recoger ayudas");
 
-        printf("\n3. Ver próximos talleres");
+        printf("\n3. Ver próximos eventos");
 
         printf("\n0. Volver al menú anterior / Cerrar sesión");
 
