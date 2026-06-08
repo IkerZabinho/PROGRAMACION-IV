@@ -95,6 +95,7 @@ void procesarLoginCliente() {
         cout << "\n>>> " << respuesta.mensajeRespuesta << " <<<\n";
         cout << "ID Usuario: " << respuesta.idUsuario << "\n";
         
+        
         // GUARDAMOS LOS DATOS REALES EN LA VARIABLE GLOBAL
         datosLoginGlobal = respuesta; 
 
@@ -109,13 +110,16 @@ void procesarLoginCliente() {
         
         if (respuesta.tipoUsuario == 4) { 
             
-            //menuAdministrador(NULL); 
+            menuAdministrador(NULL); 
+            return;
         } 
         else if (respuesta.tipoUsuario >= 1 && respuesta.tipoUsuario <= 3) { 
             menuPrincipal(respuesta.tipoUsuario, respuesta.idUsuario);
+            return;
         }
     } else {
         cout << "\n[!] ERROR: " << respuesta.mensajeRespuesta << "\n";
+        return;
     }
     cout << "\nPresione Enter para continuar...";
     cin.get();
