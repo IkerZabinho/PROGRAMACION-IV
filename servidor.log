@@ -1270,3 +1270,15 @@
 [Mon Jun 08 21:28:13 2026] Procesando Login Real para: zaloa18
 [Mon Jun 08 21:28:13 2026] LOGIN EXITOSO: zaloa18 (ID: 40)
 [Mon Jun 08 21:28:13 2026] Cliente desconectado del socket.
+[Tue Jun 09 00:13:31 2026] === INICIANDO SERVIDOR ONG ===
+[Tue Jun 09 00:13:31 2026] Cargando configuracion...
+[Tue Jun 09 00:13:31 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Tue Jun 09 00:13:31 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Tue Jun 09 00:21:30 2026] Cliente conectado al socket.
+[Tue Jun 09 00:21:30 2026] Procesando Login Real para: admin
+[Tue Jun 09 00:21:30 2026] LOGIN EXITOSO: admin (ID: 2)
+[Tue Jun 09 00:21:30 2026] Cliente desconectado del socket.
+[Tue Jun 09 00:21:33 2026] Cliente conectado al socket.
+[Tue Jun 09 00:21:33 2026] Cliente desconectado del socket.
+[Tue Jun 09 00:21:37 2026] Cliente conectado al socket.
+[Tue Jun 09 00:21:37 2026] Cliente desconectado del socket.
