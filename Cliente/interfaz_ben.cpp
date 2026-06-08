@@ -119,34 +119,91 @@ void limpiarBufferLocal() {
 
 // Cambia la cabecera en interfaz_ben.cpp e interfazBen.h para que reciba el objeto actual
 Beneficiario guardarCondicionesBeneficiario(const GestionONG::Beneficiario& bActual) {
-    int correcto;
-    // Inicializamos con lo que el usuario ya tiene guardado en el sistema
     int adultos = bActual.getNumAdultos();
     int ninos = bActual.getNumNinos();
     float sueldos = bActual.getIngresos(); 
     float gastos = bActual.getGastos();
 
-    int cambiar;
     cout << "\n--- DETALLES ECONÓMICOS DEL BENEFICIARIO ---\n";
 
+
+    int opcionInicial = -1;
+    while (true) {
+        cout << "¿Qué deseas hacer? (1: Modificar datos / 0: Volver al menú sin cambiar nada): ";
+        if (cin >> opcionInicial) {
+            cin.ignore(10000, '\n'); 
+
+            if (opcionInicial == 0) {
+                cout << "\n[!] Operación cancelada. Volviendo al menú principal...\n";
+                
+                GestionONG::Beneficiario bCancelado;
+                bCancelado.setIngresos(-1.0f); 
+                return bCancelado; 
+            }
+            else if (opcionInicial == 1) {
+                break; 
+            }
+            else {
+                cout << "[!] Error: Opción inválida. Introduce 1 o 0.\n";
+            }
+        } else {
+            cout << "[!] Error: Entrada no numérica. Por favor, introduce un número (1 o 0).\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+        }
+    }
+
+
+    int cambiar = -1;
     cout << "\n> INTEGRANTES DE LA FAMILIA\n";
     cout << "  Número de adultos actual: " << adultos << "\n";
     cout << "  Número de niños actual: " << ninos << "\n";
-    cout << "  > ¿Deseas cambiar algún dato de los integrantes? (1: Sí / 0: No): ";
-    cin >> cambiar;
-    if (cambiar == 1) {
-        cout << "  Nuevo número de adultos en casa: "; cin >> adultos;
-        cout << "  Nuevo número de niños en casa: "; cin >> ninos;
+    
+    while (true) {
+        cout << "  > ¿Deseas cambiar algún dato de los integrantes? (Sí=1, No=0): ";
+        if (cin >> cambiar) {
+            cin.ignore(10000, '\n');
+            if (cambiar == 1) {
+                cout << "  Nuevo número de adultos en casa: "; cin >> adultos;
+                cout << "  Nuevo número de niños en casa: "; cin >> ninos;
+                cin.ignore(10000, '\n');
+                break;
+            } else if (cambiar == 0) {
+                break; 
+            } else {
+                cout << "  [!] Error: Opción inválida. Introduce 1 o 0.\n";
+            }
+        } else {
+            cout << "  [!] Error: Entrada no numérica.\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+        }
     }
+
 
     cout << "\n> INGRESOS Y GASTOS\n";
     cout << "  Ingresos actuales: " << sueldos << "€\n";
     cout << "  Gastos actuales: " << gastos << "€\n";
-    cout << "  > ¿Deseas cambiar los balances financieros? (1: Sí / 0: No): ";
-    cin >> cambiar;
-    if (cambiar == 1) {
-        cout << "  Introduce nuevos ingresos mensuales totales (€): "; cin >> sueldos;
-        cout << "  Introduce nuevos gastos mensuales totales (€): "; cin >> gastos;
+    
+    while (true) {
+        cout << "  > ¿Deseas cambiar los balances financieros? (Sí=1, No=0): ";
+        if (cin >> cambiar) {
+            cin.ignore(10000, '\n');
+            if (cambiar == 1) {
+                cout << "  Introduce nuevos ingresos mensuales totales (€): "; cin >> sueldos;
+                cout << "  Introduce nuevos gastos mensuales totales (€): "; cin >> gastos;
+                cin.ignore(10000, '\n');
+                break;
+            } else if (cambiar == 0) {
+                break; 
+            } else {
+                cout << "  [!] Error: Opción inválida. Introduce 1 o 0.\n";
+            }
+        } else {
+            cout << "  [!] Error: Entrada no numérica.\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+        }
     }
 
     GestionONG::Beneficiario b;
@@ -159,7 +216,6 @@ Beneficiario guardarCondicionesBeneficiario(const GestionONG::Beneficiario& bAct
 
     return b;
 }
-
 // Envía los nuevos datos al servidor para que actualice la BD remota
 int actualizarDatosBeneficiario(int socketServidor, int id_perfil, const GestionONG::Beneficiario& b) {
     PaqueteRed paquete;

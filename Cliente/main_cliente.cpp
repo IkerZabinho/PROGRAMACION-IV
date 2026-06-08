@@ -80,10 +80,23 @@ void procesarLoginCliente() {
 
     string usuario, contrasena;
     cout << "\n--- INICIO DE SESIÓN ---\n";
-    cout << "Usuario: ";
-    getline(cin, usuario);
-    cout << "Contraseña: ";
-    getline(cin, contrasena);
+    while (true) {
+        cout << "Usuario: ";
+        getline(cin, usuario);
+        cout << "Contraseña: ";
+        getline(cin, contrasena);
+
+        if (usuario.empty() || contrasena.empty() || 
+            usuario.find_first_not_of(" ") == string::npos || 
+            contrasena.find_first_not_of(" ") == string::npos) {
+            
+            cout << "\n[!] Error: El usuario y la contraseña no pueden estar vacíos ni contener solo espacios.\n";
+            cout << "Por favor, inténtalo de nuevo.\n\n";
+        } else {
+            
+            break; 
+        }
+    }
 
     strncpy(paquete.perfil.usuario, usuario.c_str(), sizeof(paquete.perfil.usuario) - 1);
     strncpy(paquete.perfil.contrasena, contrasena.c_str(), sizeof(paquete.perfil.contrasena) - 1);
@@ -96,15 +109,11 @@ void procesarLoginCliente() {
         cout << "\n>>> " << respuesta.mensajeRespuesta << " <<<\n";
         cout << "ID Usuario: " << respuesta.idUsuario << "\n";
         
-        
-        // GUARDAMOS LOS DATOS REALES EN LA VARIABLE GLOBAL
         datosLoginGlobal = respuesta; 
 
         if (respuesta.tipoUsuario == 3) { 
             cout << "--- CACHÉ LOCAL (Datos Económicos Guardados) ---\n";
-            // 'sueldo' contiene los ingresos totales calculados por el servidor
             cout << "Sueldo: " << respuesta.economia.sueldo << "€\n";
-            // 'otros_gastos' contiene los gastos totales agregados calculados por el servidor
             cout << "Gastos: " << respuesta.economia.otros_gastos << "€\n"; 
             cout << "------------------------------------------------\n";
         }
@@ -114,10 +123,10 @@ void procesarLoginCliente() {
         
     } else {
         cout << "\n[!] ERROR: " << respuesta.mensajeRespuesta << "\n";
+        cout << "\nPresione Enter para continuar...";
+        cin.get();
         return;
     }
-    cout << "\nPresione Enter para continuar...";
-    cin.get();
 }
 
 void ejecutarFormularioRegistroCliente() {

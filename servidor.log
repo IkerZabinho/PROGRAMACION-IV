@@ -911,3 +911,31 @@
 [Mon Jun 08 18:02:08 2026] [BD] Petición de actualización económica para beneficiario ID: 44
 [Mon Jun 08 18:02:08 2026] [OK] Datos guardados con éxito en la Base de Datos.
 [Mon Jun 08 18:02:08 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:05:02 2026] Cliente conectado al socket.
+[Mon Jun 08 18:05:02 2026] Procesando Login Real para: iker
+[Mon Jun 08 18:05:02 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 44
+[Mon Jun 08 18:05:02 2026] LOGIN EXITOSO: iker (ID: 44)
+[Mon Jun 08 18:05:02 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:05:09 2026] Cliente conectado al socket.
+[Mon Jun 08 18:05:09 2026] [BD] Petición de actualización económica para beneficiario ID: 44
+[Mon Jun 08 18:05:09 2026] [OK] Datos guardados con éxito en la Base de Datos.
+[Mon Jun 08 18:05:09 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:10:03 2026] Cliente conectado al socket.
+[Mon Jun 08 18:10:03 2026] Procesando Login Real para: iker
+[Mon Jun 08 18:10:03 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 44
+[Mon Jun 08 18:10:03 2026] LOGIN EXITOSO: iker (ID: 44)
+[Mon Jun 08 18:10:03 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:10:07 2026] Cliente conectado al socket.
+[Mon Jun 08 18:10:07 2026] [BD] Petición de actualización económica para beneficiario ID: 44
+[Mon Jun 08 18:10:07 2026] [ERROR] Falló la escritura SQLite del beneficiario.
+[Mon Jun 08 18:10:07 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:14:35 2026] Cliente conectado al socket.
+[Mon Jun 08 18:14:35 2026] Procesando Login Real para: 
+[Mon Jun 08 18:14:35 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 46
+[Mon Jun 08 18:14:35 2026] LOGIN EXITOSO:  (ID: 46)
+[Mon Jun 08 18:14:35 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:16:45 2026] Cliente conectado al socket.
+[Mon Jun 08 18:16:45 2026] Procesando Login Real para: iker
+[Mon Jun 08 18:16:45 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 44
+[Mon Jun 08 18:16:45 2026] LOGIN EXITOSO: iker (ID: 44)
+[Mon Jun 08 18:16:45 2026] Cliente desconectado del socket.
