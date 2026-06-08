@@ -9,6 +9,7 @@
 #include "interfazVol.h"
 #include "interfazDon.h"
 #include "interfazBen.h"
+#include "interfazAdmin.h" // <--- Añadir este
 
 
 using namespace std;
@@ -108,15 +109,9 @@ void procesarLoginCliente() {
             cout << "------------------------------------------------\n";
         }
         
-        if (respuesta.tipoUsuario == 4) { 
-            
-            menuAdministrador(NULL); 
-            return;
-        } 
-        else if (respuesta.tipoUsuario >= 1 && respuesta.tipoUsuario <= 3) { 
-            menuPrincipal(respuesta.tipoUsuario, respuesta.idUsuario);
-            return;
-        }
+        menuPrincipal(respuesta.tipoUsuario, respuesta.idUsuario);
+        return;
+        
     } else {
         cout << "\n[!] ERROR: " << respuesta.mensajeRespuesta << "\n";
         return;
@@ -204,8 +199,12 @@ void menuPrincipal(int tipo, int id_perfil) {
         return;
     }
     
-    if (tipo == GestionONG::BENEFICIARIO) {
+    else if (tipo == GestionONG::BENEFICIARIO) {
         menuBeneficiario(0, id_perfil, datosLoginGlobal);
         return;
+    }
+
+    else if (tipo == GestionONG::ADMINISTRADOR) { 
+        menuAdministrador(id_perfil); // <--- Cambiar por esto (solo id_perfil)
     }
 }

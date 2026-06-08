@@ -1,7 +1,6 @@
-// Protocolo.h
+// protocolo.h
 #pragma once
 
-// Enumerado para identificar la acción que solicita el cliente
 enum TipoOperacion {
     OP_LOGIN = 1,
     OP_REGISTRO_VOLUNTARIO,
@@ -19,10 +18,16 @@ enum TipoOperacion {
     OP_DONACION_COMIDA,
     OP_DONACION_ROPA,         
     OP_CONSULTAR_DONACIONES,
-    OP_ACTUALIZAR_PERFIL
+    OP_ACTUALIZAR_PERFIL,
+
+    OP_CREAR_EVENTO,
+    OP_BORRAR_EVENTO,
+    OP_LISTAR_USUARIOS,
+    OP_BAJA_USUARIO,
+    OP_REGISTRAR_ROPA,
+    OP_CREAR_TALLER
 };
 
-// Estructuras de datos específicas (Reutilizadas de tus structs de la Fase 1)
 struct DatosEconomicos {
     int adultos;
     int ninos;
@@ -41,17 +46,36 @@ struct DatosPersonales {
     char contrasena[50];
 };
 
-// El paquete principal que viaja por el socket (Red)
+struct EstructuraFechaRed {
+    int anyo;
+    int mes;
+    int dia;
+    int hora;
+};
+
+// Estructura unificada para todos los datos del Panel de Administración
+struct DatosAdmin {
+    char nombre_taller_o_material[50]; 
+    char descripcion[150];      
+    int cupo_o_limite;          
+    int cantidad_ropa;          
+    EstructuraFechaRed f_inicio;
+    EstructuraFechaRed f_final;
+};
+
+// TU PAQUETE ÚNICO DE RED SIN DUPLICADOS
 struct PaqueteRed {
-    int tipoOperacion;          // Almacena un valor del enum TipoOperacion
-    int idUsuario;              // ID devuelto o solicitado
-    int idEvento;               // ID del evento
-    int tipoUsuario;            // Rol del usuario (1: Voluntario, 2: Donante, etc.)
-    // Puedes crear un campo específico para la donación si no lo tienes:
+    int tipoOperacion;          
+    int idUsuario;              // Carga: id_usuario (Baja), id_beneficiario (Ropa) o id_profesor (Taller)
+    int idEvento;               // Carga: id_evento (Borrar)
+    int tipoUsuario;            
+    
     float cantidadDonada;
     int tipoDonacion;
-    DatosPersonales perfil;     // Estructura anidada con datos de login/registro
-    DatosEconomicos economia;   // REQUERIMIENTO 2: Datos para la Caché del Beneficiario
     
-    char mensajeRespuesta[4096]; // Mensaje de éxito/error del servidor (ej: "[OK] Sesión iniciada")
+    DatosPersonales perfil;     
+    DatosEconomicos economia;   
+    DatosAdmin admin;           // Bloque limpio para tus 6 operaciones admin
+
+    char mensajeRespuesta[4096]; 
 };

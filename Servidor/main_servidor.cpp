@@ -21,6 +21,25 @@ void verProximoRepartoRopa(sqlite3* db, PaqueteRed& paqueteIn, PaqueteRed& paque
 void verProximoRepartoComida(sqlite3* db, PaqueteRed& paqueteOut);
 int actualizarDatosBeneficiario(sqlite3 *db, int id_beneficiario, GestionONG::Beneficiario b);
 
+
+int callbackListarUsuarios(void* data, int argc, char** argv, char** azColName) {
+    std::string* lista = static_cast<std::string*>(data);
+    
+    std::string id = argv[0] ? argv[0] : "NULL";
+    std::string nombre = argv[1] ? argv[1] : "NULL";
+    std::string apellidos = argv[2] ? argv[2] : "NULL";
+    std::string tipoNum = argv[3] ? argv[3] : "0";
+    
+    std::string tipoTexto = "Desconocido";
+    if (tipoNum == "1") tipoTexto = "Voluntario";
+    else if (tipoNum == "2") tipoTexto = "Donante";
+    else if (tipoNum == "3") tipoTexto = "Beneficiario";
+    else if (tipoNum == "4") tipoTexto = "Administrador";
+
+    *lista += "[ID: " + id + "] " + nombre + " " + apellidos + " (" + tipoTexto + ")\n";
+    return 0;
+}
+
 int main()
 {
     // 1. Cargar configuración (Requerimiento 5)
@@ -207,6 +226,147 @@ int main()
                 }
                 break;
             }
+// ============================================================================
+            // COMPROBAR Y REEMPLAZAR SOLO ESTOS CASES DENTRO DE TU SWITCH PRINCIPAL
+            // ============================================================================
+            case OP_CREAR_EVENTO: 
+            {
+                registrarLog("LOG ADMIN: Solicitud OP_CREAR_EVENTO.");
+                char consulta[1024];
+                char fecha_ini_str[30];
+                char fecha_fin_str[30];
+
+                snprintf(fecha_ini_str, sizeof(fecha_ini_str), "%04d-%02d-%02d %02d:00", 
+                         paqueteRecibido.admin.f_inicio.anyo, paqueteRecibido.admin.f_inicio.mes, 
+                         paqueteRecibido.admin.f_inicio.dia, paqueteRecibido.admin.f_inicio.hora);
+
+                snprintf(fecha_fin_str, sizeof(fecha_fin_str), "%04d-%02d-%02d %02d:00", 
+                         paqueteRecibido.admin.f_final.anyo, paqueteRecibido.admin.f_final.mes, 
+                         paqueteRecibido.admin.f_final.dia, paqueteRecibido.admin.f_final.hora);
+                
+                snprintf(consulta, sizeof(consulta), 
+                         "INSERT INTO Evento (material, descripcion, fecha_ini, fecha_fin, tipo, lim_voluntarios) "
+                         "VALUES ('%s', '%s', '%s', '%s', '%s', %d);",
+                         paqueteRecibido.admin.nombre_taller_o_material, 
+                         paqueteRecibido.admin.descripcion, fecha_ini_str, fecha_fin_str, 
+                         paqueteRecibido.perfil.nombre, paqueteRecibido.admin.cupo_o_limite);
+
+                int rc = sqlite3_exec(db, consulta, 0, 0, 0);
+                if (rc == SQLITE_OK) {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Éxito: Evento creado correctamente.");
+                } else {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    snprintf(paqueteRespuesta.mensajeRespuesta, sizeof(paqueteRespuesta.mensajeRespuesta), "[Servidor] Error SQL: %s", sqlite3_errmsg(db));
+                }
+                break;
+            }
+
+            case OP_BORRAR_EVENTO: 
+            {
+                registrarLog("LOG ADMIN: Solicitud OP_BORRAR_EVENTO.");
+                char consulta[256];
+                snprintf(consulta, sizeof(consulta), "DELETE FROM Evento WHERE id_evento = %d;", paqueteRecibido.idEvento);
+                
+                int rc = sqlite3_exec(db, consulta, 0, 0, 0);
+                if (rc == SQLITE_OK && sqlite3_changes(db) > 0) {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Éxito: Evento eliminado.");
+                } else {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Error: ID de evento no encontrado o inexistente.");
+                }
+                break;
+            }
+
+            case OP_LISTAR_USUARIOS: 
+            {
+                registrarLog("LOG ADMIN: Solicitud OP_LISTAR_USUARIOS.");
+                std::string bufferUsuarios = "";
+                char* errorMsg = 0;
+                const char* consulta = "SELECT id_usuario, nombre, apellidos, tipo FROM Usuarios;";
+                
+                int rc = sqlite3_exec(db, consulta, callbackListarUsuarios, &bufferUsuarios, &errorMsg);
+                if (rc == SQLITE_OK) {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                    if (bufferUsuarios.empty()) {
+                        strcpy(paqueteRespuesta.mensajeRespuesta, "No hay usuarios registrados en el sistema.");
+                    } else {
+                        strncpy(paqueteRespuesta.mensajeRespuesta, bufferUsuarios.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+                    }
+                } else {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Error crítico al consultar la tabla Usuarios.");
+                }
+                break;
+            }
+
+            case OP_BAJA_USUARIO: 
+            {
+                registrarLog("LOG ADMIN: Solicitud OP_BAJA_USUARIO.");
+                char consulta[256];
+                snprintf(consulta, sizeof(consulta), "DELETE FROM Usuarios WHERE id_usuario = %d;", paqueteRecibido.idUsuario);
+                
+                int rc = sqlite3_exec(db, consulta, 0, 0, 0);
+                if (rc == SQLITE_OK && sqlite3_changes(db) > 0) {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Éxito: Usuario eliminado del sistema.");
+                } else {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Error: El ID de usuario especificado no existe.");
+                }
+                break;
+            }
+
+            case OP_REGISTRAR_ROPA: 
+            {
+                registrarLog("LOG ADMIN: Solicitud OP_REGISTRAR_ROPA.");
+                char consulta[512];
+                // Columnas reales de tu captura: id_beneficiario, cantidad, fecha
+                snprintf(consulta, sizeof(consulta), 
+                         "INSERT INTO RecogidaRopa (id_beneficiario, cantidad, fecha) "
+                         "VALUES (%d, %d, datetime('now', 'localtime'));", 
+                         paqueteRecibido.idUsuario, paqueteRecibido.admin.cantidad_ropa);
+                         
+                int rc = sqlite3_exec(db, consulta, 0, 0, 0);
+                if (rc == SQLITE_OK) {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Éxito: Registro insertado en RecogidaRopa.");
+                } else {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    snprintf(paqueteRespuesta.mensajeRespuesta, sizeof(paqueteRespuesta.mensajeRespuesta), "[Servidor] Error SQL en RecogidaRopa: %s", sqlite3_errmsg(db));
+                }
+                break;
+            }
+
+            case OP_CREAR_TALLER: 
+            {
+                registrarLog("LOG ADMIN: Solicitud OP_CREAR_TALLER.");
+                char consulta[1024];
+                char fecha_taller_str[30];
+
+                snprintf(fecha_taller_str, sizeof(fecha_taller_str), "%04d-%02d-%02d %02d:00", 
+                         paqueteRecibido.admin.f_inicio.anyo, paqueteRecibido.admin.f_inicio.mes, 
+                         paqueteRecibido.admin.f_inicio.dia, paqueteRecibido.admin.f_inicio.hora);
+
+                // Columnas reales de tu captura: id_profesor, fecha, nombre, descripcion
+                snprintf(consulta, sizeof(consulta), 
+                         "INSERT INTO Taller (id_profesor, fecha, nombre, descripcion) "
+                         "VALUES (%d, '%s', '%s', '%s');",
+                         paqueteRecibido.idUsuario, fecha_taller_str,
+                         paqueteRecibido.admin.nombre_taller_o_material, paqueteRecibido.admin.descripcion);
+
+                int rc = sqlite3_exec(db, consulta, 0, 0, 0);
+                if (rc == SQLITE_OK) {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Éxito: Taller creado correctamente en SQLite.");
+                } else {
+                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                    snprintf(paqueteRespuesta.mensajeRespuesta, sizeof(paqueteRespuesta.mensajeRespuesta), "[Servidor] Error SQL en Taller: %s", sqlite3_errmsg(db));
+                }
+                break;
+            }
+
 
             case OP_REGISTRO_DONANTE:
             {
@@ -655,7 +815,9 @@ case OP_VER_EVENTOS_DISPONIBLES:
         break;
     }
 
-            case OP_INSCRIBIR_EN_EVENTO:
+
+
+case OP_INSCRIBIR_EN_EVENTO:
             {
                 int id_vol = paqueteRecibido.idUsuario;
                 int id_ev = paqueteRecibido.idEvento;

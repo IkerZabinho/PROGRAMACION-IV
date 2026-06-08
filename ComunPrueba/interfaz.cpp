@@ -172,11 +172,8 @@ namespace GestionONG {
             if (id_perfil != -1) {
                 cout << "\n¡Bienvenido, " << sesion.getNombre() << " " << sesion.getApellidos() << "!\n";
                 
-                if (sesion.getTipo() == ADMINISTRADOR) {
-                    menuAdministrador(db);
-                } else {
-                    menuPrincipal(db, (int)sesion.getTipo(), id_perfil);
-                }
+                menuPrincipal(db, (int)sesion.getTipo(), id_perfil);
+                
             } else {
                 cout << "Error: No se encontró un perfil asociado a este usuario.\n";
             }
@@ -852,49 +849,36 @@ namespace GestionONG {
     // ============================================================================
     // AUXILIAR: LEER Y VALIDAR FECHA
     // ============================================================================
-    int leer_y_validar_fecha(const string& mensaje, Fecha *f) {
-        cout << mensaje;
-        if (!(cin >> f->dia >> f->mes >> f->anyo >> f->hora >> f->minutos)) {
-            cin.clear();
-            cin.ignore(10000, '\n');
-            return 0;
-        }
+int Fecha::leer_y_validar_fecha(const string& mensaje, Fecha *f) {
+        int correcto = 0;
+        do {
+            cout << mensaje;
+            cout << "\nIntroduce el año (aaaa): ";
+            cin >> f->anyo;
+            cout << "Introduce el mes (1-12): ";
+            cin >> f->mes;
+            cout << "Introduce el día (1-31): ";
+            cin >> f->dia;
+            cout << "Introduce la hora (0-23): ";
+            cin >> f->hora;
+            f->minutos = 0;
 
-        int dias_max;
-        if (f->mes < 1 || f->mes > 12 || f->hora < 0 || f->hora > 23 || f->minutos < 0 || f->minutos > 59)
-            return 0;
-
-        if (f->mes == 2) {
-            dias_max = es_bisiesto(f->anyo) ? 29 : 28;
-        } else if (f->mes == 4 || f->mes == 6 || f->mes == 9 || f->mes == 11) {
-            dias_max = 30;
-        } else {
-            dias_max = 31;
-        }
-
-        if (f->dia < 1 || f->dia > dias_max) return 0;
-
-        struct tm temp = {0};
-        temp.tm_mday = f->dia;
-        temp.tm_mon = f->mes - 1;      
-        temp.tm_year = f->anyo - 1900; 
-        temp.tm_hour = f->hora;
-        temp.tm_min = f->minutos;
-        temp.tm_sec = 0;
-        temp.tm_isdst = -1; 
-
-        time_t tiempo_usuario = mktime(&temp); 
-        time_t tiempo_ahora = time(NULL);
-
-        if (tiempo_usuario <= tiempo_ahora) {
-            cout << "Error: La fecha debe ser posterior a la actual.\n";
-            return 0; 
-        }
-
-        return 1; 
+            if (f->mes >= 1 && f->mes <= 12 && f->dia >= 1 && f->dia <= 31 && f->hora >= 0 && f->hora <= 23) {
+                correcto = 1;
+            } else {
+                cout << "[!] Fecha o hora no válida. Inténtalo de nuevo.\n";
+            }
+        } while (!correcto);
+        return 1;
     }
 
-    // ============================================================================
+    // 3B. FUNCIÓN SUELTA (Para las llamadas viejas de interfaz.cpp que daban error)
+    int leer_y_validar_fecha(const string& mensaje, Fecha *f) {
+        Fecha aux;
+        return aux.leer_y_validar_fecha(mensaje, f);
+    }
+
+   // ============================================================================
     // GESTIÓN DE EVENTOS AUTOMÁTICOS Y CONSULTAS DE AYUDA
     // ============================================================================
 
@@ -1148,7 +1132,8 @@ namespace GestionONG {
                 printf("\n2. Consultar horarios para recoger ayudas");
                 printf("\n3. Ver proximos talleres");
             }
-           
+
+            
             printf("\n0. Cerrar sesion");
             printf("\nSeleccione una opcion: ");
             scanf("%d", &opcion);
@@ -1276,40 +1261,6 @@ void registrarRecogidaRopaAdmin(sqlite3 *db) {
     }
 }
 
-void menuAdministrador(sqlite3 *db) {
-    int opcion;
-    do {
-        printf("\n==================================");
-        printf("\n   PANEL DE ADMINISTRACIÓN");
-        printf("\n==================================");
-        printf("\n1. Crear nuevo evento");
-        printf("\n2. Gestionar eventos (Borrar)");
-        printf("\n3. Listar usuarios registrados");
-        printf("\n4. Dar de baja a un usuario");
-        printf("\n5. Registrar recogida de ropa");
-        printf("\n6. Asignar voluntario a taller");
-        printf("\n0. Cerrar sesión");
-        printf("\n----------------------------------");
-        printf("\nSeleccione una opción: ");
-
-        if (scanf("%d", &opcion) != 1) {
-            printf("\n[!] Por favor, introduce el número de la opción deseada.\n");
-            opcion = -1;
-            continue;
-        }
-
-        switch(opcion) {
-            case 1: crearEvento(db); break;
-            case 2: borrarEvento(db); break;
-            case 3: listarUsuarios(db); break;
-            case 4: darBajaUsuario(db); break;
-            case 5: registrarRecogidaRopaAdmin(db); break;
-            case 6: crearTaller(db); break;
-            case 0: printf("\nFinalizando sesión administrativa. ¡Buen día!\n"); break;
-            default: printf("\n[!] Esa opción no está en el menú. Inténtalo de nuevo.\n"); break;
-        }
-    } while (opcion != 0);
-}
 
     int buscarIdEspecifico(sqlite3 *db, int id_usuario, int tipoUsuario) {
         return id_usuario; 
@@ -1326,14 +1277,45 @@ void menuAdministrador(sqlite3 *db) {
     void mostrarProximaRecogida(sqlite3 *db, int tipo) {
         cout << "\n[Cliente] Consultando próximas recogidas en el servidor...\n";
     }
-
-    int es_bisiesto(int anyo) {
+// 1. MÉTODO DE LA CLASE (Para interfaz_Admin.cpp)
+    int Fecha::es_bisiesto(int anyo) {
         return ((anyo % 4 == 0 && anyo % 100 != 0) || (anyo % 400 == 0));
     }
 
-    int comparar_fechas(const Fecha& f1, const Fecha& f2) {
-        // Retorna un valor neutro para compilar
+    // 1B. FUNCIÓN SUELTA (Para las llamadas viejas de interfaz.cpp)
+    int es_bisiesto(int anyo) {
+        Fecha aux;
+        return aux.es_bisiesto(anyo);
+    }
+
+    int Fecha::comparar_fechas(const Fecha& f1, const Fecha& f2) {
+// 1. Comparar Años
+        if (f1.anyo < f2.anyo) return -1;
+        if (f1.anyo > f2.anyo) return 1;
+
+        // 2. Si el año es igual, comparar Meses
+        if (f1.mes < f2.mes) return -1;
+        if (f1.mes > f2.mes) return 1;
+
+        // 3. Si el mes es igual, comparar Días
+        if (f1.dia < f2.dia) return -1;
+        if (f1.dia > f2.dia) return 1;
+
+        // 4. Si el día es igual, ¡comparamos las Horas! (Aquí estaba tu fallo)
+        if (f1.hora < f2.hora) return -1;
+        if (f1.hora > f2.hora) return 1;
+
+        // 5. Si la hora es igual, comparar Minutos
+        if (f1.minutos < f2.minutos) return -1;
+        if (f1.minutos > f2.minutos) return 1;
+        
         return 0; 
+    }
+
+    // 2B. FUNCIÓN SUELTA (Para las llamadas viejas de interfaz.cpp)
+    int comparar_fechas(const Fecha& f1, const Fecha& f2) {
+        Fecha aux;
+        return aux.comparar_fechas(f1, f2);
     }
 
     int insertarDonacionRopa(sqlite3* db, const Ropa& r, int id_usuario) {

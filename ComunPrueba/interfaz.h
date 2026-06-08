@@ -10,7 +10,6 @@ using std::string;
 namespace GestionONG {
 
         // Declaraciones avanzadas de menús y funciones de base de datos
-    void menuAdministrador(sqlite3 *db);
     void menuPrincipal(sqlite3 *db, int tipoUsuario, int id_perfil);
     void listarUsuarios(sqlite3 *db);
     int eliminarUsuarioDB(sqlite3 *db, int id);
@@ -71,9 +70,7 @@ namespace GestionONG {
     // ============================================================================
     // 5. SECCIÓN DE ADMINISTRACIÓN (CREACIÓN)
     // ============================================================================
-    void crearEvento(sqlite3 *db);
     void crearTaller(sqlite3 *db);
-    void darBajaUsuario(sqlite3 *db);
     void registrarRecogidaRopaAdmin(sqlite3 *db);
     void consultarMisEventos(sqlite3 *db, int id_voluntario);
     void consultarHistorialEventos(sqlite3 *db, int id_voluntario);
