@@ -278,6 +278,30 @@ int main()
                 }
                 break;
             }
+            case OP_LISTAR_EVENTOS:
+            {
+                const char *sql_list = "SELECT id_evento, descripcion, fecha_ini FROM Evento;";
+                sqlite3_stmt *stmt;
+                string lista = "\n--- EVENTOS DISPONIBLES ---\nID\t| Descripcion\t| Fecha Inicio\n---------------------------------------\n";
+
+                if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK) {
+                    while (sqlite3_step(stmt) == SQLITE_ROW) {
+                        int id = sqlite3_column_int(stmt, 0);
+                        string nombre = (const char*)sqlite3_column_text(stmt, 1);
+                        string tipo = (const char*)sqlite3_column_text(stmt, 2);
+                        
+                        lista += to_string(id) + "\t| " + nombre + "\t| " + tipo + "\n";
+                    }
+                    sqlite3_finalize(stmt);
+                } else {
+                    lista = "[!] Error al acceder a la base de datos de eventos.";
+                }
+
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                strncpy(paqueteRespuesta.mensajeRespuesta, lista.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+                break;
+            }
+
 
             case OP_LISTAR_USUARIOS: 
             {
@@ -322,23 +346,76 @@ int main()
             {
                 registrarLog("LOG ADMIN: Solicitud OP_REGISTRAR_ROPA.");
                 char consulta[512];
-                // Columnas reales de tu captura: id_beneficiario, cantidad, fecha
+                
                 snprintf(consulta, sizeof(consulta), 
-                         "INSERT INTO RecogidaRopa (id_beneficiario, cantidad, fecha) "
-                         "VALUES (%d, %d, datetime('now', 'localtime'));", 
-                         paqueteRecibido.idUsuario, paqueteRecibido.admin.cantidad_ropa);
-                         
+                        "INSERT INTO RecogidaRopa (id_beneficiario, id_evento, fecha_recogida) "
+                        "VALUES (%d, %d, (SELECT fecha_fin FROM Evento WHERE id_evento = %d));", 
+                        paqueteRecibido.idUsuario, 
+                        paqueteRecibido.idEvento,
+                        paqueteRecibido.idEvento); 
+                            
                 int rc = sqlite3_exec(db, consulta, 0, 0, 0);
                 if (rc == SQLITE_OK) {
                     paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Éxito: Registro insertado en RecogidaRopa.");
+                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Éxito: Registro insertado en RecogidaRopa con la fecha del evento.");
                 } else {
                     paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-                    snprintf(paqueteRespuesta.mensajeRespuesta, sizeof(paqueteRespuesta.mensajeRespuesta), "[Servidor] Error SQL en RecogidaRopa: %s", sqlite3_errmsg(db));
+                    snprintf(paqueteRespuesta.mensajeRespuesta, sizeof(paqueteRespuesta.mensajeRespuesta), 
+                            "[Servidor] Error SQL: %s", sqlite3_errmsg(db));
                 }
                 break;
             }
+            case OP_LISTAR_BENEFICIARIOS:
+            {
+                const char *sql = "SELECT id_usuario, nombre, apellidos FROM Usuarios WHERE tipo = 3;";
+                sqlite3_stmt *stmt;
+                string lista = "";
 
+                if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+                    while (sqlite3_step(stmt) == SQLITE_ROW) {
+                        int id = sqlite3_column_int(stmt, 0);
+                        const char* nom = (const char*)sqlite3_column_text(stmt, 1);
+                        const char* ape = (const char*)sqlite3_column_text(stmt, 2);
+                        
+                        lista += "ID: " + to_string(id) + " - " + (nom ? nom : "") + " " + (ape ? ape : "") + "\n";
+                    }
+                    sqlite3_finalize(stmt);
+                } else {
+                    lista = "[!] Error al cargar beneficiarios.";
+                }
+
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                strncpy(paqueteRespuesta.mensajeRespuesta, lista.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+                break;
+            }
+            case OP_LISTAR_EVENTOS_ROPA:
+            {
+                const char *sql = "SELECT id_evento, descripcion, fecha_fin FROM Evento WHERE tipo = 0;";
+                sqlite3_stmt *stmt;
+                string lista = "";
+
+                if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+                    while (sqlite3_step(stmt) == SQLITE_ROW) {
+                        int id = sqlite3_column_int(stmt, 0);
+                        const char* desc = (const char*)sqlite3_column_text(stmt, 1);
+                        const char* fecha_fin = (const char*)sqlite3_column_text(stmt, 2);
+                        
+                        lista += "ID: " + to_string(id) + " - " + (desc ? desc : "[Sin descripción]") 
+                            + " (Fin: " + (fecha_fin ? fecha_fin : "No asignada") + ")\n";
+                    }
+                    sqlite3_finalize(stmt);
+                    
+                    if (lista.empty()) {
+                        lista = "[No hay eventos de reparto de ropa futuros (tipo=0) disponibles]\n";
+                    }
+                } else {
+                    lista = "[!] Error al acceder a la tabla de eventos filtrados (tipo=0).";
+                }
+
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                strncpy(paqueteRespuesta.mensajeRespuesta, lista.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+                break;
+            }
             case OP_CREAR_TALLER: 
             {
                 registrarLog("LOG ADMIN: Solicitud OP_CREAR_TALLER.");
@@ -929,8 +1006,7 @@ case OP_ACTUALIZAR_PERFIL: // Debe llamarse igual que en el cliente
     sqlite3_close(db);
     return 0;
 }
-int tieneChoqueDeFechas(sqlite3 *db, int id_voluntario, int id_evento_nuevo)
-{
+int tieneChoqueDeFechas(sqlite3 *db, int id_voluntario, int id_evento_nuevo){
     sqlite3_stmt *stmt;
     char fecha_objetivo[20] = "";
     int choque = 0;

@@ -63,11 +63,21 @@ void crearEventoCliente() {
     cout << "Descripción del evento: ";
     cin.getline(paquete.admin.descripcion, 150);
 
-    cout << "Tipo de evento (ej: Entrega, Recogida): ";
-    string tipoAux;
-    getline(cin, tipoAux);
-    strncpy(paquete.perfil.nombre, tipoAux.c_str(), 49);
+   string tipoAux;
+    while (true) {
+        cout << "Tipo de evento (Entrega/Recogida): ";
+        getline(cin, tipoAux);
 
+        if (tipoAux == "Recogida" || tipoAux == "recogida" || 
+            tipoAux == "Reparto"  || tipoAux == "reparto"  ){
+            
+
+            strncpy(paquete.perfil.nombre, tipoAux.c_str(), 49);
+            break; 
+        } else {
+            cout << "[!] Error: Tipo de evento inválido. Solo se permite 'Recogida' o 'Reparto'.\n\n";
+        }
+    }
     cout << "Límite de voluntarios: ";
     cin >> paquete.admin.cupo_o_limite;
     cin.ignore();
@@ -117,18 +127,27 @@ void crearEventoCliente() {
 // 2. GESTIONAR EVENTOS (BORRAR)
 // ============================================================================
 void borrarEventoCliente() {
-    PaqueteRed paquete;
-    memset(&paquete, 0, sizeof(PaqueteRed));
-    paquete.tipoOperacion = OP_BORRAR_EVENTO;
+    PaqueteRed paqueteListar;
+    memset(&paqueteListar, 0, sizeof(PaqueteRed));
+    paqueteListar.tipoOperacion = OP_LISTAR_EVENTOS;
 
-    cout << "\n--- ELIMINAR EVENTO ---" << endl;
-    cout << "Introduce el ID del evento a borrar: ";
-    cin >> paquete.idEvento;
-    cin.ignore();
+    PaqueteRed respuestaLista = enviarPeticionServidor(paqueteListar);
+    cout << respuestaLista.mensajeRespuesta << endl;
+    PaqueteRed paqueteBorrar;
+    memset(&paqueteBorrar, 0, sizeof(PaqueteRed));
+    paqueteBorrar.tipoOperacion = OP_BORRAR_EVENTO;
 
-    cout << "\n[Red] Eliminando evento " << paquete.idEvento << "...\n";
-    PaqueteRed respuesta = enviarPeticionServidor(paquete);
-    cout << respuesta.mensajeRespuesta << endl;
+    cout << "Introduce el ID del evento a eliminar (0 para cancelar): ";
+    if (!(cin >> paqueteBorrar.idEvento) || paqueteBorrar.idEvento <= 0) {
+        cin.clear();
+        cin.ignore(10000, '\n');
+        cout << "[!] Operación cancelada.\n";
+        return;
+    }
+    cout << "\n[Red] Enviando solicitud de eliminación para el evento " << paqueteBorrar.idEvento << "...\n";
+    PaqueteRed respuestaBorrar = enviarPeticionServidor(paqueteBorrar);
+    
+    cout << respuestaBorrar.mensajeRespuesta << endl;
 }
 
 // ============================================================================
@@ -148,40 +167,87 @@ void listarUsuariosCliente() {
 // 4. DAR DE BAJA A UN USUARIO
 // ============================================================================
 void darBajaUsuarioCliente() {
-    PaqueteRed paquete;
-    memset(&paquete, 0, sizeof(PaqueteRed));
-    paquete.tipoOperacion = OP_BAJA_USUARIO;
+    
+    PaqueteRed paqueteListar;
+    memset(&paqueteListar, 0, sizeof(PaqueteRed));
+    paqueteListar.tipoOperacion = OP_LISTAR_USUARIOS; 
 
-    cout << "\n--- DAR DE BAJA USUARIO ---" << endl;
-    cout << "Introduce el ID del usuario a eliminar: ";
-    cin >> paquete.idUsuario;
-    cin.ignore();
+    cout << "\n--- LISTA DE USUARIOS REGISTRADOS ---" << endl;
+    PaqueteRed respuestaLista = enviarPeticionServidor(paqueteListar);
+    
+    
+    cout << respuestaLista.mensajeRespuesta << endl;
+    cout << "-------------------------------------\n" << endl;
 
-    cout << "\n[Red] Dando de baja al usuario " << paquete.idUsuario << "...\n";
-    PaqueteRed respuesta = enviarPeticionServidor(paquete);
-    cout << respuesta.mensajeRespuesta << endl;
+    PaqueteRed paqueteBaja;
+    memset(&paqueteBaja, 0, sizeof(PaqueteRed));
+    paqueteBaja.tipoOperacion = OP_BAJA_USUARIO;
+
+    cout << "--- DAR DE BAJA USUARIO ---" << endl;
+    cout << "Introduce el ID del usuario a eliminar (0 para cancelar): ";
+    if (!(cin >> paqueteBaja.idUsuario) || paqueteBaja.idUsuario <= 0) {
+        cin.clear();
+        cin.ignore(10000, '\n');
+        cout << "[!] Operación cancelada.\n";
+        return;
+    }
+    cin.ignore(); 
+    cout << "\n[Red] Dando de baja al usuario " << paqueteBaja.idUsuario << "...\n";
+    PaqueteRed respuestaBaja = enviarPeticionServidor(paqueteBaja);
+    cout << respuestaBaja.mensajeRespuesta << endl;
 }
 
 // ============================================================================
 // 5. REGISTRAR RECOGIDA DE ROPA
 // ============================================================================
 void registrarRecogidaRopaAdminCliente() {
-    PaqueteRed paquete;
-    memset(&paquete, 0, sizeof(PaqueteRed));
-    paquete.tipoOperacion = OP_REGISTRAR_ROPA;
+    PaqueteRed paqueteListarBeneficiarios;
+    memset(&paqueteListarBeneficiarios, 0, sizeof(PaqueteRed));
+    // Reutilizamos u obtenemos una operación destinada a listar solo beneficiarios
+    paqueteListarBeneficiarios.tipoOperacion = OP_LISTAR_BENEFICIARIOS; 
 
-    cout << "\n--- REGISTRAR RECOGIDA DE ROPA ---\n";
-    cout << "Introduce el ID del Beneficiario: ";
-    cin >> paquete.idUsuario; 
-    cout << "Introduce la cantidad de prendas: ";
-    cin >> paquete.admin.cantidad_ropa; 
+    cout << "\n--- LISTA DE BENEFICIARIOS ---" << endl;
+    PaqueteRed respBeneficiarios = enviarPeticionServidor(paqueteListarBeneficiarios);
+    cout << respBeneficiarios.mensajeRespuesta << endl;
+
+    int idBeneficiario;
+    cout << "Introduce el ID del beneficiario: ";
+    if (!(cin >> idBeneficiario) || idBeneficiario <= 0) {
+        cin.clear();
+        cin.ignore(10000, '\n');
+        cout << "[!] Operación cancelada.\n";
+        return;
+    }
+    cin.ignore();
+    PaqueteRed paqueteListarEventosRopa;
+    memset(&paqueteListarEventosRopa, 0, sizeof(PaqueteRed));
+    paqueteListarEventosRopa.tipoOperacion = OP_LISTAR_EVENTOS_ROPA; // Operación nueva
+
+    cout << "\n--- EVENTOS DE REPARTO DE ROPA FUTUROS ---" << endl;
+    PaqueteRed respEventos = enviarPeticionServidor(paqueteListarEventosRopa);
+    cout << respEventos.mensajeRespuesta << endl;
+
+    int idEvento;
+    cout << "Introduce el ID del evento de ropa: ";
+    if (!(cin >> idEvento) || idEvento <= 0) {
+        cin.clear();
+        cin.ignore(10000, '\n');
+        cout << "[!] Operación cancelada.\n";
+        return;
+    }
     cin.ignore();
 
-    cout << "\n[Red] Registrando entrega de ropa...\n";
-    PaqueteRed respuesta = enviarPeticionServidor(paquete);
-    cout << respuesta.mensajeRespuesta << endl;
-}
 
+    PaqueteRed paqueteRegistrar;
+    memset(&paqueteRegistrar, 0, sizeof(PaqueteRed));
+    paqueteRegistrar.tipoOperacion = OP_REGISTRAR_ROPA;
+    paqueteRegistrar.idUsuario = idBeneficiario; // id_beneficiario
+    paqueteRegistrar.idEvento = idEvento;       // id_evento
+
+    cout << "\n[Red] Enviando registro de recogida de ropa...\n";
+    PaqueteRed respuestaFinal = enviarPeticionServidor(paqueteRegistrar);
+    cout << respuestaFinal.mensajeRespuesta << endl;
+}
 // ============================================================================
 // 6. ASIGNAR VOLUNTARIO A TALLER / CREAR TALLER
 // ============================================================================
