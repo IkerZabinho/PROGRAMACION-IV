@@ -593,3 +593,37 @@
 [Sun Jun  7 10:17:34 2026] Procesando Login Real para: junza
 [Sun Jun  7 10:17:34 2026] LOGIN EXITOSO: junza (ID: 50)
 [Sun Jun  7 10:17:34 2026] Cliente desconectado del socket.
+[Mon Jun 08 09:18:47 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 08 09:18:47 2026] Cargando configuracion...
+[Mon Jun 08 09:18:47 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 08 09:18:47 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 08 09:19:07 2026] Cliente conectado al socket.
+[Mon Jun 08 09:19:07 2026] Procesando Login Real para: admin
+[Mon Jun 08 09:19:07 2026] ADVERTENCIA: El usuario existe en Usuarios pero no tiene fila en la tabla Beneficiario.
+[Mon Jun 08 09:19:07 2026] LOGIN EXITOSO: admin (ID: 2)
+[Mon Jun 08 09:19:07 2026] Cliente desconectado del socket.
+[Mon Jun 08 09:22:31 2026] Cliente conectado al socket.
+[Mon Jun 08 09:22:31 2026] [BD] Petición de actualización económica para beneficiario ID: 2
+[Mon Jun 08 09:22:31 2026] [OK] Datos guardados con éxito en la Base de Datos.
+[Mon Jun 08 09:22:31 2026] Cliente desconectado del socket.
+[Mon Jun 08 09:28:59 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 08 09:28:59 2026] Cargando configuracion...
+[Mon Jun 08 09:28:59 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 08 09:28:59 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 08 09:29:13 2026] Cliente conectado al socket.
+[Mon Jun 08 09:29:13 2026] Procesando Login Real para: admin
+[Mon Jun 08 09:29:13 2026] ADVERTENCIA: El usuario existe en Usuarios pero no tiene fila en la tabla Beneficiario.
+[Mon Jun 08 09:29:13 2026] LOGIN EXITOSO: admin (ID: 2)
+[Mon Jun 08 09:29:13 2026] Cliente desconectado del socket.
+[Mon Jun 08 09:42:31 2026] Cliente conectado al socket.
+[Mon Jun 08 09:42:31 2026] Procesando Login Real para: admin
+[Mon Jun 08 09:42:31 2026] LOGIN EXITOSO: admin (ID: 2)
+[Mon Jun 08 09:42:31 2026] Cliente desconectado del socket.
+[Mon Jun 08 09:49:37 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 08 09:49:37 2026] Cargando configuracion...
+[Mon Jun 08 09:49:37 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 08 09:49:37 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 08 09:49:52 2026] Cliente conectado al socket.
+[Mon Jun 08 09:49:52 2026] Procesando Login Real para: admin
+[Mon Jun 08 09:49:52 2026] LOGIN EXITOSO: admin (ID: 2)
+[Mon Jun 08 09:49:52 2026] Cliente desconectado del socket.

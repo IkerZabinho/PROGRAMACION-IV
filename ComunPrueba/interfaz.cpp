@@ -1230,9 +1230,86 @@ namespace GestionONG {
     sqlite3_finalize(stmt);
     printf("----------------------------------------------------------------------------------\n");
 }
-void menuAdministrador(sqlite3 *db) {
-        cout << "\n[Cliente] El menú de administrador se gestionará por red.\n";
+void registrarRecogidaRopaAdmin(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    int id_beneficiario, id_evento;
+    
+    printf("\n--- LISTA DE BENEFICIARIOS ---\n");
+    const char *sql_benef = "SELECT b.id_beneficiario, u.nombre, u.apellidos "
+                             "FROM Beneficiario b JOIN Usuarios u ON b.id_usuario = u.id_usuario;";
+    if (sqlite3_prepare_v2(db, sql_benef, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("ID: %d - %s %s\n", sqlite3_column_int(stmt, 0), 
+                   sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2));
+        }
     }
+    sqlite3_finalize(stmt);
+    
+    printf("Introduce el ID del beneficiario: ");
+    scanf("%d", &id_beneficiario);
+    
+    printf("\n--- EVENTOS DE ROPA FUTUROS ---\n");
+    const char *sql_eventos = "SELECT id_evento, descripcion, fecha_ini FROM Evento "
+                              "WHERE material = 0 AND tipo = 1 AND date(fecha_ini) >= date('now') "
+                              "ORDER BY fecha_ini ASC;";
+    if (sqlite3_prepare_v2(db, sql_eventos, -1, &stmt, 0) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("ID: %d - %s - %s\n", sqlite3_column_int(stmt, 0), 
+                   sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2));
+        }
+    }
+    sqlite3_finalize(stmt);
+    
+    printf("Introduce el ID del evento de ropa: ");
+    scanf("%d", &id_evento);
+
+    const char *sql = "INSERT INTO RecogidaRopa (id_beneficiario, id_evento, fecha_recogida) VALUES (?, ?, date('now'));";
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, id_beneficiario);
+        sqlite3_bind_int(stmt, 2, id_evento);
+        if (sqlite3_step(stmt) == SQLITE_DONE) {
+            printf("\n[OK] Recogida registrada con éxito.\n");
+        } else {
+            printf("\n[!] Error: Puede que esa recogida ya esté registrada.\n");
+        }
+        sqlite3_finalize(stmt);
+    }
+}
+
+void menuAdministrador(sqlite3 *db) {
+    int opcion;
+    do {
+        printf("\n==================================");
+        printf("\n   PANEL DE ADMINISTRACIÓN");
+        printf("\n==================================");
+        printf("\n1. Crear nuevo evento");
+        printf("\n2. Gestionar eventos (Borrar)");
+        printf("\n3. Listar usuarios registrados");
+        printf("\n4. Dar de baja a un usuario");
+        printf("\n5. Registrar recogida de ropa");
+        printf("\n6. Asignar voluntario a taller");
+        printf("\n0. Cerrar sesión");
+        printf("\n----------------------------------");
+        printf("\nSeleccione una opción: ");
+
+        if (scanf("%d", &opcion) != 1) {
+            printf("\n[!] Por favor, introduce el número de la opción deseada.\n");
+            opcion = -1;
+            continue;
+        }
+
+        switch(opcion) {
+            case 1: crearEvento(db); break;
+            case 2: borrarEvento(db); break;
+            case 3: listarUsuarios(db); break;
+            case 4: darBajaUsuario(db); break;
+            case 5: registrarRecogidaRopaAdmin(db); break;
+            case 6: crearTaller(db); break;
+            case 0: printf("\nFinalizando sesión administrativa. ¡Buen día!\n"); break;
+            default: printf("\n[!] Esa opción no está en el menú. Inténtalo de nuevo.\n"); break;
+        }
+    } while (opcion != 0);
+}
 
     int buscarIdEspecifico(sqlite3 *db, int id_usuario, int tipoUsuario) {
         return id_usuario; 

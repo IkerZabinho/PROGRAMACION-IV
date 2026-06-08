@@ -108,6 +108,7 @@ void procesarLoginCliente() {
         }
         
         if (respuesta.tipoUsuario == 4) { 
+            
             //menuAdministrador(NULL); 
         } 
         else if (respuesta.tipoUsuario >= 1 && respuesta.tipoUsuario <= 3) { 

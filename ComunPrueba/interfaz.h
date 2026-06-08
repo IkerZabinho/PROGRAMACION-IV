@@ -73,6 +73,17 @@ namespace GestionONG {
     // ============================================================================
     void crearEvento(sqlite3 *db);
     void crearTaller(sqlite3 *db);
+    void darBajaUsuario(sqlite3 *db);
+    void registrarRecogidaRopaAdmin(sqlite3 *db);
+    void consultarMisEventos(sqlite3 *db, int id_voluntario);
+    void consultarHistorialEventos(sqlite3 *db, int id_voluntario);
+    void listarDonaciones(sqlite3 *db, int id_donante);
+    void verProximoRepartoComida(sqlite3 *db);
+    void verProximoRepartoRopa(sqlite3 *db, int id_beneficiario);
+    void verTalleresProximos(sqlite3 *db);
+    
+    
+    
 
 } // namespace GestionONG
 
