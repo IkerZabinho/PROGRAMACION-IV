@@ -20,7 +20,6 @@ void menuAdministrador(int id_perfil) {
         cout << "\n3. Listar usuarios registrados";
         cout << "\n4. Dar de baja a un usuario";
         cout << "\n5. Registrar recogida de ropa"; 
-        cout << "\n6. Asignar voluntario a taller";
         cout << "\n0. Cerrar sesión";
         cout << "\n----------------------------------";
         cout << "\nSeleccione una opción: ";
@@ -32,15 +31,14 @@ void menuAdministrador(int id_perfil) {
             opcion = -1;
             continue;
         }
-        while (cin.get() != '\n'); // Limpiar buffer
+        while (cin.get() != '\n'); 
 
         switch(opcion) {
             case 1: crearEventoCliente(); break;
             case 2: borrarEventoCliente(); break;
             case 3: listarUsuariosCliente(); break;
             case 4: darBajaUsuarioCliente(); break;
-            case 5: registrarRecogidaRopaAdminCliente(); break; // 🆕 Llamada red
-            case 6: crearTallerCliente(); break;
+            case 5: registrarRecogidaRopaAdminCliente(); break; 
             case 0: cout << "\nCerrando sesión administrativa.\n"; break;
             default: cout << "\nOpción no válida.\n"; break;
         }
@@ -65,7 +63,7 @@ void crearEventoCliente() {
 
    string tipoAux;
     while (true) {
-        cout << "Tipo de evento (Entrega/Recogida): ";
+        cout << "Tipo de evento (Reparto/Recogida): ";
         getline(cin, tipoAux);
 
         if (tipoAux == "Recogida" || tipoAux == "recogida" || 
@@ -119,11 +117,41 @@ void crearEventoCliente() {
     paquete.admin.f_final.anyo = f_final.anyo;
     paquete.admin.f_final.hora = f_final.hora;
 
-    cout << "\n[Red] Enviando datos de evento...\n";
-    PaqueteRed respuesta = enviarPeticionServidor(paquete);
-    cout << respuesta.mensajeRespuesta << endl;
+   int confirmacion = -1;
+
+    while (true) {
+        cout << "\n¿Quieres crear el evento? (Si=1, No=0): ";
+        
+        
+        if (cin >> confirmacion) {
+            cin.ignore(10000, '\n');
+
+            if (confirmacion == 1) {
+                cout << "\n[Red] Enviando datos de evento...\n";
+                PaqueteRed respuesta = enviarPeticionServidor(paquete);
+                cout << respuesta.mensajeRespuesta << endl;
+                break; 
+            } 
+            else if (confirmacion == 0) {
+                cout << "\n[!] Operación cancelada. Volviendo al menú principal...\n";
+                return; 
+            } 
+            else {
+                
+                cout << "[!] Error: Opción inválida. Introduce solo 1 para Sí o 0 para No.\n";
+            }
+        } 
+        else {
+            
+            cout << "[!] Error: Entrada no numérica. Por favor, introduce un número (1 o 0).\n";
+            cin.clear();          
+            cin.ignore(10000, '\n'); 
+        }
+    }
 }
 
+
+// ============================================================================
 // 2. GESTIONAR EVENTOS (BORRAR)
 // ============================================================================
 void borrarEventoCliente() {
@@ -133,6 +161,7 @@ void borrarEventoCliente() {
 
     PaqueteRed respuestaLista = enviarPeticionServidor(paqueteListar);
     cout << respuestaLista.mensajeRespuesta << endl;
+    
     PaqueteRed paqueteBorrar;
     memset(&paqueteBorrar, 0, sizeof(PaqueteRed));
     paqueteBorrar.tipoOperacion = OP_BORRAR_EVENTO;
@@ -144,11 +173,37 @@ void borrarEventoCliente() {
         cout << "[!] Operación cancelada.\n";
         return;
     }
-    cout << "\n[Red] Enviando solicitud de eliminación para el evento " << paqueteBorrar.idEvento << "...\n";
-    PaqueteRed respuestaBorrar = enviarPeticionServidor(paqueteBorrar);
-    
-    cout << respuestaBorrar.mensajeRespuesta << endl;
+    cin.ignore(10000, '\n'); 
+
+  
+    int confirmacion = -1;
+    while (true) {
+        cout << "¿Seguro que deseas eliminar el evento " << paqueteBorrar.idEvento << "? (Sí=1, No=0): ";
+        if (cin >> confirmacion) {
+            cin.ignore(10000, '\n'); 
+
+            if (confirmacion == 1) {
+                cout << "\n[Red] Enviando solicitud de eliminación para el evento " << paqueteBorrar.idEvento << "...\n";
+                PaqueteRed respuestaBorrar = enviarPeticionServidor(paqueteBorrar);
+                cout << respuestaBorrar.mensajeRespuesta << endl;
+                break;
+            } 
+            else if (confirmacion == 0) {
+                cout << "\n[!] Operación cancelada. Volviendo al menú principal...\n";
+                return; 
+            } 
+            else {
+                cout << "[!] Error: Opción inválida. Introduce solo 1 para Sí o 0 para No.\n";
+            }
+        } 
+        else {
+            cout << "[!] Error: Entrada no numérica. Por favor, introduce un número (1 o 0).\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+        }
+    }
 }
+
 
 // ============================================================================
 // 3. LISTAR USUARIOS REGISTRADOS
@@ -161,20 +216,36 @@ void listarUsuariosCliente() {
     cout << "\n--- LISTADO DE USUARIOS ---" << endl;
     PaqueteRed respuesta = enviarPeticionServidor(paquete);
     cout << respuesta.mensajeRespuesta << endl;
+    
+   
+    int volver = -1;
+    while (true) {
+        cout << "Pulsa 0 para volver al menú: ";
+        if (cin >> volver) {
+            cin.ignore(10000, '\n');
+            if (volver == 0) {
+                break; 
+            } else {
+                cout << "[!] Error: Opción inválida. ";
+            }
+        } else {
+            cout << "[!] Error: Entrada no numérica. ";
+            cin.clear();
+            cin.ignore(10000, '\n');
+        }
+    }
 }
 
 // ============================================================================
 // 4. DAR DE BAJA A UN USUARIO
 // ============================================================================
 void darBajaUsuarioCliente() {
-    
     PaqueteRed paqueteListar;
     memset(&paqueteListar, 0, sizeof(PaqueteRed));
     paqueteListar.tipoOperacion = OP_LISTAR_USUARIOS; 
 
     cout << "\n--- LISTA DE USUARIOS REGISTRADOS ---" << endl;
     PaqueteRed respuestaLista = enviarPeticionServidor(paqueteListar);
-    
     
     cout << respuestaLista.mensajeRespuesta << endl;
     cout << "-------------------------------------\n" << endl;
@@ -191,10 +262,35 @@ void darBajaUsuarioCliente() {
         cout << "[!] Operación cancelada.\n";
         return;
     }
-    cin.ignore(); 
-    cout << "\n[Red] Dando de baja al usuario " << paqueteBaja.idUsuario << "...\n";
-    PaqueteRed respuestaBaja = enviarPeticionServidor(paqueteBaja);
-    cout << respuestaBaja.mensajeRespuesta << endl;
+    cin.ignore(10000, '\n'); 
+
+    
+    int confirmacion = -1;
+    while (true) {
+        cout << "¿Seguro que deseas dar de baja al usuario " << paqueteBaja.idUsuario << "? (Sí=1, No=0): ";
+        if (cin >> confirmacion) {
+            cin.ignore(10000, '\n');
+
+            if (confirmacion == 1) {
+                cout << "\n[Red] Dando de baja al usuario " << paqueteBaja.idUsuario << "...\n";
+                PaqueteRed respuestaBaja = enviarPeticionServidor(paqueteBaja);
+                cout << respuestaBaja.mensajeRespuesta << endl;
+                break;
+            } 
+            else if (confirmacion == 0) {
+                cout << "\n[!] Operación cancelada. Volviendo al menú principal...\n";
+                return; 
+            } 
+            else {
+                cout << "[!] Error: Opción inválida. Introduce solo 1 para Sí o 0 para No.\n";
+            }
+        } 
+        else {
+            cout << "[!] Error: Entrada no numérica. Por favor, introduce un número (1 o 0).\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+        }
+    }
 }
 
 // ============================================================================
@@ -203,7 +299,6 @@ void darBajaUsuarioCliente() {
 void registrarRecogidaRopaAdminCliente() {
     PaqueteRed paqueteListarBeneficiarios;
     memset(&paqueteListarBeneficiarios, 0, sizeof(PaqueteRed));
-    // Reutilizamos u obtenemos una operación destinada a listar solo beneficiarios
     paqueteListarBeneficiarios.tipoOperacion = OP_LISTAR_BENEFICIARIOS; 
 
     cout << "\n--- LISTA DE BENEFICIARIOS ---" << endl;
@@ -218,10 +313,11 @@ void registrarRecogidaRopaAdminCliente() {
         cout << "[!] Operación cancelada.\n";
         return;
     }
-    cin.ignore();
+    cin.ignore(10000, '\n');
+
     PaqueteRed paqueteListarEventosRopa;
     memset(&paqueteListarEventosRopa, 0, sizeof(PaqueteRed));
-    paqueteListarEventosRopa.tipoOperacion = OP_LISTAR_EVENTOS_ROPA; // Operación nueva
+    paqueteListarEventosRopa.tipoOperacion = OP_LISTAR_EVENTOS_ROPA; 
 
     cout << "\n--- EVENTOS DE REPARTO DE ROPA FUTUROS ---" << endl;
     PaqueteRed respEventos = enviarPeticionServidor(paqueteListarEventosRopa);
@@ -235,49 +331,39 @@ void registrarRecogidaRopaAdminCliente() {
         cout << "[!] Operación cancelada.\n";
         return;
     }
-    cin.ignore();
-
+    cin.ignore(10000, '\n');
 
     PaqueteRed paqueteRegistrar;
     memset(&paqueteRegistrar, 0, sizeof(PaqueteRed));
     paqueteRegistrar.tipoOperacion = OP_REGISTRAR_ROPA;
-    paqueteRegistrar.idUsuario = idBeneficiario; // id_beneficiario
-    paqueteRegistrar.idEvento = idEvento;       // id_evento
+    paqueteRegistrar.idUsuario = idBeneficiario; 
+    paqueteRegistrar.idEvento = idEvento;       
 
-    cout << "\n[Red] Enviando registro de recogida de ropa...\n";
-    PaqueteRed respuestaFinal = enviarPeticionServidor(paqueteRegistrar);
-    cout << respuestaFinal.mensajeRespuesta << endl;
-}
-// ============================================================================
-// 6. ASIGNAR VOLUNTARIO A TALLER / CREAR TALLER
-// ============================================================================
-void crearTallerCliente() {
-    PaqueteRed paquete;
-    memset(&paquete, 0, sizeof(PaqueteRed));
-    paquete.tipoOperacion = OP_CREAR_TALLER;
-
-    cout << "\n--- CREAR NUEVO TALLER ---\n";
-    cout << "Nombre del Taller: ";
-    cin.getline(paquete.admin.nombre_taller_o_material, 50);
-    cout << "Descripción detallada: ";
-    cin.getline(paquete.admin.descripcion, 150);
     
-    cout << "Introduce el ID del Voluntario (Profesor): ";
-    cin >> paquete.idUsuario; 
-    cin.ignore();
-
-    GestionONG::Fecha fechaAux;
+    int confirmacion = -1;
     while (true) {
-        if (fechaAux.leer_y_validar_fecha("Introduce la fecha del taller (DD-MM-AAAA HH:MM): ", &fechaAux)) break;
-        cout << "[!] Fecha inválida.\n";
+        cout << "¿Seguro que deseas registrar esta recogida de ropa? (Sí=1, No=0): ";
+        if (cin >> confirmacion) {
+            cin.ignore(10000, '\n');
+
+            if (confirmacion == 1) {
+                cout << "\n[Red] Enviando registro de recogida de ropa...\n";
+                PaqueteRed respuestaFinal = enviarPeticionServidor(paqueteRegistrar);
+                cout << respuestaFinal.mensajeRespuesta << endl;
+                break;
+            } 
+            else if (confirmacion == 0) {
+                cout << "\n[!] Operación cancelada. Volviendo al menú principal...\n";
+                return; 
+            } 
+            else {
+                cout << "[!] Error: Opción inválida. Introduce solo 1 para Sí o 0 para No.\n";
+            }
+        } 
+        else {
+            cout << "[!] Error: Entrada no numérica. Por favor, introduce un número (1 o 0).\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+        }
     }
-
-    paquete.admin.f_inicio.dia  = fechaAux.dia;
-    paquete.admin.f_inicio.mes  = fechaAux.mes;
-    paquete.admin.f_inicio.anyo = fechaAux.anyo;
-    paquete.admin.f_inicio.hora = fechaAux.hora;
-
-    cout << "\n[Red] Creando taller en el servidor...\n";
-    PaqueteRed respuesta = enviarPeticionServidor(paquete);
-    cout << respuesta.mensajeRespuesta << endl;
 }
