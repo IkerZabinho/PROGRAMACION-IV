@@ -211,7 +211,7 @@ void donarRopa(int socketServidor, int id_donante) {
         cin.ignore(10000, '\n');
         return;
     }
-    while (cin.get() != '\n'); // Consumir cualquier carácter sobrante (.6 o basura) tras leer el float
+    cin.ignore(10000, '\n');
     cout << "¿Confirmas donar " << kilos << " kg de ropa?\n0. No\n1. Sí\nSelección: ";
     cin >> respuesta;
 

@@ -342,29 +342,31 @@ int main()
                 break;
             }
 
-            case OP_REGISTRAR_ROPA: 
-            {
-                registrarLog("LOG ADMIN: Solicitud OP_REGISTRAR_ROPA.");
-                char consulta[512];
+           case OP_REGISTRAR_ROPA: 
+{
+    registrarLog("LOG ADMIN: Solicitud OP_REGISTRAR_ROPA.");
+    char consulta[512];
+    
+    snprintf(consulta, sizeof(consulta), 
+            "INSERT INTO RecogidaRopa (id_beneficiario, id_evento, fecha_recogida) "
+            "VALUES (%d, %d, (SELECT fecha_fin FROM Evento WHERE id_evento = %d));", 
+            paqueteRecibido.idUsuario, 
+            paqueteRecibido.idEvento,
+            paqueteRecibido.idEvento); 
                 
-                snprintf(consulta, sizeof(consulta), 
-                        "INSERT INTO RecogidaRopa (id_beneficiario, id_evento, fecha_recogida) "
-                        "VALUES (%d, %d, (SELECT fecha_fin FROM Evento WHERE id_evento = %d));", 
-                        paqueteRecibido.idUsuario, 
-                        paqueteRecibido.idEvento,
-                        paqueteRecibido.idEvento); 
-                            
-                int rc = sqlite3_exec(db, consulta, 0, 0, 0);
-                if (rc == SQLITE_OK) {
-                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Éxito: Registro insertado en RecogidaRopa con la fecha del evento.");
-                } else {
-                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-                    snprintf(paqueteRespuesta.mensajeRespuesta, sizeof(paqueteRespuesta.mensajeRespuesta), 
-                            "[Servidor] Error SQL: %s", sqlite3_errmsg(db));
-                }
-                break;
-            }
+    int rc = sqlite3_exec(db, consulta, 0, 0, 0);
+    if (rc == SQLITE_OK) {
+        paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+        strncpy(paqueteRespuesta.mensajeRespuesta, 
+                "\n[Servidor] Éxito: Registro insertado en RecogidaRopa con la fecha del evento.\n", 
+                sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+    } else {
+        paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+        snprintf(paqueteRespuesta.mensajeRespuesta, sizeof(paqueteRespuesta.mensajeRespuesta), 
+                "\n[Servidor] Error SQL: %s\n", sqlite3_errmsg(db));
+    }
+    break;
+}
             case OP_LISTAR_BENEFICIARIOS:
             {
                 const char *sql = "SELECT id_usuario, nombre, apellidos FROM Usuarios WHERE tipo = 3;";
@@ -416,33 +418,7 @@ int main()
                 strncpy(paqueteRespuesta.mensajeRespuesta, lista.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
                 break;
             }
-            case OP_CREAR_TALLER: 
-            {
-                registrarLog("LOG ADMIN: Solicitud OP_CREAR_TALLER.");
-                char consulta[1024];
-                char fecha_taller_str[30];
-
-                snprintf(fecha_taller_str, sizeof(fecha_taller_str), "%04d-%02d-%02d %02d:00", 
-                         paqueteRecibido.admin.f_inicio.anyo, paqueteRecibido.admin.f_inicio.mes, 
-                         paqueteRecibido.admin.f_inicio.dia, paqueteRecibido.admin.f_inicio.hora);
-
-                // Columnas reales de tu captura: id_profesor, fecha, nombre, descripcion
-                snprintf(consulta, sizeof(consulta), 
-                         "INSERT INTO Taller (id_profesor, fecha, nombre, descripcion) "
-                         "VALUES (%d, '%s', '%s', '%s');",
-                         paqueteRecibido.idUsuario, fecha_taller_str,
-                         paqueteRecibido.admin.nombre_taller_o_material, paqueteRecibido.admin.descripcion);
-
-                int rc = sqlite3_exec(db, consulta, 0, 0, 0);
-                if (rc == SQLITE_OK) {
-                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                    strcpy(paqueteRespuesta.mensajeRespuesta, "[Servidor] Éxito: Taller creado correctamente en SQLite.");
-                } else {
-                    paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-                    snprintf(paqueteRespuesta.mensajeRespuesta, sizeof(paqueteRespuesta.mensajeRespuesta), "[Servidor] Error SQL en Taller: %s", sqlite3_errmsg(db));
-                }
-                break;
-            }
+            
 
 
             case OP_REGISTRO_DONANTE:
