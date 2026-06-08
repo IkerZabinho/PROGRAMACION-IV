@@ -1216,3 +1216,44 @@
 [Mon Jun  8 20:06:50 2026] Peticion recibida: Historial completo de donaciones del Usuario ID: 42
 [Mon Jun  8 20:06:50 2026] ÉXITO: Historial completo enviado (8 filas) al Donante ID: 17
 [Mon Jun  8 20:06:50 2026] Cliente desconectado del socket.
+[Mon Jun 08 20:24:02 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 08 20:24:02 2026] Cargando configuracion...
+[Mon Jun 08 20:24:02 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 08 20:24:02 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 08 20:28:06 2026] Cliente conectado al socket.
+[Mon Jun 08 20:28:06 2026] Procesando registro de Voluntario: mikelgoiko
+[Mon Jun 08 20:28:06 2026] Cliente desconectado del socket.
+[Mon Jun 08 20:32:57 2026] Cliente conectado al socket.
+[Mon Jun 08 20:32:57 2026] Procesando registro de Donante: pellito
+[Mon Jun 08 20:32:57 2026] Cliente desconectado del socket.
+[Mon Jun 08 20:36:21 2026] Cliente conectado al socket.
+[Mon Jun 08 20:36:21 2026] Procesando registro de Beneficiario: malena
+[Mon Jun 08 20:36:21 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Mon Jun 08 20:36:21 2026] Cliente desconectado del socket.
+[Mon Jun 08 20:43:05 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 08 20:43:05 2026] Cargando configuracion...
+[Mon Jun 08 20:43:05 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 08 20:43:05 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 08 20:43:36 2026] Cliente conectado al socket.
+[Mon Jun 08 20:43:36 2026] Procesando registro de Voluntario: laida129
+[Mon Jun 08 20:43:36 2026] Cliente desconectado del socket.
+[Mon Jun 08 20:50:51 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 08 20:50:51 2026] Cargando configuracion...
+[Mon Jun 08 20:50:51 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 08 20:50:51 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 08 20:51:55 2026] Cliente conectado al socket.
+[Mon Jun 08 20:51:55 2026] Procesando registro de Voluntario: zaloa123
+[Mon Jun 08 20:51:55 2026] Cliente desconectado del socket.
+[Mon Jun 08 21:01:21 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 08 21:01:21 2026] Cargando configuracion...
+[Mon Jun 08 21:01:21 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 08 21:01:21 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 08 21:01:57 2026] Cliente conectado al socket.
+[Mon Jun 08 21:01:57 2026] Procesando registro de Voluntario: 1234
+[Mon Jun 08 21:01:57 2026] Cliente desconectado del socket.
+[Mon Jun 08 21:02:56 2026] Cliente conectado al socket.
+[Mon Jun 08 21:02:56 2026] Procesando registro de Voluntario: zzaloa
+[Mon Jun 08 21:02:56 2026] Cliente desconectado del socket.
+[Mon Jun 08 21:06:40 2026] Cliente conectado al socket.
+[Mon Jun 08 21:06:40 2026] Procesando registro de Voluntario: pers
+[Mon Jun 08 21:06:40 2026] Cliente desconectado del socket.

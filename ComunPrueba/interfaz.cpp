@@ -75,7 +75,7 @@ namespace GestionONG {
         float gastos_totales = alquiler + suministros + material_escolar + estudios + otros;
 
         Beneficiario b(0, "", "", "", "", 0, adultos, ninos, ingresos_totales, gastos_totales);
-        b.evaluarBeneficiario();
+        //b.evaluarBeneficiario();
 
         return b;
     }
@@ -84,77 +84,96 @@ namespace GestionONG {
     // 2. SISTEMA DE REGISTRO E INICIO DE SESIÓN
     // ============================================================================
 
-    void registrarUsuario(sqlite3 *db) {
-        int rolElegido;
-        string nombre, apellidos, nombre_usuario, contrasena;
-        void *datosE = NULL;
-        
-        Beneficiario b(0, "", "", "", "", 0, 0, 0, 0.0f, 0.0f);
-        Voluntario v(0, "", "", "", "", 0, "");
-        Donante d(0, "", "", "", "", 0);
-
-        cout << "\n--- REGISTRO DE NUEVO USUARIO ---\n";
-        cout << "Elige tu rol:\n1. Voluntario\n2. Donante\n3. Beneficiario\nRol (1-3): ";
-        
-        if (!(cin >> rolElegido) || rolElegido < 1 || rolElegido > 3) {
-            cout << "Rol no válido.\n";
-            cin.clear();
-            cin.ignore(10000, '\n');
-            return;
-        }
-        
-        TipoUsuario tipo = (TipoUsuario)rolElegido; 
-
-        cout << "Nombre: ";
-        cin.ignore(); 
-        getline(cin, nombre);
-
-        cout << "Apellidos: ";
-        getline(cin, apellidos);
-
-        cout << "Nombre de usuario: ";
-        cin >> nombre_usuario;
-
-        cout << "Contraseña: ";
-        cin >> contrasena;
-
-        Usuario u(0, nombre, apellidos, nombre_usuario, contrasena, tipo);
-
-        if (u.getTipo() == BENEFICIARIO) {
-            b = guardarCondicionesBeneficiario();
-            b.setNombre(nombre); 
-            b.setApellidos(apellidos); 
-            b.setNombreUsuario(nombre_usuario); 
-            b.setContrasena(contrasena);
-            datosE = &b;
-        } 
-        else if (u.getTipo() == VOLUNTARIO) {
-            v.setNombre(nombre); 
-            v.setApellidos(apellidos); 
-            v.setNombreUsuario(nombre_usuario); 
-            v.setContrasena(contrasena);
-            datosE = &v;
-        }
-        else if (u.getTipo() == DONANTE) {
-            d.setNombre(nombre); 
-            d.setApellidos(apellidos); 
-            d.setNombreUsuario(nombre_usuario); 
-            d.setContrasena(contrasena);
-            datosE = &d;
-        }
-
-        int id_perfil_especifico = Usuario::insertarUsuario(db, u, datosE);
-
-        if (id_perfil_especifico != -1) {
-            cout << "\n[OK] Registro completado con éxito.\n";
-        } else {
-            cout << "\n[!] ERROR: No se pudo registrar. Puede que el usuario ya exista.\n";
-        }
-
-        cout << "\nPresiona ENTER para volver al menú principal...";
+  void registrarUsuario(sqlite3 *db) {
+    int rolElegido;
+    string nombre, apellidos, nombre_usuario, contrasena;
+    
+    cout << "\n--- REGISTRO DE NUEVO USUARIO ---\n";
+    cout << "Elige tu rol:\n1. Voluntario\n2. Donante\n3. Beneficiario\nRol (1-3): ";
+    
+    if (!(cin >> rolElegido) || rolElegido < 1 || rolElegido > 3) {
+        cout << "Rol no válido.\n";
+        cin.clear();
         cin.ignore(10000, '\n');
-        cin.get(); 
+        return;
     }
+    
+    TipoUsuario tipo = (TipoUsuario)rolElegido; 
+
+    cout << "Nombre: ";
+    cin.ignore(); 
+    getline(cin, nombre);
+
+    cout << "Apellidos: ";
+    getline(cin, apellidos);
+
+    cout << "Nombre de usuario: ";
+    cin >> nombre_usuario;
+
+    cout << "Contraseña: ";
+    cin >> contrasena;
+
+    Usuario u(0, nombre, apellidos, nombre_usuario, contrasena, tipo);
+
+    void *datosE = NULL;
+
+    Beneficiario b(0, "", "", "", "", 0, 0, 0, 0.0f, 0.0f);
+    Voluntario v(0, "", "", "", "", 0, "");
+    Donante d(0, "", "", "", "", 0);
+
+    if (tipo == BENEFICIARIO) {
+        b = guardarCondicionesBeneficiario();
+        void evaluarBeneficiario(GestionONG::Beneficiario &b);
+        b.setNombre(nombre); 
+        b.setApellidos(apellidos); 
+        b.setNombreUsuario(nombre_usuario); 
+        b.setContrasena(contrasena);
+        
+        datosE = &b;
+    } 
+    else if (tipo == VOLUNTARIO) {
+        v.setNombre(nombre); 
+        v.setApellidos(apellidos); 
+        v.setNombreUsuario(nombre_usuario); 
+        v.setContrasena(contrasena);
+        
+        datosE = &v;
+    }
+    else if (tipo == DONANTE) {
+        d.setNombre(nombre); 
+        d.setApellidos(apellidos); 
+        d.setNombreUsuario(nombre_usuario); 
+        d.setContrasena(contrasena);
+        
+        datosE = &d;
+    }
+
+    // Inserción en la Base de Datos
+    int id_perfil_especifico = Usuario::insertarUsuario(db, u, datosE);
+
+    // Bloque de feedback al usuario final
+    if (id_perfil_especifico != -1) {
+        
+        // Comportamiento diferenciado para la impresión de pantallas de éxito
+        if (tipo == BENEFICIARIO) {
+            cout << "\n[OK] Registro de Beneficiario completado con éxito.\n";
+        } 
+        else if (tipo == VOLUNTARIO) {
+            cout << "\n[Red] Enviando paquete de registro seguro al servidor por TCP...\n";
+            cout << ">>> ¡ÉXITO! ¡Voluntario registrado correctamente! <<<\n";
+        } 
+        else if (tipo == DONANTE) {
+            cout << "\n[OK] Registro de Donante completado con éxito. ¡Gracias por tu apoyo!\n";
+        }
+
+    } else {
+        cout << "\n[!] ERROR: No se pudo registrar. Puede que el nombre de usuario ya exista.\n";
+    }
+
+    cout << "\nPresiona ENTER para volver al menú principal...";
+    cin.ignore(10000, '\n');
+    cin.get(); 
+}
 
     void iniciarSesion(sqlite3 *db) {
         string user, pass;

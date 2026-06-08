@@ -370,30 +370,28 @@ void ejecutarFormularioRegistroCliente() {
 
 
 
-    if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
-
+   if (respuesta.tipoOperacion == OP_RESPUESTA_OK) {
         cout << "\n>>> ¡ÉXITO! " << respuesta.mensajeRespuesta << " <<<\n";
+        
+        if (paquete.tipoUsuario == 3) { 
+            GestionONG::Beneficiario bNuevo;
+            bNuevo.setNumAdultos(paquete.economia.adultos);
+            bNuevo.setNumNinos(paquete.economia.ninos);
+            
+            bNuevo.setIngresos(paquete.economia.sueldo + paquete.economia.otras_ayudas);
+            
+            float totalGastos = paquete.economia.alquiler + 
+                                paquete.economia.suministros + 
+                                paquete.economia.estudios + 
+                                paquete.economia.otros_gastos;
+            bNuevo.setGastos(totalGastos);
 
-        GestionONG::Beneficiario bNuevo;
-
-        bNuevo.setNumAdultos(paquete.economia.adultos);
-
-        bNuevo.setNumNinos(paquete.economia.ninos);
-
-        bNuevo.setIngresos(paquete.economia.sueldo);
-
-        bNuevo.setGastos(paquete.economia.otros_gastos);
-
-
-
-        evaluarBeneficiario(bNuevo);
-
+            evaluarBeneficiario(bNuevo);
+        }
+        
     } else {
-
         cout << "\n[!] ERROR EN REGISTRO: " << respuesta.mensajeRespuesta << "\n";
-
     }
-
 }
 
 
