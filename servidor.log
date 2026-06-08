@@ -1059,3 +1059,160 @@
 [Mon Jun 08 19:24:35 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 51
 [Mon Jun 08 19:24:35 2026] LOGIN EXITOSO: Benefi (ID: 51)
 [Mon Jun 08 19:24:35 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:50:09 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun  8 19:50:09 2026] Cargando configuracion...
+[Mon Jun  8 19:50:09 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun  8 19:50:09 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun  8 19:50:39 2026] Cliente conectado al socket.
+[Mon Jun  8 19:50:39 2026] Procesando Login Real para: ikerza
+[Mon Jun  8 19:50:39 2026] LOGIN FALLIDO: ikerza -> [ERROR] El usuario no existe.
+[Mon Jun  8 19:50:39 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:50:46 2026] Cliente conectado al socket.
+[Mon Jun  8 19:50:46 2026] Procesando Login Real para: ikerz
+[Mon Jun  8 19:50:46 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 45
+[Mon Jun  8 19:50:46 2026] LOGIN EXITOSO: ikerz (ID: 45)
+[Mon Jun  8 19:50:46 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:51:02 2026] Cliente conectado al socket.
+[Mon Jun  8 19:51:02 2026] Procesando Login Real para: juneza
+[Mon Jun  8 19:51:02 2026] LOGIN EXITOSO: juneza (ID: 42)
+[Mon Jun  8 19:51:02 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:51:09 2026] Cliente conectado al socket.
+[Mon Jun  8 19:51:09 2026] Peticion recibida: Registrar donacion de dinero del Usuario ID: 42
+[Mon Jun  8 19:51:09 2026] ÉXITO: Donacion de dinero registrada para el Donante ID: 17
+[Mon Jun  8 19:51:09 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:51:18 2026] Cliente conectado al socket.
+[Mon Jun  8 19:51:18 2026] Peticion recibida: Registrar donacion de comida del Usuario ID: 42
+[Mon Jun  8 19:51:18 2026] ÉXITO: Donacion de comida registrada para el Donante ID: 17
+[Mon Jun  8 19:51:18 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:51:23 2026] Cliente conectado al socket.
+[Mon Jun  8 19:51:23 2026] Peticion recibida: Registrar donacion de ropa del Usuario ID: 42
+[Mon Jun  8 19:51:23 2026] ÉXITO: Donacion de ropa registrada para el Donante ID: 17
+[Mon Jun  8 19:51:23 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:51:24 2026] Cliente conectado al socket.
+[Mon Jun  8 19:51:24 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Mon Jun  8 19:51:24 2026] ÉXITO: Historial enviado (12 filas) al Usuario ID: 42
+[Mon Jun  8 19:51:24 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:52:56 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun  8 19:52:56 2026] Cargando configuracion...
+[Mon Jun  8 19:52:56 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun  8 19:52:56 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun  8 19:53:19 2026] Cliente conectado al socket.
+[Mon Jun  8 19:53:19 2026] Procesando Login Real para: juneza
+[Mon Jun  8 19:53:19 2026] LOGIN EXITOSO: juneza (ID: 42)
+[Mon Jun  8 19:53:19 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:53:24 2026] Cliente conectado al socket.
+[Mon Jun  8 19:53:24 2026] Peticion recibida: Registrar donacion de dinero del Usuario ID: 42
+[Mon Jun  8 19:53:24 2026] ÉXITO: Donacion de dinero registrada para el Usuario ID: 42
+[Mon Jun  8 19:53:24 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:53:26 2026] Cliente conectado al socket.
+[Mon Jun  8 19:53:26 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Mon Jun  8 19:53:26 2026] ÉXITO: Historial enviado (13 filas) al Usuario ID: 42
+[Mon Jun  8 19:53:26 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:53:43 2026] Cliente conectado al socket.
+[Mon Jun  8 19:53:43 2026] Peticion recibida: Registrar donacion de comida del Usuario ID: 42
+[Mon Jun  8 19:53:43 2026] ÉXITO: Donacion de comida registrada para el Usuario ID: 42
+[Mon Jun  8 19:53:43 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:53:44 2026] Cliente conectado al socket.
+[Mon Jun  8 19:53:44 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Mon Jun  8 19:53:44 2026] ÉXITO: Historial enviado (14 filas) al Usuario ID: 42
+[Mon Jun  8 19:53:44 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:53:55 2026] Cliente conectado al socket.
+[Mon Jun  8 19:53:55 2026] Peticion recibida: Registrar donacion de ropa del Usuario ID: 42
+[Mon Jun  8 19:53:55 2026] ÉXITO: Donacion de ropa registrada para el Usuario ID: 42
+[Mon Jun  8 19:53:55 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:53:58 2026] Cliente conectado al socket.
+[Mon Jun  8 19:53:58 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Mon Jun  8 19:53:58 2026] ÉXITO: Historial enviado (15 filas) al Usuario ID: 42
+[Mon Jun  8 19:53:58 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:57:15 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun  8 19:57:15 2026] Cargando configuracion...
+[Mon Jun  8 19:57:15 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun  8 19:57:15 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun  8 19:57:38 2026] Cliente conectado al socket.
+[Mon Jun  8 19:57:38 2026] Procesando Login Real para: juneza
+[Mon Jun  8 19:57:38 2026] LOGIN EXITOSO: juneza (ID: 42)
+[Mon Jun  8 19:57:38 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:57:47 2026] Cliente conectado al socket.
+[Mon Jun  8 19:57:47 2026] Peticion recibida: Registrar donacion de dinero del Usuario ID: 42
+[Mon Jun  8 19:57:47 2026] ÉXITO: Donacion de dinero registrada para el Donante ID: 17
+[Mon Jun  8 19:57:47 2026] Cliente desconectado del socket.
+[Mon Jun  8 19:57:48 2026] Cliente conectado al socket.
+[Mon Jun  8 19:57:48 2026] Peticion recibida: Historial de donaciones del Usuario ID: 42
+[Mon Jun  8 19:57:48 2026] ÉXITO: Historial enviado (4 filas) al Donante ID: 17
+[Mon Jun  8 19:57:48 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:00:08 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun  8 20:00:08 2026] Cargando configuracion...
+[Mon Jun  8 20:00:08 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun  8 20:00:08 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun  8 20:00:46 2026] Cliente conectado al socket.
+[Mon Jun  8 20:00:46 2026] Procesando Login Real para: juneza
+[Mon Jun  8 20:00:46 2026] LOGIN EXITOSO: juneza (ID: 42)
+[Mon Jun  8 20:00:46 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:00:51 2026] Cliente conectado al socket.
+[Mon Jun  8 20:00:51 2026] Peticion recibida: Historial completo de donaciones del Usuario ID: 42
+[Mon Jun  8 20:00:51 2026] ÉXITO: Historial completo enviado (4 filas) al Donante ID: 17
+[Mon Jun  8 20:00:51 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:03:30 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun  8 20:03:30 2026] Cargando configuracion...
+[Mon Jun  8 20:03:30 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun  8 20:03:30 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun  8 20:03:51 2026] Cliente conectado al socket.
+[Mon Jun  8 20:03:51 2026] Procesando Login Real para: juneza
+[Mon Jun  8 20:03:51 2026] LOGIN EXITOSO: juneza (ID: 42)
+[Mon Jun  8 20:03:51 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:03:57 2026] Cliente conectado al socket.
+[Mon Jun  8 20:03:57 2026] Peticion recibida: Registrar donacion de dinero del Usuario ID: 42
+[Mon Jun  8 20:03:57 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:03:58 2026] Cliente conectado al socket.
+[Mon Jun  8 20:03:58 2026] Peticion recibida: Historial completo de donaciones del Usuario ID: 42
+[Mon Jun  8 20:03:58 2026] ÉXITO: Historial completo enviado (5 filas) al Donante ID: 17
+[Mon Jun  8 20:03:58 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:04:09 2026] Cliente conectado al socket.
+[Mon Jun  8 20:04:09 2026] Peticion recibida: Registrar donacion de comida del Usuario ID: 42
+[Mon Jun  8 20:04:09 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:04:12 2026] Cliente conectado al socket.
+[Mon Jun  8 20:04:12 2026] Peticion recibida: Registrar donacion de ropa del Usuario ID: 42
+[Mon Jun  8 20:04:12 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:04:14 2026] Cliente conectado al socket.
+[Mon Jun  8 20:04:14 2026] Peticion recibida: Historial completo de donaciones del Usuario ID: 42
+[Mon Jun  8 20:04:14 2026] ÉXITO: Historial completo enviado (7 filas) al Donante ID: 17
+[Mon Jun  8 20:04:14 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:04:26 2026] Cliente conectado al socket.
+[Mon Jun  8 20:04:26 2026] Procesando Login Real para: oihanetxe
+[Mon Jun  8 20:04:26 2026] LOGIN EXITOSO: oihanetxe (ID: 43)
+[Mon Jun  8 20:04:26 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:04:28 2026] Cliente conectado al socket.
+[Mon Jun  8 20:04:28 2026] Usuario ID 43 solicita ver eventos disponibles.
+[Mon Jun  8 20:04:28 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:04:29 2026] Cliente conectado al socket.
+[Mon Jun  8 20:04:29 2026] Procesando inscripción de Usuario ID 43 en Evento ID 17
+[Mon Jun  8 20:04:29 2026] INSCRIPCIÓN EXITOSA: Voluntario 43 -> Evento 17
+[Mon Jun  8 20:04:29 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:04:32 2026] Cliente conectado al socket.
+[Mon Jun  8 20:04:32 2026] Usuario ID 43 solicita ver sus eventos.
+[Mon Jun  8 20:04:32 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:04:36 2026] Cliente conectado al socket.
+[Mon Jun  8 20:04:36 2026] Usuario ID 43 solicita desapuntarse del evento 17.
+[Mon Jun  8 20:04:36 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:04:38 2026] Cliente conectado al socket.
+[Mon Jun  8 20:04:38 2026] Voluntario ID 43 solicita historial de eventos.
+[Mon Jun  8 20:04:38 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:06:15 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun  8 20:06:15 2026] Cargando configuracion...
+[Mon Jun  8 20:06:15 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun  8 20:06:15 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun  8 20:06:41 2026] Cliente conectado al socket.
+[Mon Jun  8 20:06:41 2026] Procesando Login Real para: juneza
+[Mon Jun  8 20:06:41 2026] LOGIN EXITOSO: juneza (ID: 42)
+[Mon Jun  8 20:06:41 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:06:42 2026] Cliente conectado al socket.
+[Mon Jun  8 20:06:42 2026] Peticion recibida: Historial completo de donaciones del Usuario ID: 42
+[Mon Jun  8 20:06:42 2026] ÉXITO: Historial completo enviado (7 filas) al Donante ID: 17
+[Mon Jun  8 20:06:42 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:06:48 2026] Cliente conectado al socket.
+[Mon Jun  8 20:06:48 2026] Peticion recibida: Registrar donacion de comida del Usuario ID: 42
+[Mon Jun  8 20:06:48 2026] Cliente desconectado del socket.
+[Mon Jun  8 20:06:50 2026] Cliente conectado al socket.
+[Mon Jun  8 20:06:50 2026] Peticion recibida: Historial completo de donaciones del Usuario ID: 42
+[Mon Jun  8 20:06:50 2026] ÉXITO: Historial completo enviado (8 filas) al Donante ID: 17
+[Mon Jun  8 20:06:50 2026] Cliente desconectado del socket.

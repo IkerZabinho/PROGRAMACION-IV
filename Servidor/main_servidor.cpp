@@ -532,29 +532,41 @@ case OP_CONSULTAR_EVENTOS:
 
                 // ... Dentro del switch (paqueteRecibido.tipoOperacion) en main_servidor.cpp
 
-// ====================================================================
+        // ====================================================================
         // CASO 1: REGISTRAR DONACIÓN DE DINERO
         // ====================================================================
         case OP_DONACION_DINERO: {
             registrarLog("Peticion recibida: Registrar donacion de dinero del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             
-            float monto = paqueteRecibido.cantidadDonada;
-            
-            // Según tu constructor: Dinero(id, idD, cant)
-            // Pasamos 0 en IDs automáticos porque la base de datos los autoincrementa
-            GestionONG::Dinero miDinero(0, 0, monto);
+            int idDonanteReal = -1;
+            const char* sqlBusqueda = "SELECT id_donante FROM Donantes WHERE id_usuario = ?;";
+            sqlite3_stmt* stmtBusqueda;
+            if (sqlite3_prepare_v2(db, sqlBusqueda, -1, &stmtBusqueda, 0) == SQLITE_OK) {
+                sqlite3_bind_int(stmtBusqueda, 1, paqueteRecibido.idUsuario);
+                if (sqlite3_step(stmtBusqueda) == SQLITE_ROW) {
+                    idDonanteReal = sqlite3_column_int(stmtBusqueda, 0);
+                }
+                sqlite3_finalize(stmtBusqueda);
+            }
 
-            // Tu función estática exacta: insertarDonacionDinero(db, const Dinero& d, int id_donante)
-            int rc = GestionONG::Donacion::insertarDonacionDinero(db, miDinero, paqueteRecibido.idUsuario);
+            if (idDonanteReal == -1) {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] No se encontro perfil de Donante para este usuario.");
+                break;
+            }
+
+            float monto = paqueteRecibido.cantidadDonada;
+            GestionONG::Dinero miDinero(0, idDonanteReal, monto);
+
+            // Vinculamos usando el ID de donante real en la función de inserción
+            int rc = GestionONG::Donacion::insertarDonacionDinero(db, miDinero, idDonanteReal);
 
             if (rc == SQLITE_DONE || rc == SQLITE_OK) {
                 paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
                 sprintf(paqueteRespuesta.mensajeRespuesta, "\n[OK] Servidor: Donacion de %.2f EUR registrada correctamente.\n", monto);
-                registrarLog("ÉXITO: Donacion de dinero registrada para el Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             } else {
                 paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
                 strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] No se pudo registrar la donacion de dinero.");
-                registrarLog("ERROR: Fallo en BD para donacion de dinero del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             }
             break;
         }
@@ -565,30 +577,44 @@ case OP_CONSULTAR_EVENTOS:
         case OP_DONACION_COMIDA: {
             registrarLog("Peticion recibida: Registrar donacion de comida del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             
-            int selectComida = paqueteRecibido.idEvento; // Recibe 0 o 1 del cliente
+            int idDonanteReal = -1;
+            const char* sqlBusqueda = "SELECT id_donante FROM Donantes WHERE id_usuario = ?;";
+            sqlite3_stmt* stmtBusqueda;
+            if (sqlite3_prepare_v2(db, sqlBusqueda, -1, &stmtBusqueda, 0) == SQLITE_OK) {
+                sqlite3_bind_int(stmtBusqueda, 1, paqueteRecibido.idUsuario);
+                if (sqlite3_step(stmtBusqueda) == SQLITE_ROW) {
+                    idDonanteReal = sqlite3_column_int(stmtBusqueda, 0);
+                }
+                sqlite3_finalize(stmtBusqueda);
+            }
+
+            if (idDonanteReal == -1) {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] No se encontro perfil de Donante para este usuario.");
+                break;
+            }
+
+            int selectComida = paqueteRecibido.idEvento; 
             float kilos = paqueteRecibido.cantidadDonada;
 
-            // 1. Instanciamos el objeto base Donacion 
-            // Según tu constructor: Donacion(id, idU, TipoDonacion, string fecha)
-            // Asumimos el valor del enum correspondiente a Comida o realizamos un cast
-            GestionONG::Donacion baseDonacion(0, paqueteRecibido.idUsuario, static_cast<GestionONG::TipoDonacion>(2), "date('now')"); 
+            // 🌟 CORRECCIÓN: Calcular la fecha real de hoy en formato YYYY-MM-DD en texto plano
+            time_t t = time(0);
+            struct tm * now = localtime(&t);
+            char fechaActual[11];
+            strftime(fechaActual, sizeof(fechaActual), "%Y-%m-%d", now);
 
-            // 2. Instanciamos el objeto específico Comida
-            // Según tu constructor: Comida(id, TipoComida, kilos, idD)
-            GestionONG::Comida miComida(0, static_cast<GestionONG::TipoComida>(selectComida), kilos, 0);
+            // 🌟 Ahora pasamos la variable fechaActual en lugar de las comillas fijas
+            GestionONG::Donacion baseDonacion(0, idDonanteReal, static_cast<GestionONG::TipoDonacion>(1), fechaActual); 
+            GestionONG::Comida miComida(0, static_cast<GestionONG::TipoComida>(selectComida), kilos, idDonanteReal);
 
-            // 3. Tu función estática exacta: insertarDonacionComidaDB(db, const Donacion& d, const Comida& c)
             int rc = GestionONG::Donacion::insertarDonacionComidaDB(db, baseDonacion, miComida);
 
             if (rc == SQLITE_DONE || rc == SQLITE_OK) {
                 paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                const char* txtTipo = (selectComida == 0) ? "" : "";
                 sprintf(paqueteRespuesta.mensajeRespuesta, "\n[OK] Servidor: Recibidos %.2f kg de comida.\n", kilos);
-                registrarLog("ÉXITO: Donacion de comida registrada para el Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             } else {
                 paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
                 strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] No se pudo procesar la donacion de comida.");
-                registrarLog("ERROR: Fallo en BD para donacion de comida del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             }
             break;
         }
@@ -599,130 +625,145 @@ case OP_CONSULTAR_EVENTOS:
         case OP_DONACION_ROPA: {
             registrarLog("Peticion recibida: Registrar donacion de ropa del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             
-            float kilos = paqueteRecibido.cantidadDonada;
-            
-            // Según tu constructor: Ropa(id, idD, kilos)
-            GestionONG::Ropa miRopa(0, 0, kilos);
+            int idDonanteReal = -1;
+            const char* sqlBusqueda = "SELECT id_donante FROM Donantes WHERE id_usuario = ?;";
+            sqlite3_stmt* stmtBusqueda;
+            if (sqlite3_prepare_v2(db, sqlBusqueda, -1, &stmtBusqueda, 0) == SQLITE_OK) {
+                sqlite3_bind_int(stmtBusqueda, 1, paqueteRecibido.idUsuario);
+                if (sqlite3_step(stmtBusqueda) == SQLITE_ROW) {
+                    idDonanteReal = sqlite3_column_int(stmtBusqueda, 0);
+                }
+                sqlite3_finalize(stmtBusqueda);
+            }
 
-            // Tu función estática exacta: insertarDonacionRopa(db, const Ropa& r, int id_donante)
-            int rc = GestionONG::Donacion::insertarDonacionRopa(db, miRopa, paqueteRecibido.idUsuario);
+            if (idDonanteReal == -1) {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] No se encontro perfil de Donante para este usuario.");
+                break;
+            }
+
+            float kilos = paqueteRecibido.cantidadDonada;
+            GestionONG::Ropa miRopa(0, idDonanteReal, kilos);
+
+            int rc = GestionONG::Donacion::insertarDonacionRopa(db, miRopa, idDonanteReal);
 
             if (rc == SQLITE_DONE || rc == SQLITE_OK) {
                 paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
                 sprintf(paqueteRespuesta.mensajeRespuesta, "\n[OK] Servidor: Almacenados %.2f kg de ropa.\n", kilos);
-                registrarLog("ÉXITO: Donacion de ropa registrada para el Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             } else {
                 paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
                 strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] Error al guardar la donacion de ropa.");
-                registrarLog("ERROR: Fallo en BD para donacion de ropa del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
             }
             break;
         }
-
-// ====================================================================
-        // CASO 4: CONSULTAR HISTORIAL DE DONACIONES
+        
         // ====================================================================
-            case OP_CONSULTAR_DONACIONES: {
-                        registrarLog("Peticion recibida: Historial de donaciones del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
-                        
-                        sqlite3_stmt *stmt;
-                        // Consulta SQL que une la tabla de Donaciones con sus tres detalles (Ropa, Comida, Dinero)
-                        const char *sql =
-                            "SELECT d.tipo, r.kilos, c.tipo_comida, c.kilos, din.cantidad, d.fecha "
-                            "FROM Donaciones d "
-                            "LEFT JOIN Ropa r ON d.id_donacion = r.id_donacion "
-                            "LEFT JOIN Comida c ON d.id_donacion = c.id_donacion "
-                            "LEFT JOIN Dinero din ON d.id_donacion = din.id_donacion "
-                            "WHERE d.id_donante = ? ORDER BY d.id_donacion DESC;";
+        // CASO 4: CONSULTAR HISTORIAL COMPLETO DE DONACIONES
+        // ====================================================================
+        case OP_CONSULTAR_DONACIONES: {
+            registrarLog("Peticion recibida: Historial completo de donaciones del Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+            
+            // 1. Buscamos el id_donante real mapeado con el id_usuario de red
+            int idDonanteReal = -1;
+            const char* sqlBusqueda = "SELECT id_donante FROM Donantes WHERE id_usuario = ?;";
+            sqlite3_stmt* stmtBusqueda;
+            if (sqlite3_prepare_v2(db, sqlBusqueda, -1, &stmtBusqueda, 0) == SQLITE_OK) {
+                sqlite3_bind_int(stmtBusqueda, 1, paqueteRecibido.idUsuario);
+                if (sqlite3_step(stmtBusqueda) == SQLITE_ROW) {
+                    idDonanteReal = sqlite3_column_int(stmtBusqueda, 0);
+                }
+                sqlite3_finalize(stmtBusqueda);
+            }
 
-                        string tabla = "";
-                        char fila[256];
+            if (idDonanteReal == -1) {
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+                strcpy(paqueteRespuesta.mensajeRespuesta, "[ERROR] No se encontro el perfil de donante.");
+                registrarLog("ERROR HISTORIAL: id_donante no encontrado para Usuario ID: " + to_string(paqueteRecibido.idUsuario));
+                break;
+            }
 
-                        // Diseñamos la cabecera de la tabla que verá el usuario en su consola
-                        sprintf(fila, "\n%-12s | %-32s | %-20s\n", "TIPO", "DETALLES", "FECHA");
-                        tabla += fila;
-                        tabla += "--------------------------------------------------------------------\n";
+            sqlite3_stmt *stmt;
+            // 🌟 Esta consulta barre TODAS las donaciones del ID sin importar la fecha
+            const char *sql =
+                "SELECT d.tipo, r.kilos, c.tipo_comida, c.kilos, din.cantidad, d.fecha "
+                "FROM Donaciones d "
+                "LEFT JOIN Ropa r ON d.id_donacion = r.id_donacion "
+                "LEFT JOIN Comida c ON d.id_donacion = c.id_donacion "
+                "LEFT JOIN Dinero din ON d.id_donacion = din.id_donacion "
+                "WHERE d.id_donante = ? ORDER BY d.id_donacion DESC;";
 
-                        if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
-                            // Enlazamos el ID del donante que nos mandó el cliente
-                            sqlite3_bind_int(stmt, 1, paqueteRecibido.idUsuario);
+            string tabla = "";
+            char fila[256];
 
-                            int count = 0;
-                            // Recorremos los registros devueltos por la base de datos
-                            while (sqlite3_step(stmt) == SQLITE_ROW) {
-                                count++;
-                                
-                                // 1. Extraemos el tipo (Columna 0)
-                                int tipo = sqlite3_column_int(stmt, 0);
-                                
-                                // 2. Extraemos los datos numéricos de los JOINs antes de tocar cualquier texto
-                                double k_ropa = sqlite3_column_double(stmt, 1);
-                                int t_comida = sqlite3_column_int(stmt, 2);
-                                double k_comida = sqlite3_column_double(stmt, 3);
-                                double importe = sqlite3_column_double(stmt, 4);
-                                
-                                // 3. Extraemos la fecha al final (Columna 5) de forma segura
-                                const char *fecha_raw = (const char *)sqlite3_column_text(stmt, 5);
-                                string fecha = fecha_raw ? fecha_raw : "Sin fecha";
+            sprintf(fila, "\n%-12s | %-32s | %-20s\n", "TIPO", "DETALLES", "FECHA");
+            tabla += fila;
+            tabla += "--------------------------------------------------------------------\n";
 
-                                // 4. Identificamos el tipo de donación alineado con tu Clases.h original:
-                                // enum TipoDonacion { COMIDAD = 1, ROPAD, DINERO };
-                                switch (tipo) {
-                                    case 1: // COMIDA (COMIDAD = 1 en tu enum)
-                                        {
-                                            // Mapeamos las categorías de TipoComida según tu Clases.h
-                                            // enum TipoComida { CARBOHIDRATOS = 1, LEGUMBRES, CONSERVAS, LACTEOS };
-                                            const char* txtC;
-                                            if (t_comida == 1) txtC = "Carbohidratos";
-                                            else if (t_comida == 2) txtC = "Legumbres";
-                                            else if (t_comida == 3) txtC = "Conservas";
-                                            else if (t_comida == 4) txtC = "Lacteos";
-                                            else txtC = "Alimento";
+            if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK) {
+                sqlite3_bind_int(stmt, 1, idDonanteReal);
 
-                                            snprintf(fila, sizeof(fila), "%-12s | %-13s - %.2f kg      | %s\n", 
-                                                    "COMIDA", txtC, k_comida, fecha.c_str());
-                                        }
-                                        break;
+                int count = 0;
+                while (sqlite3_step(stmt) == SQLITE_ROW) {
+                    count++;
+                    int tipo = sqlite3_column_int(stmt, 0);
+                    double k_ropa = sqlite3_column_double(stmt, 1);
+                    int t_comida = sqlite3_column_int(stmt, 2);
+                    double k_comida = sqlite3_column_double(stmt, 3);
+                    double importe = sqlite3_column_double(stmt, 4);
+                    const char *fecha_raw = (const char *)sqlite3_column_text(stmt, 5);
+                    string fecha = fecha_raw ? fecha_raw : "Sin fecha";
 
-                                    case 2: // ROPA (ROPAD = 2 en tu enum)
-                                        snprintf(fila, sizeof(fila), "%-12s | Ropa variada - %.2f kg      | %s\n", 
-                                                "ROPA", k_ropa, fecha.c_str());
-                                        break;
+                    switch (tipo) {
+                        case 1: // COMIDA 
+                            {
+                                const char* txtC;
+                                if (t_comida == 1) txtC = "Carbohidratos";
+                                else if (t_comida == 2) txtC = "Legumbres";
+                                else if (t_comida == 3) txtC = "Conservas";
+                                else if (t_comida == 4) txtC = "Lacteos";
+                                else txtC = "Alimento";
 
-                                    case 3: // DINERO (DINERO = 3 en tu enum)
-                                        snprintf(fila, sizeof(fila), "%-12s | Importe: %.2f EUR           | %s\n", 
-                                                "DINERO", importe, fecha.c_str());
-                                        break;
-
-                                    default:
-                                        snprintf(fila, sizeof(fila), "%-12s | Sin detalles (Tipo: %d)     | %s\n", 
-                                                "OTROS", tipo, fecha.c_str());
-                                        break;
-                                }
-                                tabla += fila;
+                                snprintf(fila, sizeof(fila), "%-12s | %-13s - %.2f kg      | %s\n", 
+                                        "COMIDA", txtC, k_comida, fecha.c_str());
                             }
+                            break;
 
-                            if (count == 0) {
-                                tabla += "No se han encontrado registros en tu historial de donaciones.\n";
-                            }
-                            tabla += "--------------------------------------------------------------------\n";
-                            sqlite3_finalize(stmt);
-                            
-                            paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                            registrarLog("ÉXITO: Historial enviado (" + to_string(count) + " filas) al Usuario ID: " + to_string(paqueteRecibido.idUsuario));
-                        } else {
-                            // Si la consulta SQL falla
-                            sprintf(fila, "[ERROR] Error interno en el motor SQLite: %s\n", sqlite3_errmsg(db));
-                            tabla += fila;
-                            paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-                            registrarLog("ERROR: Fallo SQL en historial para el Usuario ID: " + to_string(paqueteRecibido.idUsuario));
-                        }
+                        case 2: // ROPA
+                            snprintf(fila, sizeof(fila), "%-12s | Ropa variada - %.2f kg      | %s\n", 
+                                    "ROPA", k_ropa, fecha.c_str());
+                            break;
 
-                        // Copiamos la cadena de texto de la tabla al mensaje de respuesta asegurando que no desborde el buffer
-                        strncpy(paqueteRespuesta.mensajeRespuesta, tabla.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
-                        paqueteRespuesta.mensajeRespuesta[sizeof(paqueteRespuesta.mensajeRespuesta) - 1] = '\0';
-                        break;
+                        case 3: // DINERO
+                            snprintf(fila, sizeof(fila), "%-12s | Importe: %.2f EUR           | %s\n", 
+                                    "DINERO", importe, fecha.c_str());
+                            break;
+
+                        default:
+                            snprintf(fila, sizeof(fila), "%-12s | Sin detalles (Tipo: %d)     | %s\n", 
+                                    "OTROS", tipo, fecha.c_str());
+                            break;
                     }
+                    tabla += fila;
+                }
+
+                if (count == 0) {
+                    tabla += "No se han encontrado registros en tu historial de donaciones.\n";
+                }
+                tabla += "--------------------------------------------------------------------\n";
+                sqlite3_finalize(stmt);
+                
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                registrarLog("ÉXITO: Historial completo enviado (" + to_string(count) + " filas) al Donante ID: " + to_string(idDonanteReal));
+            } else {
+                sprintf(fila, "[ERROR] Error SQL: %s\n", sqlite3_errmsg(db));
+                tabla += fila;
+                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
+            }
+
+            strncpy(paqueteRespuesta.mensajeRespuesta, tabla.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+            paqueteRespuesta.mensajeRespuesta[sizeof(paqueteRespuesta.mensajeRespuesta) - 1] = '\0';
+            break;
+        }
                 
             case OP_CONSULTAR_MIS_EVENTOS:
             {
