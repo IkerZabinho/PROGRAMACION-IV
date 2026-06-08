@@ -939,3 +939,123 @@
 [Mon Jun 08 18:16:45 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 44
 [Mon Jun 08 18:16:45 2026] LOGIN EXITOSO: iker (ID: 44)
 [Mon Jun 08 18:16:45 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:28:08 2026] === INICIANDO SERVIDOR ONG ===
+[Mon Jun 08 18:28:08 2026] Cargando configuracion...
+[Mon Jun 08 18:28:08 2026] Base de datos conectada con exito en la ruta: asociacion.db
+[Mon Jun 08 18:28:08 2026] Servidor en linea. Escuchando peticiones en el puerto: 8888
+[Mon Jun 08 18:29:15 2026] Cliente conectado al socket.
+[Mon Jun 08 18:29:15 2026] Procesando Login Real para: ewef
+[Mon Jun 08 18:29:15 2026] LOGIN FALLIDO: ewef -> [ERROR] El usuario no existe.
+[Mon Jun 08 18:29:15 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:30:19 2026] Cliente conectado al socket.
+[Mon Jun 08 18:30:19 2026] Procesando registro de Beneficiario: Benefi
+[Mon Jun 08 18:30:19 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Mon Jun 08 18:30:19 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:31:32 2026] Cliente conectado al socket.
+[Mon Jun 08 18:31:32 2026] Procesando registro de Beneficiario: Benefi2
+[Mon Jun 08 18:31:32 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Mon Jun 08 18:31:32 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:32:17 2026] Cliente conectado al socket.
+[Mon Jun 08 18:32:17 2026] Procesando Login Real para: Benefi2
+[Mon Jun 08 18:32:17 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 52
+[Mon Jun 08 18:32:17 2026] LOGIN EXITOSO: Benefi2 (ID: 52)
+[Mon Jun 08 18:32:17 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:33:01 2026] Cliente conectado al socket.
+[Mon Jun 08 18:33:01 2026] [BD] Petición de actualización económica para beneficiario ID: 52
+[Mon Jun 08 18:33:01 2026] [ERROR] Falló la escritura SQLite del beneficiario.
+[Mon Jun 08 18:33:01 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:34:00 2026] Cliente conectado al socket.
+[Mon Jun 08 18:34:00 2026] [BD] Petición de actualización económica para beneficiario ID: 52
+[Mon Jun 08 18:34:00 2026] [ERROR] Falló la escritura SQLite del beneficiario.
+[Mon Jun 08 18:34:00 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:40:35 2026] Cliente conectado al socket.
+[Mon Jun 08 18:40:35 2026] Procesando Login Real para: Benefi2
+[Mon Jun 08 18:40:35 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 52
+[Mon Jun 08 18:40:35 2026] LOGIN EXITOSO: Benefi2 (ID: 52)
+[Mon Jun 08 18:40:35 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:44:56 2026] Cliente conectado al socket.
+[Mon Jun 08 18:44:56 2026] Beneficiario ID 52 consulta horarios de ayuda.
+[Mon Jun 08 18:44:56 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:45:16 2026] Cliente conectado al socket.
+[Mon Jun 08 18:45:16 2026] Usuario ID 0 solicita ver eventos disponibles.
+[Mon Jun 08 18:45:16 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:58:38 2026] Cliente conectado al socket.
+[Mon Jun 08 18:58:38 2026] Procesando Login Real para: Benefi2
+[Mon Jun 08 18:58:38 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 52
+[Mon Jun 08 18:58:38 2026] LOGIN EXITOSO: Benefi2 (ID: 52)
+[Mon Jun 08 18:58:38 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:59:00 2026] Cliente conectado al socket.
+[Mon Jun 08 18:59:00 2026] [BD] Petición de actualización económica para beneficiario ID: 52
+[Mon Jun 08 18:59:00 2026] [OK] Datos guardados con éxito en la Base de Datos.
+[Mon Jun 08 18:59:00 2026] Cliente desconectado del socket.
+[Mon Jun 08 18:59:47 2026] Cliente conectado al socket.
+[Mon Jun 08 18:59:47 2026] [BD] Petición de actualización económica para beneficiario ID: 52
+[Mon Jun 08 18:59:47 2026] [OK] Datos guardados con éxito en la Base de Datos.
+[Mon Jun 08 18:59:47 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:00:06 2026] Cliente conectado al socket.
+[Mon Jun 08 19:00:06 2026] [BD] Petición de actualización económica para beneficiario ID: 52
+[Mon Jun 08 19:00:06 2026] [OK] Datos guardados con éxito en la Base de Datos.
+[Mon Jun 08 19:00:06 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:01:54 2026] Cliente conectado al socket.
+[Mon Jun 08 19:01:54 2026] Procesando Login Real para: Benefi2
+[Mon Jun 08 19:01:54 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 52
+[Mon Jun 08 19:01:54 2026] LOGIN EXITOSO: Benefi2 (ID: 52)
+[Mon Jun 08 19:01:54 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:02:44 2026] Cliente conectado al socket.
+[Mon Jun 08 19:02:44 2026] Procesando Login Real para: Benefi
+[Mon Jun 08 19:02:44 2026] LOGIN FALLIDO: Benefi -> [ERROR] Contrasena incorrecta.
+[Mon Jun 08 19:02:44 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:02:54 2026] Cliente conectado al socket.
+[Mon Jun 08 19:02:54 2026] Procesando Login Real para: Benefi
+[Mon Jun 08 19:02:54 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 51
+[Mon Jun 08 19:02:54 2026] LOGIN EXITOSO: Benefi (ID: 51)
+[Mon Jun 08 19:02:54 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:03:32 2026] Cliente conectado al socket.
+[Mon Jun 08 19:03:32 2026] [BD] Petición de actualización económica para beneficiario ID: 51
+[Mon Jun 08 19:03:32 2026] [OK] Datos guardados con éxito en la Base de Datos.
+[Mon Jun 08 19:03:32 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:05:00 2026] Cliente conectado al socket.
+[Mon Jun 08 19:05:00 2026] Procesando registro de Beneficiario: pepe
+[Mon Jun 08 19:05:00 2026] REGISTRO OK: Beneficiario guardado en cascada.
+[Mon Jun 08 19:05:00 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:05:08 2026] Cliente conectado al socket.
+[Mon Jun 08 19:05:08 2026] Procesando Login Real para: pepe
+[Mon Jun 08 19:05:08 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 53
+[Mon Jun 08 19:05:08 2026] LOGIN EXITOSO: pepe (ID: 53)
+[Mon Jun 08 19:05:08 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:22:12 2026] Cliente conectado al socket.
+[Mon Jun 08 19:22:12 2026] Procesando Login Real para: Benefi2
+[Mon Jun 08 19:22:12 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 52
+[Mon Jun 08 19:22:12 2026] LOGIN EXITOSO: Benefi2 (ID: 52)
+[Mon Jun 08 19:22:12 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:22:26 2026] Cliente conectado al socket.
+[Mon Jun 08 19:22:26 2026] [BD] Petición de actualización económica para beneficiario ID: 52
+[Mon Jun 08 19:22:26 2026] [OK] Datos guardados con éxito en la Base de Datos.
+[Mon Jun 08 19:22:26 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:22:46 2026] Cliente conectado al socket.
+[Mon Jun 08 19:22:46 2026] Procesando Login Real para: Benefi
+[Mon Jun 08 19:22:46 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 51
+[Mon Jun 08 19:22:46 2026] LOGIN EXITOSO: Benefi (ID: 51)
+[Mon Jun 08 19:22:46 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:22:54 2026] Cliente conectado al socket.
+[Mon Jun 08 19:22:54 2026] [BD] Petición de actualización económica para beneficiario ID: 51
+[Mon Jun 08 19:22:54 2026] [OK] Datos guardados con éxito en la Base de Datos.
+[Mon Jun 08 19:22:54 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:23:43 2026] Cliente conectado al socket.
+[Mon Jun 08 19:23:43 2026] Procesando Login Real para: kaietunamuno
+[Mon Jun 08 19:23:43 2026] LOGIN EXITOSO: kaietunamuno (ID: 24)
+[Mon Jun 08 19:23:43 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:24:16 2026] Cliente conectado al socket.
+[Mon Jun 08 19:24:16 2026] Procesando Login Real para: iker
+[Mon Jun 08 19:24:16 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 44
+[Mon Jun 08 19:24:16 2026] LOGIN EXITOSO: iker (ID: 44)
+[Mon Jun 08 19:24:16 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:24:25 2026] Cliente conectado al socket.
+[Mon Jun 08 19:24:25 2026] [BD] Petición de actualización económica para beneficiario ID: 44
+[Mon Jun 08 19:24:25 2026] [OK] Datos guardados con éxito en la Base de Datos.
+[Mon Jun 08 19:24:25 2026] Cliente desconectado del socket.
+[Mon Jun 08 19:24:35 2026] Cliente conectado al socket.
+[Mon Jun 08 19:24:35 2026] Procesando Login Real para: Benefi
+[Mon Jun 08 19:24:35 2026] CACHE COMPLETADA: Datos reales cargados para Beneficiario ID: 51
+[Mon Jun 08 19:24:35 2026] LOGIN EXITOSO: Benefi (ID: 51)
+[Mon Jun 08 19:24:35 2026] Cliente desconectado del socket.
