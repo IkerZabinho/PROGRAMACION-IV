@@ -1386,3 +1386,8 @@
 [Tue Jun 09 12:18:37 2026] Procesando registro de Beneficiario: zalolo
 [Tue Jun 09 12:18:37 2026] REGISTRO OK: Beneficiario guardado en cascada.
 [Tue Jun 09 12:18:37 2026] Cliente desconectado del socket.
+[Tue Jun 09 12:45:31 2026] [INFO] === INICIANDO SERVIDOR ONG ===
+[Tue Jun 09 12:45:31 2026] [INFO] Nivel de log activo: INFO
+[Tue Jun 09 12:45:31 2026] [INFO] Cargando configuracion...
+[Tue Jun 09 12:45:31 2026] [INFO] Base de datos conectada con exito en la ruta: asociacion.db
+[Tue Jun 09 12:45:31 2026] [INFO] Servidor en linea. Escuchando peticiones en el puerto: 8888

@@ -15,7 +15,5 @@ void crearEventoCliente();
 void borrarEventoCliente();
 void listarUsuariosCliente();
 void darBajaUsuarioCliente();
-void registrarRecogidaRopaAdminCliente(); 
-void crearTallerCliente();
 
 #endif 

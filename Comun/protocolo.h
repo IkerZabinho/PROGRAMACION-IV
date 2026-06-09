@@ -26,8 +26,7 @@ enum TipoOperacion {
     OP_LISTAR_USUARIOS,
     OP_BAJA_USUARIO,
     OP_LISTAR_BENEFICIARIOS,
-    OP_LISTAR_EVENTOS_ROPA,
-    OP_REGISTRAR_ROPA
+    OP_LISTAR_EVENTOS_ROPA
 };
 
 struct DatosEconomicos {

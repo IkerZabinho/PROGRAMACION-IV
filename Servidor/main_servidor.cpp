@@ -355,32 +355,8 @@ int main()
                 break;
             }
 
-           case OP_REGISTRAR_ROPA: 
-{
-    registrarLog("LOG ADMIN: Solicitud OP_REGISTRAR_ROPA.");
-    char consulta[512];
-    
-    snprintf(consulta, sizeof(consulta), 
-            "INSERT INTO RecogidaRopa (id_beneficiario, id_evento, fecha_recogida) "
-            "VALUES (%d, %d, (SELECT fecha_fin FROM Evento WHERE id_evento = %d));", 
-            paqueteRecibido.idUsuario, 
-            paqueteRecibido.idEvento,
-            paqueteRecibido.idEvento); 
-                
-    int rc = sqlite3_exec(db, consulta, 0, 0, 0);
-    if (rc == SQLITE_OK) {
-        paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-        strncpy(paqueteRespuesta.mensajeRespuesta, 
-                "\n[Servidor] Éxito: Registro insertado en RecogidaRopa con la fecha del evento.\n", 
-                sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
-    } else {
-        paqueteRespuesta.tipoOperacion = OP_RESPUESTA_ERROR;
-        snprintf(paqueteRespuesta.mensajeRespuesta, sizeof(paqueteRespuesta.mensajeRespuesta), 
-                "\n[Servidor] Error SQL: %s\n", sqlite3_errmsg(db));
-    }
-    break;
-}
-            case OP_LISTAR_BENEFICIARIOS:
+  
+           case OP_LISTAR_BENEFICIARIOS:
             {
                 const char *sql = "SELECT id_usuario, nombre, apellidos FROM Usuarios WHERE tipo = 3;";
                 sqlite3_stmt *stmt;
