@@ -19,7 +19,6 @@ void InterfazAdmin::ejecutarMenu(int socketServidor, int id_perfil) {
         cout << "\n2. Gestionar eventos (Borrar)";
         cout << "\n3. Listar usuarios registrados";
         cout << "\n4. Dar de baja a un usuario";
-        cout << "\n5. Registrar recogida de ropa"; 
         cout << "\n0. Cerrar sesión";
         cout << "\n----------------------------------";
         cout << "\nSeleccione una opción: ";
@@ -38,7 +37,6 @@ void InterfazAdmin::ejecutarMenu(int socketServidor, int id_perfil) {
             case 2: borrarEventoCliente(); break;
             case 3: listarUsuariosCliente(); break;
             case 4: darBajaUsuarioCliente(); break;
-            case 5: registrarRecogidaRopaAdminCliente(); break;
         }
     } while (opcion != 0);
 }

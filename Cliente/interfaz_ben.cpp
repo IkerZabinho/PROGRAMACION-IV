@@ -510,7 +510,7 @@ void verProximoRepartoRopa(int socketServidor, int id_perfil) {
 
 void verTalleresProximos(int socketServidor) {
 
-    printf("\n--- CONSULTANDO PRÓXIMOS TALLERES Y EVENTOS ---\n");
+    printf("\n--- CONSULTANDO PRÓXIMOS EVENTOS ---\n");
 
    
 
