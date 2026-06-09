@@ -47,6 +47,7 @@ int main()
     ConfigServidor config;
 
     registrarLog("=== INICIANDO SERVIDOR ONG ===");
+    registrarLog("Nivel de log activo: " + config.getLogNivel(), "INFO");  
     registrarLog("Cargando configuracion...");
 
     // 2. Inicializar Base de Datos SQLite usando la ruta del .conf (¡Cero Hardcoding!)
@@ -54,7 +55,8 @@ int main()
     int rc = sqlite3_open(config.getDbPath().c_str(), &db);
     if (rc != SQLITE_OK)
     {
-        registrarLog("ERROR CRITICO: No se pudo abrir la BD en: " + config.getDbPath());
+        registrarLog("ERROR CRITICO: No se pudo abrir la BD en: " + config.getDbPath(), "ERROR");
+
         return 1;
     }
     registrarLog("Base de datos conectada con exito en la ruta: " + config.getDbPath());
@@ -86,7 +88,7 @@ int main()
 
     if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
     {
-        registrarLog("ERROR: Fallo en BIND en el puerto " + to_string(config.getPuerto()));
+        registrarLog("ERROR: Fallo en BIND en el puerto " + to_string(config.getPuerto()), "ERROR");
         closesocket(serverSocket);
         WSACleanup();
         sqlite3_close(db);
@@ -245,10 +247,11 @@ int main()
                          paqueteRecibido.admin.f_final.anyo, paqueteRecibido.admin.f_final.mes, 
                          paqueteRecibido.admin.f_final.dia, paqueteRecibido.admin.f_final.hora);
                 
+
                 snprintf(consulta, sizeof(consulta), 
                          "INSERT INTO Evento (material, descripcion, fecha_ini, fecha_fin, tipo, lim_voluntarios) "
                          "VALUES ('%s', '%s', '%s', '%s', '%s', %d);",
-                         paqueteRecibido.admin.nombre_taller_o_material, 
+                         paqueteRecibido.admin.material, 
                          paqueteRecibido.admin.descripcion, fecha_ini_str, fecha_fin_str, 
                          paqueteRecibido.perfil.nombre, paqueteRecibido.admin.cupo_o_limite);
 
@@ -280,28 +283,37 @@ int main()
                 break;
             }
             case OP_LISTAR_EVENTOS:
-            {
-                const char *sql_list = "SELECT id_evento, descripcion, fecha_ini FROM Evento;";
-                sqlite3_stmt *stmt;
-                string lista = "\n--- EVENTOS DISPONIBLES ---\nID\t| Descripcion\t| Fecha Inicio\n---------------------------------------\n";
+                        {
+                            // 1. Añadimos 'material' a la consulta SQL
+                            const char *sql_list = "SELECT id_evento, descripcion, fecha_ini, material FROM Evento;";
+                            sqlite3_stmt *stmt;
+                            
+                            // Modificamos la cabecera para que incluya la columna de Material
+                            string lista = "\n--- EVENTOS DISPONIBLES ---\nID\t| Descripcion\t| Fecha Inicio\t| Material\n----------------------------------------------------\n";
 
-                if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK) {
-                    while (sqlite3_step(stmt) == SQLITE_ROW) {
-                        int id = sqlite3_column_int(stmt, 0);
-                        string nombre = (const char*)sqlite3_column_text(stmt, 1);
-                        string tipo = (const char*)sqlite3_column_text(stmt, 2);
-                        
-                        lista += to_string(id) + "\t| " + nombre + "\t| " + tipo + "\n";
-                    }
-                    sqlite3_finalize(stmt);
-                } else {
-                    lista = "[!] Error al acceder a la base de datos de eventos.";
-                }
+                            if (sqlite3_prepare_v2(db, sql_list, -1, &stmt, 0) == SQLITE_OK) {
+                                while (sqlite3_step(stmt) == SQLITE_ROW) {
+                                    int id = sqlite3_column_int(stmt, 0);
+                                    string nombre = (const char*)sqlite3_column_text(stmt, 1);
+                                    string tipo = (const char*)sqlite3_column_text(stmt, 2);
+                                    
+                                    // 2. Recuperamos el valor de la columna 3 (material)
+                                    // Si el campo en la BD puede ser NULL, es buena idea protegerlo
+                                    const char* mat_text = (const char*)sqlite3_column_text(stmt, 3);
+                                    string material = mat_text ? mat_text : "No asignado";
+                                    
+                                    // 3. Lo concatenamos al final de la línea
+                                    lista += to_string(id) + "\t| " + nombre + "\t| " + tipo + "\t| " + material + "\n";
+                                }
+                                sqlite3_finalize(stmt);
+                            } else {
+                                lista = "[!] Error al acceder a la base de datos de eventos.";
+                            }
 
-                paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
-                strncpy(paqueteRespuesta.mensajeRespuesta, lista.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
-                break;
-            }
+                            paqueteRespuesta.tipoOperacion = OP_RESPUESTA_OK;
+                            strncpy(paqueteRespuesta.mensajeRespuesta, lista.c_str(), sizeof(paqueteRespuesta.mensajeRespuesta) - 1);
+                            break;
+                        }
 
 
             case OP_LISTAR_USUARIOS: 

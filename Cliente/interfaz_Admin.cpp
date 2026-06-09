@@ -54,27 +54,53 @@ void crearEventoCliente() {
     paquete.tipoOperacion = OP_CREAR_EVENTO;
 
     cout << "\n--- CREAR EVENTO ---" << endl;
-    cout << "Material / Nombre del evento: ";
-    cin.getline(paquete.admin.nombre_taller_o_material, 50);
+    int opcionMaterial;
+        while (true) {
+            cout << "Material del evento (0 = Ropa, 1 = Comida): ";
+            if (cin >> opcionMaterial) {
+                if (opcionMaterial == 0) {
+                    // Copiamos "Ropa" al campo de tu estructura (asumiendo que es un char[])
+                    strncpy(paquete.admin.material, "Ropa", sizeof(paquete.admin.material) - 1);
+                    break;
+                } else if (opcionMaterial == 1) {
+                    strncpy(paquete.admin.material, "Comida", sizeof(paquete.admin.material) - 1);
+                    break;
+                } else {
+                    cout << "[!] Error: Opción inválida. Introduce 0 o 1.\n";
+                }
+            } else {
+                // Por si el usuario introduce una letra por error
+                cout << "[!] Error: Entrada no válida. Introduce un número (0 o 1).\n";
+                cin.clear(); // Limpia el estado de error
+                cin.ignore(10000, '\n');        
+            }
+        }
+    cin.ignore(10000, '\n');
 
-    cout << "Descripción del evento: ";
+    cout << "Descripción del evento: "<<endl;
     cin.getline(paquete.admin.descripcion, 150);
 
-   string tipoAux;
-    while (true) {
-        cout << "Tipo de evento (Reparto/Recogida): ";
-        getline(cin, tipoAux);
-
-        if (tipoAux == "Recogida" || tipoAux == "recogida" || 
-            tipoAux == "Reparto"  || tipoAux == "reparto"  ){
-            
-
-            strncpy(paquete.perfil.nombre, tipoAux.c_str(), 49);
-            break; 
-        } else {
-            cout << "[!] Error: Tipo de evento inválido. Solo se permite 'Recogida' o 'Reparto'.\n\n";
+    int opcionTipo;
+        while (true) {
+            cout << "Tipo de evento (0 = Recogida, 1 = Reparto): ";
+            if (cin >> opcionTipo) {
+                if (opcionTipo == 0) {
+                    strncpy(paquete.perfil.nombre, "Recogida", sizeof(paquete.perfil.nombre) - 1);
+                    break;
+                } else if (opcionTipo == 1) {
+                    strncpy(paquete.perfil.nombre, "Reparto", sizeof(paquete.perfil.nombre) - 1);
+                    break;
+                } else {
+                    cout << "[!] Error: Opción inválida. Introduce 0 o 1.\n";
+                }
+            } else {
+                cout << "[!] Error: Entrada no válida. Introduce un número (0 o 1).\n";
+                cin.clear();
+                cin.ignore(10000, '\n');
+            }
         }
-    }
+        cin.ignore(10000, '\n'); // Limpia el salto de línea residual
+        
     cout << "Límite de voluntarios: ";
     cin >> paquete.admin.cupo_o_limite;
     cin.ignore();

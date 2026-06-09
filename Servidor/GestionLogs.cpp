@@ -35,3 +35,25 @@ void registrarLog(const std::string& mensaje) {
     // También lo sacamos por la pantalla del servidor para monitorizarlo en vivo
     std::cout << "[LOG] " << mensaje << std::endl;
 }
+
+void registrarLog(const std::string& mensaje, const std::string& nivel) {
+    std::ofstream logFile("servidor.log", std::ios::app);
+    
+    std::time_t ahora = std::time(nullptr);
+    char bufferHora[26];
+#if defined(_MSC_VER)
+    ctime_s(bufferHora, sizeof(bufferHora), &ahora);
+#else
+    std::string strHora = std::ctime(&ahora);
+    snprintf(bufferHora, sizeof(bufferHora), "%s", strHora.c_str());
+#endif
+    std::string stringHora(bufferHora);
+    if (!stringHora.empty() && stringHora.back() == '\n')
+        stringHora.pop_back();
+
+    if (logFile.is_open()) {
+        logFile << "[" << stringHora << "] [" << nivel << "] " << mensaje << std::endl;
+        logFile.close();
+    }
+    std::cout << "[" << nivel << "] " << mensaje << std::endl;
+}

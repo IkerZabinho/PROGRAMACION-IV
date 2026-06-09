@@ -662,7 +662,7 @@ void evaluarBeneficiario(const GestionONG::Beneficiario &b) {
 
     }
 
-    if (renta >= gastoComidaMensual && renta <= umbralTotal) {
+    else if (renta >= gastoComidaMensual && renta <= umbralTotal) {
 
         printf("\nESTADO: Evaluación Finalizada -> Escenario A");
 
@@ -676,7 +676,7 @@ void evaluarBeneficiario(const GestionONG::Beneficiario &b) {
 
     }
 
-    if (renta > 0 && renta < gastoComidaMensual) {
+    else if (renta > 0 && renta < gastoComidaMensual) {
 
         printf("\nESTADO: Evaluación Finalizada -> Escenario B");
 

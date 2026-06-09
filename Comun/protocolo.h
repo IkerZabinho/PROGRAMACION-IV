@@ -57,7 +57,7 @@ struct EstructuraFechaRed {
 
 // Estructura unificada para todos los datos del Panel de Administración
 struct DatosAdmin {
-    char nombre_taller_o_material[50]; 
+    char material[50]; 
     char descripcion[150];      
     int cupo_o_limite;          
     int cantidad_ropa;          

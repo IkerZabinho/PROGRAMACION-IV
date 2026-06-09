@@ -3,4 +3,5 @@
 #include <string>
 
 // Función para registrar eventos en el archivo "servidor.log" (Requerimiento 4)
-void registrarLog(const std::string& mensaje);
+
+void registrarLog(const std::string& mensaje, const std::string& nivel = "INFO");
